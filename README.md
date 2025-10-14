@@ -179,7 +179,7 @@ Colors-LE has **13 essential settings** — no bloat, no complexity.
 
 ## 🧩 System Requirements
 
-- **VS Code**: 1.105.0 or higher
+- **VS Code**: 1.70.0 or higher
 - **Node.js**: Not required (extension runs in VS Code's built-in runtime)
 - **Platform**: Windows, macOS, Linux
 - **Memory**: 50MB minimum, 200MB recommended for large files
