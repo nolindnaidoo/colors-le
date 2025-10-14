@@ -1,0 +1,290 @@
+{
+	"name": "colors-le",
+	"publisher": "nolindnaidoo",
+	"displayName": "Colors-LE",
+	"description": "Zero Hassle Color Extraction from CSS, HTML, and JavaScript",
+	"version": "1.0.1",
+	"license": "MIT",
+	"author": {
+		"name": "Nolin D Naidoo",
+		"url": "https://github.com/nolindnaidoo"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nolindnaidoo/colors-le.git"
+	},
+	"bugs": {
+		"url": "https://github.com/nolindnaidoo/colors-le/issues"
+	},
+	"homepage": "https://github.com/nolindnaidoo/colors-le#readme",
+	"engines": {
+		"vscode": "^1.70.0",
+		"node": ">=20.0.0"
+	},
+	"categories": [
+		"Other",
+		"Programming Languages",
+		"Linters"
+	],
+	"keywords": [
+		"colors",
+		"color",
+		"extract",
+		"extractor",
+		"extraction",
+		"css",
+		"html",
+		"javascript",
+		"palette",
+		"hex",
+		"rgb",
+		"hsl"
+	],
+	"icon": "src/assets/images/icon.png",
+	"main": "./dist/extension.js",
+	"l10n": "./package.nls.json",
+	"activationEvents": [
+		"onLanguage:css",
+		"onLanguage:html",
+		"onLanguage:javascript",
+		"onLanguage:typescript",
+		"onCommand:colors-le.extractColors",
+		"onCommand:colors-le.postProcess.dedupe",
+		"onCommand:colors-le.postProcess.sort",
+		"onCommand:colors-le.openSettings",
+		"onCommand:colors-le.help"
+	],
+	"capabilities": {
+		"virtualWorkspaces": {
+			"supported": "limited",
+			"description": "%manifest.capability.untrusted-workspaces.desc%"
+		},
+		"untrustedWorkspaces": {
+			"supported": "limited",
+			"description": "%manifest.capability.untrusted-workspaces.desc%"
+		}
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "colors-le.extractColors",
+				"title": "%manifest.command.extract.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.postProcess.dedupe",
+				"title": "%manifest.command.dedupe.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.postProcess.sort",
+				"title": "%manifest.command.sort.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.openSettings",
+				"title": "%manifest.command.settings.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.help",
+				"title": "%manifest.command.help.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.settings.export",
+				"title": "%manifest.command.settings.export.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.settings.import",
+				"title": "%manifest.command.settings.import.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.settings.reset",
+				"title": "%manifest.command.settings.reset.title%",
+				"category": "%manifest.command.category%"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "colors-le.extractColors",
+				"key": "ctrl+alt+c",
+				"mac": "cmd+alt+c",
+				"when": "editorTextFocus"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "colors-le.extractColors",
+					"when": "resourceExtname in .css || resourceExtname in .html || resourceExtname in .htm || resourceExtname in .js || resourceExtname in .jsx || resourceExtname in .ts || resourceExtname in .tsx",
+					"group": "1_modification@1"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "colors-le.extractColors"
+				},
+				{
+					"command": "colors-le.postProcess.dedupe"
+				},
+				{
+					"command": "colors-le.postProcess.sort"
+				},
+				{
+					"command": "colors-le.openSettings"
+				},
+				{
+					"command": "colors-le.help"
+				},
+				{
+					"command": "colors-le.settings.export"
+				},
+				{
+					"command": "colors-le.settings.import"
+				},
+				{
+					"command": "colors-le.settings.reset"
+				}
+			]
+		},
+		"configuration": {
+			"title": "%manifest.settings.title%",
+			"properties": {
+				"colors-le.copyToClipboardEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.copy.clipboard.desc%"
+				},
+				"colors-le.dedupeEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.dedupe.desc%"
+				},
+				"colors-le.notificationsLevel": {
+					"type": "string",
+					"default": "silent",
+					"enum": [
+						"all",
+						"important",
+						"silent"
+					],
+					"enumDescriptions": [
+						"%manifest.settings.notifications.level.option.all%",
+						"%manifest.settings.notifications.level.option.important%",
+						"%manifest.settings.notifications.level.option.silent%"
+					],
+					"description": "%manifest.settings.notifications.level.desc%"
+				},
+				"colors-le.openResultsSideBySide": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.open.side-by-side.desc%"
+				},
+				"colors-le.safety.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.safety.enabled.desc%"
+				},
+				"colors-le.safety.fileSizeWarnBytes": {
+					"type": "number",
+					"default": 1000000,
+					"minimum": 1000,
+					"description": "%manifest.settings.safety.warn.file-size.desc%"
+				},
+				"colors-le.safety.largeOutputLinesThreshold": {
+					"type": "number",
+					"default": 50000,
+					"minimum": 100,
+					"description": "%manifest.settings.safety.warn.large-output.desc%"
+				},
+				"colors-le.safety.manyDocumentsThreshold": {
+					"type": "number",
+					"default": 8,
+					"minimum": 1,
+					"description": "%manifest.settings.safety.warn.many-documents.desc%"
+				},
+				"colors-le.showParseErrors": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.parse-errors.desc%"
+				},
+				"colors-le.sortEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.sort.enabled.desc%"
+				},
+				"colors-le.sortMode": {
+					"type": "string",
+					"default": "off",
+					"enum": [
+						"off",
+						"hue-asc",
+						"hue-desc",
+						"saturation-asc",
+						"saturation-desc",
+						"lightness-asc",
+						"lightness-desc",
+						"hex-asc",
+						"hex-desc"
+					],
+					"enumDescriptions": [
+						"%manifest.settings.sort.mode.option.off%",
+						"%manifest.settings.sort.mode.option.hue-asc%",
+						"%manifest.settings.sort.mode.option.hue-desc%",
+						"%manifest.settings.sort.mode.option.saturation-asc%",
+						"%manifest.settings.sort.mode.option.saturation-desc%",
+						"%manifest.settings.sort.mode.option.lightness-asc%",
+						"%manifest.settings.sort.mode.option.lightness-desc%",
+						"%manifest.settings.sort.mode.option.hex-asc%",
+						"%manifest.settings.sort.mode.option.hex-desc%"
+					],
+					"description": "%manifest.settings.sort.mode.desc%"
+				},
+				"colors-le.statusBar.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.statusbar.enabled.desc%"
+				},
+				"colors-le.telemetryEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.telemetry.desc%"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./",
+		"clean": "rm -rf dist coverage",
+		"clean:i18n": "node -e \"const fs=require('fs');fs.readdirSync('.').filter(f=>f.startsWith('package.nls.')&&f.endsWith('.json')&&f!=='package.nls.json').forEach(f=>fs.unlinkSync(f));try{fs.rmSync('vsix',{recursive:true})}catch(e){}\"",
+		"copy:i18n": "cp src/i18n/package.nls.json .",
+		"watch": "tsc -watch -p ./",
+		"test": "vitest run --pool=threads",
+		"test:watch": "vitest --pool=threads",
+		"test:coverage": "vitest run --coverage --pool=threads",
+		"test:ui": "vitest --ui",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"vscode:prepublish": "bun run build && bun run copy:i18n",
+		"package": "bun run copy:i18n && mkdir -p release && bun x vsce package --out release/${npm_package_name}-${npm_package_version}.vsix && bun run clean:i18n",
+		"package:ls": "vsce ls release/${npm_package_name}-${npm_package_version}.vsix --tree | cat",
+		"publish": "vsce publish"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.5",
+		"@types/node": "^24.7.1",
+		"@types/vscode": "^1.70.0",
+		"@vscode/test-electron": "^2.3.0",
+		"@vscode/vsce": "^3.6.2",
+		"@vitest/coverage-v8": "^3.2.4",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.4"
+	},
+	"dependencies": {
+		"vscode-nls": "^5.2.0"
+	}
+}

@@ -1,0 +1,129 @@
+/* Colors-LE Sample CSS File */
+
+:root {
+  /* Primary Colors */
+  --primary-blue: #3b82f6;
+  --primary-green: #10b981;
+  --primary-red: #ef4444;
+
+  /* Secondary Colors */
+  --secondary-purple: #8b5cf6;
+  --secondary-orange: #f59e0b;
+  --secondary-pink: #ec4899;
+
+  /* Grayscale */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* RGBA Colors */
+  --overlay-light: rgba(255, 255, 255, 0.9);
+  --overlay-dark: rgba(0, 0, 0, 0.75);
+  --shadow: rgba(0, 0, 0, 0.1);
+
+  /* HSL Colors */
+  --hsl-blue: hsl(217, 91%, 60%);
+  --hsl-green: hsl(158, 64%, 52%);
+  --hsl-yellow: hsl(45, 100%, 51%);
+
+  /* Named Colors */
+  --white: white;
+  --black: black;
+  --transparent: transparent;
+}
+
+/* Component Styles */
+.button {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: 2px solid #2563eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background-color: #2563eb;
+  border-color: #1d4ed8;
+}
+
+.button.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.button.danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.card-header {
+  background: hsl(220, 13%, 91%);
+  color: hsl(217, 19%, 27%);
+  border-bottom: 1px solid hsl(218, 11%, 65%);
+}
+
+/* Status Colors */
+.status-success {
+  color: #10b981;
+  background-color: #d1fae5;
+}
+
+.status-warning {
+  color: #f59e0b;
+  background-color: #fef3c7;
+}
+
+.status-error {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.status-info {
+  color: #3b82f6;
+  background-color: #dbeafe;
+}
+
+/* Complex Gradients */
+.gradient-sunset {
+  background: linear-gradient(to right, #ff6b6b, #feca57, #ee5a6f);
+}
+
+.gradient-ocean {
+  background: linear-gradient(120deg, #2980b9 0%, #6dd5fa 50%, #ffffff 100%);
+}
+
+.gradient-forest {
+  background: linear-gradient(45deg, #134e5e 0%, #71b280 100%);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Media Query Colors */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1f2937;
+    --text-primary: #f9fafb;
+    --border-color: #374151;
+  }
+}

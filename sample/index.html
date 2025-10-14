@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Colors-LE Sample HTML</title>
+    <style>
+      /* Embedded CSS */
+      body {
+        background-color: #f9fafb;
+        color: #111827;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        padding: 2rem;
+      }
+
+      .container {
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .alert {
+        background-color: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        color: #78350f;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Inline Styles -->
+    <div style="background-color: #3b82f6; color: white; padding: 1rem">
+      <h1 style="color: #ffffff">Colors-LE Demo</h1>
+    </div>
+
+    <div style="background: linear-gradient(to right, #ff6b6b, #feca57); height: 200px">
+      <span style="color: #fff; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">Gradient Banner</span>
+    </div>
+
+    <!-- Status Cards -->
+    <div style="background-color: #d1fae5; border-left: 5px solid #10b981; color: #065f46">
+      Success Message
+    </div>
+
+    <div style="background-color: #fee2e2; border-left: 5px solid #ef4444; color: #991b1b">
+      Error Message
+    </div>
+
+    <div style="background-color: #dbeafe; border-left: 5px solid #3b82f6; color: #1e40af">
+      Info Message
+    </div>
+
+    <div style="background-color: #fef3c7; border-left: 5px solid #f59e0b; color: #78350f">
+      Warning Message
+    </div>
+
+    <!-- Complex Nested Styles -->
+    <section style="background: hsl(220, 13%, 91%); padding: 2rem">
+      <div style="background: rgba(255, 255, 255, 0.95); border-radius: 8px">
+        <h2 style="color: hsl(217, 19%, 27%)">HSL Colors</h2>
+        <p style="color: hsla(217, 19%, 27%, 0.8)">Testing HSLA with transparency</p>
+      </div>
+    </section>
+
+    <!-- RGB/RGBA Examples -->
+    <div style="background-color: rgb(59, 130, 246)">
+      <span style="color: rgba(255, 255, 255, 0.9)">RGB Color</span>
+    </div>
+
+    <!-- Named Colors -->
+    <div style="background-color: tomato; color: white">Tomato</div>
+    <div style="background-color: dodgerblue; color: white">DodgerBlue</div>
+    <div style="background-color: mediumseagreen; color: white">MediumSeaGreen</div>
+    <div style="background-color: slateblue; color: white">SlateBlue</div>
+
+    <!-- Short Hex -->
+    <div style="background-color: #fff; color: #000">Short Hex</div>
+    <div style="background-color: #f0f; color: #0f0">Magenta on Green</div>
+
+    <!-- 8-digit Hex (with alpha) -->
+    <div style="background-color: #3b82f6cc">8-digit Hex with Alpha</div>
+    <div style="background-color: #ef444480">Transparent Red</div>
+
+    <!-- Box Shadows with Colors -->
+    <div style="box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)">
+      Multiple Shadows
+    </div>
+
+    <div style="border: 2px solid #e5e7eb; border-top: 4px solid #3b82f6">Border Colors</div>
+  </body>
+</html>
