@@ -5,16 +5,22 @@ All notable changes to Colors-LE will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.2] - 2025-10-14
+## [1.1.0] - 2025-10-14
+
+### Added
+
+- **Command parity achievement** - Full parity with other LE extraction extensions
+- **Comprehensive documentation** - Added complete command list to README with examples
+- **Documentation updates** - Updated all docs to reflect command parity achievement
+
+### Changed
+
+- **Infrastructure verification** - Verified activation events, command registry, and all infrastructure components
+- **Command count** - Stabilized at 5 commands (Extract, Dedupe, Sort, Settings, Help)
 
 ### Removed
 
 - **Broken commands** - Removed non-functional export/import/reset settings commands that were never implemented
-- **Documentation cleanup** - Updated help text and documentation to reflect current command set
-
-### Changed
-
-- **Command count** - Reduced from 8 to 5 commands (all remaining commands are fully functional)
 
 ## [1.0.1] - 2025-10-14
 
