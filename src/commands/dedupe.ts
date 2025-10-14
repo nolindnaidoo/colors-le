@@ -98,7 +98,12 @@ export function registerDedupeCommand(
 				});
 			} catch (error) {
 				const message =
-					error instanceof Error ? error.message : 'Unknown error occurred';
+					error instanceof Error
+						? error.message
+						: localize(
+								'runtime.error.unknown-fallback',
+								'Unknown error occurred',
+							);
 				deps.notifier.showError(
 					localize(
 						'runtime.dedupe.error',

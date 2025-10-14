@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
+import * as nls from 'vscode-nls';
 import { getConfiguration } from '../config/config';
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export interface StatusBar {
 	showProgress(message: string): void;
@@ -16,8 +19,14 @@ export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
 			vscode.StatusBarAlignment.Left,
 			100,
 		);
-		statusBarItem.text = 'Colors-LE';
-		statusBarItem.tooltip = 'Colors-LE: Color extraction and analysis';
+		statusBarItem.text = localize(
+			'runtime.statusbar.text.default',
+			'Colors-LE',
+		);
+		statusBarItem.tooltip = localize(
+			'runtime.statusbar.tooltip.default',
+			'Colors-LE: Color extraction and analysis',
+		);
 		statusBarItem.command = 'colors-le.extractColors';
 		context.subscriptions.push(statusBarItem);
 		statusBarItem.show();
@@ -31,7 +40,10 @@ export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
 		},
 		hideProgress(): void {
 			if (statusBarItem) {
-				statusBarItem.text = 'Colors-LE';
+				statusBarItem.text = localize(
+					'runtime.statusbar.text.default',
+					'Colors-LE',
+				);
 			}
 		},
 		dispose(): void {

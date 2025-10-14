@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">Colors-LE: Zero Hassle Color Extraction</h1>
 <p align="center">
-  <b>Instantly extract and analyze colors from CSS, HTML, and JavaScript with precision</b><br/>
+  <b>Instantly extract and analyze colors from CSS, HTML, JavaScript, and SVG with precision</b><br/>
   <i>HEX, RGB/RGBA, and HSL/HSLA color formats</i>
   <br/>
   <i>Designed for design systems, theme development, and color palette management.</i>
@@ -66,7 +66,7 @@ It intelligently detects and extracts colors from your code, providing comprehen
 
 - **Comprehensive file format support**
 
-  Works with CSS, HTML, JavaScript, and TypeScript files using intelligent pattern matching for reliable extraction.
+  Works with CSS, HTML, JavaScript, TypeScript, and SVG files using intelligent pattern matching for reliable extraction.
 
 - **Smart color processing**
 
@@ -74,7 +74,7 @@ It intelligently detects and extracts colors from your code, providing comprehen
 
 - **Multi-language support**
 
-  English only for v1.0.0 with clean, professional interface.
+  Full localization in 13 languages: English, German, Spanish, French, Indonesian, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Ukrainian, Vietnamese, and Chinese Simplified.
 
 ## 🚀 More from the LE Family
 
@@ -175,7 +175,23 @@ Colors-LE has **13 essential settings** — no bloat, no complexity.
 
 ## 🌍 Language Support
 
-**English only** for v1.0.0. Additional languages may be added in future releases based on user feedback.
+**13 languages supported** with full localization:
+
+- 🇺🇸 **English** (en) - Default language
+- 🇩🇪 **German** (de) - Deutsche Lokalisierung
+- 🇪🇸 **Spanish** (es) - Soporte en español
+- 🇫🇷 **French** (fr) - Localisation française
+- 🇮🇩 **Indonesian** (id) - Dukungan bahasa Indonesia
+- 🇮🇹 **Italian** (it) - Localizzazione italiana
+- 🇯🇵 **Japanese** (ja) - 日本語サポート
+- 🇰🇷 **Korean** (ko) - 한국어 지원
+- 🇧🇷 **Portuguese (Brazil)** (pt-br) - Suporte em português brasileiro
+- 🇷🇺 **Russian** (ru) - Русская локализация
+- 🇺🇦 **Ukrainian** (uk) - Українська локалізація
+- 🇻🇳 **Vietnamese** (vi) - Hỗ trợ tiếng Việt
+- 🇨🇳 **Chinese Simplified** (zh-cn) - 简体中文支持
+
+All commands, settings, notifications, and help content automatically adapt to your VS Code language preference.
 
 ## 🧩 System Requirements
 

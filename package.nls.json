@@ -33,5 +33,13 @@
   "manifest.settings.sort.mode.option.hex-desc": "Hex descending",
   "manifest.settings.statusbar.enabled.desc": "Show Colors-LE status bar entry for quick access",
   "manifest.settings.telemetry.desc": "Enable local-only telemetry logs to the Output panel",
-  "manifest.capability.untrusted-workspaces.desc": "Limited functionality in untrusted workspaces"
+  "manifest.capability.untrusted-workspaces.desc": "Limited functionality in untrusted workspaces",
+
+  "runtime.help.title": "Colors-LE Help",
+  "runtime.help.quick-start": "1. Open a CSS, HTML, or JavaScript file\n2. Run \"Colors-LE: Extract Colors\"\n3. View extracted colors in results",
+  "runtime.help.commands": "**Extract Colors**: Extract from current document\n**Sort Colors**: Sort by hue, saturation, lightness, or hex\n**Deduplicate Colors**: Remove duplicate colors\n**Settings**: Configure options",
+  "runtime.help.formats": "**Supported**: CSS, HTML, JavaScript, TypeScript\n**Color Formats**: Hex (#FF0000), RGB, RGBA, HSL, HSLA",
+  "runtime.help.troubleshooting": "**No colors found?** Check file format and color syntax\n**Performance issues?** Enable safety settings for large files\n**Need help?** Check Output panel for details",
+  "runtime.help.settings": "Access via Command Palette: \"Colors-LE: Open Settings\"\nKey settings: Copy to clipboard, deduplication, sorting mode, safety checks",
+  "runtime.help.support": "GitHub Issues: https://github.com/nolindnaidoo/colors-le/issues"
 }

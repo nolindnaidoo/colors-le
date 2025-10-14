@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE",
 	"description": "Zero Hassle Color Extraction from CSS, HTML, and JavaScript",
-	"version": "1.1.0",
+	"version": "1.3.0",
 	"license": "MIT",
 	"author": {
 		"name": "Nolin D Naidoo",
@@ -38,7 +38,10 @@
 		"palette",
 		"hex",
 		"rgb",
-		"hsl"
+		"hsl",
+		"svg",
+		"icons",
+		"vector"
 	],
 	"icon": "src/assets/images/icon.png",
 	"main": "./dist/extension.js",
@@ -48,6 +51,7 @@
 		"onLanguage:html",
 		"onLanguage:javascript",
 		"onLanguage:typescript",
+		"onLanguage:xml",
 		"onCommand:colors-le.extractColors",
 		"onCommand:colors-le.postProcess.dedupe",
 		"onCommand:colors-le.postProcess.sort",
@@ -104,7 +108,7 @@
 			"editor/context": [
 				{
 					"command": "colors-le.extractColors",
-					"when": "resourceExtname in .css || resourceExtname in .html || resourceExtname in .htm || resourceExtname in .js || resourceExtname in .jsx || resourceExtname in .ts || resourceExtname in .tsx",
+					"when": "resourceExtname in .css || resourceExtname in .html || resourceExtname in .htm || resourceExtname in .js || resourceExtname in .jsx || resourceExtname in .ts || resourceExtname in .tsx || resourceExtname in .svg",
 					"group": "1_modification@1"
 				}
 			],
@@ -236,7 +240,7 @@
 		"build": "tsc -p ./",
 		"clean": "rm -rf dist coverage",
 		"clean:i18n": "node -e \"const fs=require('fs');fs.readdirSync('.').filter(f=>f.startsWith('package.nls.')&&f.endsWith('.json')&&f!=='package.nls.json').forEach(f=>fs.unlinkSync(f));try{fs.rmSync('vsix',{recursive:true})}catch(e){}\"",
-		"copy:i18n": "cp src/i18n/package.nls.json .",
+		"copy:i18n": "cp src/i18n/package.nls.*.json . 2>/dev/null || true",
 		"watch": "tsc -watch -p ./",
 		"test": "vitest run --pool=threads",
 		"test:watch": "vitest --pool=threads",

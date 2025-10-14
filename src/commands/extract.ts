@@ -280,7 +280,14 @@ export function registerExtractCommand(
 				});
 			} catch (error) {
 				const enhancedError = createEnhancedError(
-					error instanceof Error ? error : new Error('Unknown error occurred'),
+					error instanceof Error
+						? error
+						: new Error(
+								localize(
+									'runtime.error.unknown-fallback',
+									'Unknown error occurred',
+								),
+							),
 					'operational',
 					{ fileName: document.fileName, languageId: document.languageId },
 					{

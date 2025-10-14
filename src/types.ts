@@ -44,7 +44,13 @@ export type ColorFormat =
 	| 'named'
 	| 'unknown';
 
-export type FileType = 'css' | 'html' | 'javascript' | 'typescript' | 'unknown';
+export type FileType =
+	| 'css'
+	| 'html'
+	| 'javascript'
+	| 'typescript'
+	| 'svg'
+	| 'unknown';
 
 export type SortMode =
 	| 'off'

@@ -9,6 +9,7 @@ import {
 import { extractFromCss } from './formats/css';
 import { extractFromHtml } from './formats/html';
 import { extractFromJavaScript } from './formats/javascript';
+import { extractFromSvg } from './formats/svg';
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -110,6 +111,9 @@ export async function extractColors(
 			case 'javascript':
 			case 'typescript':
 				colors.push(...extractFromJavaScript(content));
+				break;
+			case 'svg':
+				colors.push(...extractFromSvg(content));
 				break;
 			default:
 				// Try CSS extraction as fallback
@@ -245,6 +249,9 @@ function determineFileType(languageId: string): FileType {
 			return 'javascript';
 		case 'typescript':
 			return 'typescript';
+		case 'xml':
+		case 'svg':
+			return 'svg';
 		default:
 			return 'unknown';
 	}
