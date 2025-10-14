@@ -187,7 +187,7 @@ Users have complete control over their data:
 Users can delete all Colors-LE data:
 
 1. **Clear Logs**: Clear VS Code Output panel
-2. **Reset Settings**: Reset all configuration to defaults
+2. **Reset Settings**: Manually reset configuration in VS Code settings
 3. **Clear Cache**: Clear extension storage
 4. **Uninstall Extension**: Remove extension completely
 
@@ -195,9 +195,9 @@ Users can delete all Colors-LE data:
 
 Users can export their configuration:
 
-- **Settings Export**: Export VS Code settings
-- **Configuration Backup**: Backup configuration files
-- **Log Export**: Export logs if needed
+- **VS Code Settings**: Use VS Code's built-in settings sync or backup
+- **Configuration Backup**: Backup your `settings.json` file
+- **Log Export**: Export logs from Output panel if needed
 - **No Data Lock-in**: No proprietary data formats
 
 ## Third-Party Dependencies

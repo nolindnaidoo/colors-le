@@ -13,12 +13,14 @@ All available commands in the Colors-LE VS Code extension.
 Extracts all colors from the active document.
 
 **Supported Files**:
+
 - CSS (`.css`)
 - HTML (`.html`, `.htm`)
 - JavaScript (`.js`, `.jsx`)
 - TypeScript (`.ts`, `.tsx`)
 
 **Supported Formats**:
+
 - HEX: `#fff`, `#ffffff`, `#ffffffaa`
 - RGB/RGBA: `rgb(255, 255, 255)`, `rgba(255, 255, 255, 0.5)`
 - HSL/HSLA: `hsl(0, 0%, 100%)`, `hsla(0, 0%, 100%, 0.5)`
@@ -45,6 +47,7 @@ Removes duplicate colors from extracted results.
 Sorts extracted colors by various criteria.
 
 **Sort Modes**:
+
 - `off` - No sorting (default)
 - `hue-asc` / `hue-desc` - By hue (rainbow order)
 - `saturation-asc` / `saturation-desc` - By saturation
@@ -73,30 +76,6 @@ Opens the Colors-LE settings panel.
 
 ---
 
-### Export Settings
-
-**Command ID**: `colors-le.settings.export`
-
-Exports your current Colors-LE configuration to a JSON file.
-
----
-
-### Import Settings
-
-**Command ID**: `colors-le.settings.import`
-
-Imports Colors-LE configuration from a JSON file.
-
----
-
-### Reset Settings
-
-**Command ID**: `colors-le.settings.reset`
-
-Resets all Colors-LE settings to their default values.
-
----
-
 ## Command Palette
 
 All commands are available via the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
@@ -108,6 +87,7 @@ All commands are available via the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+
 ## Context Menu
 
 The **Extract Colors** command is available in the editor context menu when you right-click in:
+
 - CSS files
 - HTML files
 - JavaScript/JSX files
@@ -115,8 +95,8 @@ The **Extract Colors** command is available in the editor context menu when you 
 
 ## Keyboard Shortcuts
 
-| Command         | Windows/Linux | macOS       |
-| --------------- | ------------- | ----------- |
-| Extract Colors  | `Ctrl+Alt+C`  | `Cmd+Alt+C` |
+| Command        | Windows/Linux | macOS       |
+| -------------- | ------------- | ----------- |
+| Extract Colors | `Ctrl+Alt+C`  | `Cmd+Alt+C` |
 
 All other commands are available via Command Palette only.

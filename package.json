@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE",
 	"description": "Zero Hassle Color Extraction from CSS, HTML, and JavaScript",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"license": "MIT",
 	"author": {
 		"name": "Nolin D Naidoo",
@@ -90,21 +90,6 @@
 				"command": "colors-le.help",
 				"title": "%manifest.command.help.title%",
 				"category": "%manifest.command.category%"
-			},
-			{
-				"command": "colors-le.settings.export",
-				"title": "%manifest.command.settings.export.title%",
-				"category": "%manifest.command.category%"
-			},
-			{
-				"command": "colors-le.settings.import",
-				"title": "%manifest.command.settings.import.title%",
-				"category": "%manifest.command.category%"
-			},
-			{
-				"command": "colors-le.settings.reset",
-				"title": "%manifest.command.settings.reset.title%",
-				"category": "%manifest.command.category%"
 			}
 		],
 		"keybindings": [
@@ -138,15 +123,6 @@
 				},
 				{
 					"command": "colors-le.help"
-				},
-				{
-					"command": "colors-le.settings.export"
-				},
-				{
-					"command": "colors-le.settings.import"
-				},
-				{
-					"command": "colors-le.settings.reset"
 				}
 			]
 		},

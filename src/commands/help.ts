@@ -1,22 +1,20 @@
-import * as vscode from 'vscode';
-import type { Telemetry } from '../telemetry/telemetry';
-import type { Notifier } from '../ui/notifier';
-import type { StatusBar } from '../ui/statusBar';
+import * as vscode from 'vscode'
+import type { Telemetry } from '../telemetry/telemetry'
+import type { Notifier } from '../ui/notifier'
+import type { StatusBar } from '../ui/statusBar'
 
 export function registerHelpCommand(
-	context: vscode.ExtensionContext,
-	deps: Readonly<{
-		telemetry: Telemetry;
-		notifier: Notifier;
-		statusBar: StatusBar;
-	}>,
+  context: vscode.ExtensionContext,
+  deps: Readonly<{
+    telemetry: Telemetry
+    notifier: Notifier
+    statusBar: StatusBar
+  }>,
 ): void {
-	const command = vscode.commands.registerCommand(
-		'colors-le.help',
-		async () => {
-			deps.telemetry.event('command-help');
+  const command = vscode.commands.registerCommand('colors-le.help', async () => {
+    deps.telemetry.event('command-help')
 
-			const helpText = `
+    const helpText = `
 # Colors-LE Help & Troubleshooting
 
 ## Commands
@@ -24,9 +22,7 @@ export function registerHelpCommand(
 - **Deduplicate Colors**: Remove duplicate colors from the current document
 - **Sort Colors**: Sort colors by various criteria (hue, saturation, lightness, hex)
 - **Open Settings**: Configure Colors-LE settings
-- **Export Settings**: Export current configuration
-- **Import Settings**: Import configuration
-- **Reset Settings**: Reset to defaults
+- **Help**: Open this help documentation
 
 ## Supported File Types
 - CSS - Stylesheets, CSS variables, gradients
@@ -69,15 +65,14 @@ Key settings:
 ## Support
 - GitHub Issues: https://github.com/nolindnaidoo/colors-le/issues
 - Documentation: https://github.com/nolindnaidoo/colors-le#readme
-		`.trim();
+		`.trim()
 
-			const doc = await vscode.workspace.openTextDocument({
-				content: helpText,
-				language: 'markdown',
-			});
-			await vscode.window.showTextDocument(doc);
-		},
-	);
+    const doc = await vscode.workspace.openTextDocument({
+      content: helpText,
+      language: 'markdown',
+    })
+    await vscode.window.showTextDocument(doc)
+  })
 
-	context.subscriptions.push(command);
+  context.subscriptions.push(command)
 }
