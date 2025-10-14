@@ -154,11 +154,11 @@
 					],
 					"description": "%manifest.settings.notifications.level.desc%"
 				},
-				"colors-le.openResultsSideBySide": {
-					"type": "boolean",
-					"default": false,
-					"description": "%manifest.settings.open.side-by-side.desc%"
-				},
+			"colors-le.openResultsSideBySide": {
+				"type": "boolean",
+				"default": true,
+				"description": "%manifest.settings.open.side-by-side.desc%"
+			},
 				"colors-le.safety.enabled": {
 					"type": "boolean",
 					"default": true,
