@@ -9,6 +9,9 @@ import {
 import { extractFromCss } from './formats/css';
 import { extractFromHtml } from './formats/html';
 import { extractFromJavaScript } from './formats/javascript';
+import { extractFromLESS } from './formats/less';
+import { extractFromSCSS } from './formats/scss';
+import { extractFromStylus } from './formats/stylus';
 import { extractFromSvg } from './formats/svg';
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -104,6 +107,15 @@ export async function extractColors(
 		switch (fileType) {
 			case 'css':
 				colors.push(...extractFromCss(content));
+				break;
+			case 'scss':
+				colors.push(...extractFromSCSS(content));
+				break;
+			case 'less':
+				colors.push(...extractFromLESS(content));
+				break;
+			case 'stylus':
+				colors.push(...extractFromStylus(content));
 				break;
 			case 'html':
 				colors.push(...extractFromHtml(content));
@@ -243,6 +255,12 @@ function determineFileType(languageId: string): FileType {
 	switch (languageId) {
 		case 'css':
 			return 'css';
+		case 'scss':
+			return 'scss';
+		case 'less':
+			return 'less';
+		case 'stylus':
+			return 'stylus';
 		case 'html':
 			return 'html';
 		case 'javascript':

@@ -262,7 +262,7 @@ export class PerformanceMonitor {
 	 * Get memory usage in bytes
 	 */
 	private getMemoryUsage(): number {
-		if (typeof process !== 'undefined' && process.memoryUsage) {
+		if (process?.memoryUsage) {
 			return process.memoryUsage().heapUsed;
 		}
 		return 0;
@@ -272,7 +272,7 @@ export class PerformanceMonitor {
 	 * Get CPU usage in microseconds
 	 */
 	private getCpuUsage(): number {
-		if (typeof process !== 'undefined' && process.cpuUsage) {
+		if (process?.cpuUsage) {
 			const usage = process.cpuUsage();
 			return usage.user + usage.system;
 		}
@@ -409,14 +409,14 @@ export class PerformanceMonitor {
  * Create performance monitor instance
  */
 export function createPerformanceMonitor(
-	_config: Configuration,
+	config?: Configuration,
 ): PerformanceMonitor {
 	const thresholds: PerformanceThresholds = {
-		maxDuration: 5000, // 5 seconds
-		maxMemoryUsage: 100 * 1024 * 1024, // 100MB
-		maxCpuUsage: 1000 * 1000, // 1 second CPU time
-		minThroughput: 1000, // 1000 colors per second
-		maxCacheSize: 1000, // 1000 cache entries
+		maxDuration: config?.performanceMaxDuration ?? 5000, // 5 seconds
+		maxMemoryUsage: config?.performanceMaxMemoryUsage ?? 100 * 1024 * 1024, // 100MB
+		maxCpuUsage: config?.performanceMaxCpuUsage ?? 1000 * 1000, // 1 second CPU time
+		minThroughput: config?.performanceMinThroughput ?? 1000, // 1000 colors per second
+		maxCacheSize: config?.performanceMaxCacheSize ?? 1000, // 1000 cache entries
 	};
 
 	return new PerformanceMonitor(thresholds);
@@ -481,8 +481,13 @@ export function formatPerformanceReport(report: PerformanceReport): string {
 		'runtime.performance.report.header',
 		'Performance Report:\n',
 	);
-	output += `${localize('runtime.performance.report.operation', 'Operation')}: ${report.metrics.operation}\n`;
-	output += `${localize('runtime.performance.report.duration', 'Duration')}: ${report.metrics.duration.toFixed(2)}ms\n`;
+	output += `${localize('runtime.performance.report.operation', 'Operation')}: ${
+		report.metrics.operation
+	}\n`;
+	output += `${localize(
+		'runtime.performance.report.duration',
+		'Duration',
+	)}: ${report.metrics.duration.toFixed(2)}ms\n`;
 	output += `${localize(
 		'runtime.performance.report.average',
 		'Average Duration',
@@ -538,6 +543,326 @@ export function createPerformanceWarning(
 			'Consider optimizing the operation or reducing input size',
 		),
 	});
+}
+
+/**
+ * Performance monitoring service with enhanced features
+ */
+export interface PerformanceMonitoringService {
+	startOperation(operation: string): PerformanceOperation;
+	getMetrics(): PerformanceMetrics;
+	getThresholds(): PerformanceThresholds;
+	checkThresholds(
+		metrics: PerformanceMetrics,
+		thresholds: PerformanceThresholds,
+	): PerformanceCheckResult;
+	dispose(): void;
+}
+
+/**
+ * Performance operation tracker
+ */
+export interface PerformanceOperation {
+	end(): PerformanceMetrics;
+	cancel(): void;
+	isActive(): boolean;
+}
+
+/**
+ * Performance check result
+ */
+export interface PerformanceCheckResult {
+	readonly passed: boolean;
+	readonly warnings: readonly PerformanceWarning[];
+	readonly errors: readonly PerformanceError[];
+}
+
+/**
+ * Performance warning
+ */
+export interface PerformanceWarning {
+	readonly metric: string;
+	readonly value: number;
+	readonly threshold: number;
+	readonly severity: 'warning' | 'error';
+	readonly message: string;
+}
+
+/**
+ * Performance error
+ */
+export interface PerformanceError {
+	readonly category: string;
+	readonly severity: 'error';
+	readonly message: string;
+	readonly recoverable: boolean;
+	readonly timestamp: number;
+	readonly metadata?: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * Create enhanced performance monitoring service
+ */
+export function createPerformanceMonitoringService(): PerformanceMonitoringService {
+	let disposed = false;
+	const activeOperations = new Map<string, PerformanceOperation>();
+
+	return {
+		startOperation(operation: string): PerformanceOperation {
+			if (disposed) {
+				throw new Error('Performance monitoring service has been disposed');
+			}
+
+			const startTime = Date.now();
+			let ended = false;
+
+			const operationTracker: PerformanceOperation = {
+				end(): PerformanceMetrics {
+					if (ended) {
+						throw new Error('Operation already ended');
+					}
+					ended = true;
+					activeOperations.delete(operation);
+
+					const endTime = Date.now();
+					const duration = endTime - startTime;
+
+					// Get memory usage (simplified)
+					const memoryUsage = process.memoryUsage?.()?.heapUsed || 0;
+
+					return Object.freeze({
+						operation,
+						startTime,
+						endTime,
+						duration,
+						inputSize: 0, // This would be set by the caller
+						outputSize: 0, // This would be set by the caller
+						colorCount: 0, // This would be set by the caller
+						memoryUsage,
+						cpuUsage: 0, // This would be measured by the caller
+						cacheHits: 0,
+						cacheMisses: 0,
+						warnings: 0,
+						errors: 0,
+					});
+				},
+
+				cancel(): void {
+					ended = true;
+					activeOperations.delete(operation);
+				},
+
+				isActive(): boolean {
+					return !ended;
+				},
+			};
+
+			activeOperations.set(operation, operationTracker);
+			return operationTracker;
+		},
+
+		getMetrics(): PerformanceMetrics {
+			// Return current system metrics
+			const now = Date.now();
+			return Object.freeze({
+				operation: 'system',
+				startTime: now - 1000, // Mock 1 second ago
+				endTime: now,
+				duration: 1000,
+				inputSize: 0,
+				outputSize: 0,
+				colorCount: 0,
+				memoryUsage: process.memoryUsage?.()?.heapUsed || 0,
+				cpuUsage: 0,
+				cacheHits: 0,
+				cacheMisses: 0,
+				warnings: 0,
+				errors: 0,
+			});
+		},
+
+		getThresholds(): PerformanceThresholds {
+			return Object.freeze({
+				maxDuration: 5000,
+				maxMemoryUsage: 104857600, // 100MB
+				maxCpuUsage: 1000000,
+				minThroughput: 1000,
+				maxCacheSize: 1000,
+			});
+		},
+
+		checkThresholds(
+			metrics: PerformanceMetrics,
+			thresholds: PerformanceThresholds,
+		): PerformanceCheckResult {
+			const warnings: PerformanceWarning[] = [];
+			const errors: PerformanceError[] = [];
+
+			// Check duration threshold
+			if (metrics.duration > thresholds.maxDuration) {
+				const warning: PerformanceWarning = {
+					metric: 'duration',
+					value: metrics.duration,
+					threshold: thresholds.maxDuration,
+					severity: 'warning',
+					message: `Duration ${metrics.duration}ms exceeded threshold of ${thresholds.maxDuration}ms`,
+				};
+				warnings.push(warning);
+			}
+
+			// Check memory usage threshold
+			if (metrics.memoryUsage > thresholds.maxMemoryUsage) {
+				const warning: PerformanceWarning = {
+					metric: 'memory',
+					value: metrics.memoryUsage,
+					threshold: thresholds.maxMemoryUsage,
+					severity: 'warning',
+					message: `Memory usage ${formatBytes(
+						metrics.memoryUsage,
+					)} exceeded threshold of ${formatBytes(thresholds.maxMemoryUsage)}`,
+				};
+				warnings.push(warning);
+			}
+
+			// Check CPU usage threshold
+			if (metrics.cpuUsage && metrics.cpuUsage > thresholds.maxCpuUsage) {
+				const warning: PerformanceWarning = {
+					metric: 'cpu',
+					value: metrics.cpuUsage,
+					threshold: thresholds.maxCpuUsage,
+					severity: 'warning',
+					message: `CPU usage ${metrics.cpuUsage} exceeded threshold of ${thresholds.maxCpuUsage}`,
+				};
+				warnings.push(warning);
+			}
+
+			// Check throughput threshold
+			const throughput = metrics.colorCount / (metrics.duration / 1000);
+			if (throughput < thresholds.minThroughput) {
+				const warning: PerformanceWarning = {
+					metric: 'throughput',
+					value: throughput,
+					threshold: thresholds.minThroughput,
+					severity: 'warning',
+					message: `Throughput ${throughput.toFixed(2)} colors/sec below threshold of ${
+						thresholds.minThroughput
+					} colors/sec`,
+				};
+				warnings.push(warning);
+			}
+
+			// Convert critical warnings to errors
+			for (const warning of warnings) {
+				if (warning.severity === 'error') {
+					const error: PerformanceError = {
+						category: 'performance',
+						severity: 'error',
+						message: warning.message,
+						recoverable: true,
+						timestamp: Date.now(),
+						metadata: {
+							metric: warning.metric,
+							value: warning.value,
+							threshold: warning.threshold,
+						},
+					};
+					errors.push(error);
+				}
+			}
+
+			return Object.freeze({
+				passed: warnings.length === 0,
+				warnings: Object.freeze(warnings),
+				errors: Object.freeze(errors),
+			});
+		},
+
+		dispose(): void {
+			disposed = true;
+			// Cancel all active operations
+			for (const operation of activeOperations.values()) {
+				operation.cancel();
+			}
+			activeOperations.clear();
+		},
+	};
+}
+
+/**
+ * Format bytes for display
+ */
+export function formatBytes(bytes: number): string {
+	if (bytes === 0) return '0 Bytes';
+
+	const k = 1024;
+	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+	return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
+}
+
+/**
+ * Format duration for display
+ */
+export function formatDuration(milliseconds: number): string {
+	if (milliseconds < 1000) {
+		return `${milliseconds}ms`;
+	}
+
+	const seconds = Math.floor(milliseconds / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+
+	if (hours > 0) {
+		return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+	} else if (minutes > 0) {
+		return `${minutes}m ${seconds % 60}s`;
+	} else {
+		return `${seconds}s`;
+	}
+}
+
+/**
+ * Format throughput for display
+ */
+export function formatThroughput(throughput: number): string {
+	if (throughput < 1) {
+		return `${(throughput * 1000).toFixed(0)} colors/min`;
+	} else if (throughput < 60) {
+		return `${throughput.toFixed(2)} colors/sec`;
+	} else {
+		return `${(throughput * 60).toFixed(0)} colors/min`;
+	}
+}
+
+/**
+ * Create performance report
+ */
+export function createPerformanceReport(metrics: PerformanceMetrics): string {
+	const report = [
+		'# Performance Report',
+		'',
+		'## Metrics',
+		`- **Duration**: ${formatDuration(metrics.duration)}`,
+		`- **Memory Usage**: ${formatBytes(metrics.memoryUsage)}`,
+		`- **Color Count**: ${metrics.colorCount}`,
+		`- **Input Size**: ${formatBytes(metrics.inputSize)}`,
+		`- **Output Size**: ${formatBytes(metrics.outputSize)}`,
+		`- **Throughput**: ${formatThroughput(metrics.colorCount / (metrics.duration / 1000))}`,
+		'',
+		'## Performance Analysis',
+		`- **Processing Rate**: ${(
+			metrics.colorCount / (metrics.duration / 1000)
+		).toFixed(2)} colors/second`,
+		`- **Memory Efficiency**: ${formatBytes(metrics.memoryUsage / metrics.colorCount)} per color`,
+		`- **Time Efficiency**: ${(metrics.duration / metrics.colorCount).toFixed(2)}ms per color`,
+	];
+
+	if (metrics.cpuUsage) {
+		report.push(`- **CPU Usage**: ${formatDuration(metrics.cpuUsage)}`);
+	}
+
+	return report.join('\n');
 }
 
 void localize;

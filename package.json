@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE",
 	"description": "Zero Hassle Color Extraction from CSS, HTML, and JavaScript",
-	"version": "1.3.0",
+	"version": "1.4.5",
 	"license": "MIT",
 	"author": {
 		"name": "Nolin D Naidoo",
@@ -52,7 +52,14 @@
 		"onLanguage:javascript",
 		"onLanguage:typescript",
 		"onLanguage:xml",
+		"onLanguage:scss",
+		"onLanguage:less",
+		"onLanguage:stylus",
 		"onCommand:colors-le.extractColors",
+		"onCommand:colors-le.analyze",
+		"onCommand:colors-le.convert",
+		"onCommand:colors-le.filter",
+		"onCommand:colors-le.validate",
 		"onCommand:colors-le.postProcess.dedupe",
 		"onCommand:colors-le.postProcess.sort",
 		"onCommand:colors-le.openSettings",
@@ -76,6 +83,26 @@
 				"category": "%manifest.command.category%"
 			},
 			{
+				"command": "colors-le.analyze",
+				"title": "%manifest.command.analyze.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.convert",
+				"title": "%manifest.command.convert.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.filter",
+				"title": "%manifest.command.filter.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.validate",
+				"title": "%manifest.command.validate.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
 				"command": "colors-le.postProcess.dedupe",
 				"title": "%manifest.command.dedupe.title%",
 				"category": "%manifest.command.category%"
@@ -94,6 +121,11 @@
 				"command": "colors-le.help",
 				"title": "%manifest.command.help.title%",
 				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.csv.toggleStreaming",
+				"title": "%manifest.command.csv.toggle-streaming.title%",
+				"category": "%manifest.command.category%"
 			}
 		],
 		"keybindings": [
@@ -108,13 +140,25 @@
 			"editor/context": [
 				{
 					"command": "colors-le.extractColors",
-					"when": "resourceExtname in .css || resourceExtname in .html || resourceExtname in .htm || resourceExtname in .js || resourceExtname in .jsx || resourceExtname in .ts || resourceExtname in .tsx || resourceExtname in .svg",
+					"when": "resourceExtname in .css || resourceExtname in .html || resourceExtname in .htm || resourceExtname in .js || resourceExtname in .jsx || resourceExtname in .ts || resourceExtname in .tsx || resourceExtname in .svg || resourceExtname in .scss || resourceExtname in .less || resourceExtname in .styl",
 					"group": "1_modification@1"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "colors-le.extractColors"
+				},
+				{
+					"command": "colors-le.analyze"
+				},
+				{
+					"command": "colors-le.convert"
+				},
+				{
+					"command": "colors-le.filter"
+				},
+				{
+					"command": "colors-le.validate"
 				},
 				{
 					"command": "colors-le.postProcess.dedupe"
@@ -127,6 +171,9 @@
 				},
 				{
 					"command": "colors-le.help"
+				},
+				{
+					"command": "colors-le.csv.toggleStreaming"
 				}
 			]
 		},
@@ -158,11 +205,11 @@
 					],
 					"description": "%manifest.settings.notifications.level.desc%"
 				},
-			"colors-le.openResultsSideBySide": {
-				"type": "boolean",
-				"default": true,
-				"description": "%manifest.settings.open.side-by-side.desc%"
-			},
+				"colors-le.openResultsSideBySide": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.open.side-by-side.desc%"
+				},
 				"colors-le.safety.enabled": {
 					"type": "boolean",
 					"default": true,
@@ -232,6 +279,105 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%manifest.settings.telemetry.desc%"
+				},
+				"colors-le.csv.streamingEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.csv.streaming.desc%"
+				},
+				"colors-le.postProcess.openInNewFile": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.open.new-file.desc%"
+				},
+				"colors-le.analysis.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.analysis.enabled.desc%"
+				},
+				"colors-le.analysis.includeStats": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.analysis.stats.desc%"
+				},
+				"colors-le.performance.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.performance.enabled.desc%"
+				},
+				"colors-le.performance.maxDuration": {
+					"type": "number",
+					"default": 5000,
+					"minimum": 1000,
+					"description": "%manifest.settings.performance.max-duration.desc%"
+				},
+				"colors-le.performance.maxMemoryUsage": {
+					"type": "number",
+					"default": 104857600,
+					"minimum": 1048576,
+					"description": "%manifest.settings.performance.max-memory.desc%"
+				},
+				"colors-le.performance.maxCpuUsage": {
+					"type": "number",
+					"default": 1000000,
+					"minimum": 100000,
+					"description": "%manifest.settings.performance.max-cpu.desc%"
+				},
+				"colors-le.performance.minThroughput": {
+					"type": "number",
+					"default": 1000,
+					"minimum": 100,
+					"description": "%manifest.settings.performance.min-throughput.desc%"
+				},
+				"colors-le.performance.maxCacheSize": {
+					"type": "number",
+					"default": 1000,
+					"minimum": 100,
+					"description": "%manifest.settings.performance.max-cache.desc%"
+				},
+				"colors-le.keyboard.shortcuts.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.keyboard.shortcuts.enabled.desc%"
+				},
+				"colors-le.keyboard.extractShortcut": {
+					"type": "string",
+					"default": "ctrl+alt+c",
+					"description": "%manifest.settings.keyboard.extract.shortcut.desc%"
+				},
+				"colors-le.keyboard.dedupeShortcut": {
+					"type": "string",
+					"default": "ctrl+alt+d",
+					"description": "%manifest.settings.keyboard.dedupe.shortcut.desc%"
+				},
+				"colors-le.keyboard.sortShortcut": {
+					"type": "string",
+					"default": "ctrl+alt+s",
+					"description": "%manifest.settings.keyboard.sort.shortcut.desc%"
+				},
+				"colors-le.presets.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.presets.enabled.desc%"
+				},
+				"colors-le.presets.defaultPreset": {
+					"type": "string",
+					"default": "balanced",
+					"enum": [
+						"minimal",
+						"balanced",
+						"comprehensive",
+						"performance",
+						"colors"
+					],
+					"enumDescriptions": [
+						"%manifest.settings.presets.default.option.minimal%",
+						"%manifest.settings.presets.default.option.balanced%",
+						"%manifest.settings.presets.default.option.comprehensive%",
+						"%manifest.settings.presets.default.option.performance%",
+						"%manifest.settings.presets.default.option.colors%"
+					],
+					"description": "%manifest.settings.presets.default.desc%"
 				}
 			}
 		}
@@ -248,6 +394,7 @@
 		"test:ui": "vitest --ui",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
+		"perf": "bun run scripts/gen-per-data.ts",
 		"vscode:prepublish": "bun run build && bun run copy:i18n",
 		"package": "bun run copy:i18n && mkdir -p release && bun x vsce package --out release/${npm_package_name}-${npm_package_version}.vsix && bun run clean:i18n",
 		"package:ls": "vsce ls release/${npm_package_name}-${npm_package_version}.vsix --tree | cat",

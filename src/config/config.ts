@@ -16,6 +16,14 @@ export function getConfiguration(): Configuration {
 	const sortModeRaw = config.get('sortMode', 'off');
 	const sortMode = isValidSortMode(sortModeRaw) ? sortModeRaw : 'off';
 
+	const presetsDefaultPresetRaw = config.get(
+		'presets.defaultPreset',
+		'balanced',
+	);
+	const presetsDefaultPreset = isValidPreset(presetsDefaultPresetRaw)
+		? presetsDefaultPresetRaw
+		: 'balanced';
+
 	return Object.freeze({
 		copyToClipboardEnabled: Boolean(
 			config.get('copyToClipboardEnabled', false),
@@ -41,6 +49,47 @@ export function getConfiguration(): Configuration {
 		sortMode,
 		statusBarEnabled: Boolean(config.get('statusBar.enabled', true)),
 		telemetryEnabled: Boolean(config.get('telemetryEnabled', false)),
+		csvStreamingEnabled: Boolean(config.get('csv.streamingEnabled', false)),
+		postProcessOpenInNewFile: Boolean(
+			config.get('postProcess.openInNewFile', true),
+		),
+		analysisEnabled: Boolean(config.get('analysis.enabled', true)),
+		analysisIncludeStats: Boolean(config.get('analysis.includeStats', true)),
+		performanceEnabled: Boolean(config.get('performance.enabled', true)),
+		performanceMaxDuration: Math.max(
+			1000,
+			Number(config.get('performance.maxDuration', 5000)),
+		),
+		performanceMaxMemoryUsage: Math.max(
+			1048576,
+			Number(config.get('performance.maxMemoryUsage', 104857600)),
+		),
+		performanceMaxCpuUsage: Math.max(
+			100000,
+			Number(config.get('performance.maxCpuUsage', 1000000)),
+		),
+		performanceMinThroughput: Math.max(
+			100,
+			Number(config.get('performance.minThroughput', 1000)),
+		),
+		performanceMaxCacheSize: Math.max(
+			100,
+			Number(config.get('performance.maxCacheSize', 1000)),
+		),
+		keyboardShortcutsEnabled: Boolean(
+			config.get('keyboard.shortcuts.enabled', true),
+		),
+		keyboardExtractShortcut: String(
+			config.get('keyboard.extractShortcut', 'ctrl+alt+c'),
+		),
+		keyboardDedupeShortcut: String(
+			config.get('keyboard.dedupeShortcut', 'ctrl+alt+d'),
+		),
+		keyboardSortShortcut: String(
+			config.get('keyboard.sortShortcut', 'ctrl+alt+s'),
+		),
+		presetsEnabled: Boolean(config.get('presets.enabled', true)),
+		presetsDefaultPreset,
 	});
 }
 
@@ -61,5 +110,22 @@ export function isValidSortMode(v: unknown): v is SortMode {
 		v === 'lightness-desc' ||
 		v === 'hex-asc' ||
 		v === 'hex-desc'
+	);
+}
+
+export type Preset =
+	| 'minimal'
+	| 'balanced'
+	| 'comprehensive'
+	| 'performance'
+	| 'colors';
+
+export function isValidPreset(v: unknown): v is Preset {
+	return (
+		v === 'minimal' ||
+		v === 'balanced' ||
+		v === 'comprehensive' ||
+		v === 'performance' ||
+		v === 'colors'
 	);
 }

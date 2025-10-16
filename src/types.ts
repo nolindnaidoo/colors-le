@@ -50,6 +50,9 @@ export type FileType =
 	| 'javascript'
 	| 'typescript'
 	| 'svg'
+	| 'scss'
+	| 'less'
+	| 'stylus'
 	| 'unknown';
 
 export type SortMode =
@@ -77,6 +80,27 @@ export interface Configuration {
 	readonly sortMode: SortMode;
 	readonly statusBarEnabled: boolean;
 	readonly telemetryEnabled: boolean;
+	readonly csvStreamingEnabled: boolean;
+	readonly postProcessOpenInNewFile: boolean;
+	readonly analysisEnabled: boolean;
+	readonly analysisIncludeStats: boolean;
+	readonly performanceEnabled: boolean;
+	readonly performanceMaxDuration: number;
+	readonly performanceMaxMemoryUsage: number;
+	readonly performanceMaxCpuUsage: number;
+	readonly performanceMinThroughput: number;
+	readonly performanceMaxCacheSize: number;
+	readonly keyboardShortcutsEnabled: boolean;
+	readonly keyboardExtractShortcut: string;
+	readonly keyboardDedupeShortcut: string;
+	readonly keyboardSortShortcut: string;
+	readonly presetsEnabled: boolean;
+	readonly presetsDefaultPreset:
+		| 'minimal'
+		| 'balanced'
+		| 'comprehensive'
+		| 'performance'
+		| 'colors';
 }
 
 export interface PerformanceMetrics {

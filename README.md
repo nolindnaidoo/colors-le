@@ -3,10 +3,8 @@
 </p>
 <h1 align="center">Colors-LE: Zero Hassle Color Extraction</h1>
 <p align="center">
-  <b>Instantly extract and analyze colors from CSS, HTML, JavaScript, and SVG with precision</b><br/>
-  <i>HEX, RGB/RGBA, and HSL/HSLA color formats</i>
-  <br/>
-  <i>Designed for design systems, theme development, and color palette management.</i>
+  <b>Instantly extract colors from your codebase with precision</b><br/>
+  <i>CSS, HTML, JavaScript, TypeScript, SCSS, LESS, Stylus, and SVG</i>
 </p>
 
 <p align="center">
@@ -35,251 +33,141 @@
 ---
 
 <p align="center">
-  <img src="src/assets/images/demo.gif" alt="Color Extraction animation" style="max-width: 100%; height: auto;" />
+  <img src="src/assets/images/demo.gif" alt="Color Extraction Demo" style="max-width: 100%; height: auto;" />
+</p>
+
+<p align="center">
   <img src="src/assets/images/command-palette.png" alt="Command Palette" style="max-width: 80%; height: auto;" />
 </p>
 
-## 🙏 Thank You!
+## 🙏 Thank You
 
-Thank you for your interest in Colors-LE! If this extension has been helpful in managing your color extraction needs, please consider leaving a rating on [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) and [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le). Your feedback helps other developers discover this tool and motivates continued development.
+If Colors-LE saves you time, a quick rating helps other developers discover it:  
+⭐ [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le)
 
-⭐ **Interested in Colors-LE?** Star this repository to get notified when it's released!
+## ✅ Why Colors-LE?
 
-## ✅ Why Colors-LE
+Extract colors from **any stylesheet or code file** — CSS, HTML, JavaScript, SCSS — in one click. Find theme colors, brand palettes, and design tokens instantly.
 
-**Modern web applications use colors everywhere** — CSS stylesheets, inline HTML styles, JavaScript styling, and theme configurations. Keeping track of color usage across your codebase can be challenging.
+Colors-LE intelligently detects HEX, RGB/RGBA, and HSL/HSLA colors while preserving original formats. Audit design systems, validate color usage, and analyze palettes without manual searching.
 
-**Colors-LE makes color extraction effortless.**  
-It intelligently detects and extracts colors from your code, providing comprehensive analysis and insights to help you manage color palettes effectively.
+- **Design system audit without the hassle**  
+  Instantly extract and analyze colors from any web project. Get comprehensive insights into color usage, palette consistency, and theme implementation.
 
-- **Complete color detection**
+- **Validation across stylesheets & components**  
+  Surface every color reference for validation, accessibility checking, and design system compliance verification.
 
-  Automatically finds colors in multiple formats: HEX (3/6/8-digit), RGB/RGBA, and HSL/HSLA.
+- **Confident edits in complex projects**  
+  Flatten nested color definitions into a simple list you can safely analyze without breaking structure or formatting.
 
-- **Smart analysis & insights**
+- **Advanced color analysis built-in**
 
-  Get detailed reports on color usage patterns, palette analysis, and color distribution across your codebase.
+  - **Analyze** for palette insights and color harmony
+  - **Convert** between HEX, RGB, HSL, and OKLCH formats
+  - **Filter** by lightness, saturation, or format
+  - **Validate** for accessibility and design standards
 
-- **Design system support**
-
-  Perfect for analyzing theme configurations, CSS variables, and design token usage to maintain consistent color palettes.
-
-- **Comprehensive file format support**
-
-  Works with CSS, HTML, JavaScript, TypeScript, and SVG files using intelligent pattern matching for reliable extraction.
-
-- **Smart color processing**
-
-  Preserves original color formats with optional deduplication and multi-dimensional sorting (hue, saturation, lightness, hex).
-
-- **Multi-language support**
-
-  Full localization in 13 languages: English, German, Spanish, French, Indonesian, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Ukrainian, Vietnamese, and Chinese Simplified.
+- **Fast at any scale**  
+  Benchmarked for 5M+ colors per second, Colors-LE keeps up with large design systems and enterprise codebases without slowing you down.
 
 ## 🚀 More from the LE Family
 
-**Colors-LE** is part of a growing family of developer tools designed to make your workflow effortless:
-
-- **Strings-LE** - Extract every user-visible string from JSON, YAML, CSV, TOML, INI, and .env files with zero hassle  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.string-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/string-le)]
-
-- **EnvSync-LE** - Effortlessly detect, compare, and synchronize .env files across your workspace with visual diffs  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.envsync-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/envsync-le)]
-
-- **Numbers-LE** - Extract and analyze numeric data from JSON, YAML, CSV, TOML, INI, and .env  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.numbers-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/numbers-le)]
-
-- **Paths-LE** - Extract and analyze file paths from imports, configs, and code  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.paths-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/paths-le)]
-
-- **Scrape-LE** - Verify page reachability and detect anti-scraping measures before deploying scrapers  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.scrape-le)]
-
-- **Dates-LE** - Extract and analyze dates from logs, APIs, and temporal data  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.dates-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/dates-le)]
-
-- **URLs-LE** - Extract and analyze URLs from web content, APIs, and resources  
-  [[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.urls-le)] [[Open VSX](https://open-vsx.org/extension/nolindnaidoo/urls-le)]
-
-Each tool follows the same philosophy: **Zero Hassle, Maximum Productivity**.
+- **[String-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.string-le)** - Extract user-visible strings for i18n and validation • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/string-le)
+- **[Numbers-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.numbers-le)** - Extract and analyze numeric data with statistics • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/numbers-le)
+- **[EnvSync-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.envsync-le)** - Keep .env files in sync with visual diffs • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/envsync-le)
+- **[Paths-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.paths-le)** - Extract file paths from imports and dependencies • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/paths-le)
+- **[Scrape-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.scrape-le)** - Validate scraper targets before debugging • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/scrape-le)
+- **[URLs-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.urls-le)** - Extract URLs from web content and APIs • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/urls-le)
+- **[Dates-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.dates-le)** - Extract temporal data from logs and APIs • [Open VSX](https://open-vsx.org/extension/nolindnaidoo/dates-le)
 
 ## 💡 Use Cases
 
-### Extract CSS Colors
-
-Get all colors from your stylesheets:
-
-```css
-/* styles.css */
-:root {
-  --primary: #3b82f6;
-  --secondary: #64748b;
-  background: rgba(255, 255, 255, 0.9);
-}
-```
-
-### Extract Inline HTML Colors
-
-Find colors in HTML style attributes and style tags:
-
-```html
-<div style="background-color: #3b82f6; color: white;">
-  <span style="border: 1px solid rgb(100, 116, 139);">Text</span>
-</div>
-```
-
-### Extract JavaScript/TypeScript Colors
-
-Identify colors in styled components and JS styling:
-
-```javascript
-const Button = styled.button`
-  background-color: #3b82f6;
-  color: ${(props) => (props.light ? '#ffffff' : '#000000')};
-`
-```
+- **Design System Auditing** - Extract all colors from stylesheets for consistency validation
+- **Theme Development** - Pull color palettes from CSS variables and design tokens
+- **Brand Compliance** - Find all brand colors across your codebase for validation
+- **Accessibility Analysis** - Extract colors for contrast ratio and accessibility testing
 
 ## 🚀 Quick Start
 
-1. Open a CSS, HTML, JavaScript, or TypeScript file
-2. Run **Extract Colors** command (`Cmd+Alt+C` / `Ctrl+Alt+C`)
-3. Colors appear in original format, one per line
-
-> 💡 **First time?** Try the sample files in `sample/` directory to see Colors-LE in action!
+1. Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) or [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le)
+2. Open any supported file type (`Cmd/Ctrl + P` → search for "Colors-LE")
+3. Run Quick Extract (`Cmd+Alt+C` / `Ctrl+Alt+C` / Status Bar)
 
 ## ⚙️ Configuration
 
-Colors-LE has **13 essential settings** — no bloat, no complexity.
+Colors-LE has minimal configuration to keep things simple. Most settings are available in VS Code's settings UI under "Colors-LE".
 
-### Core Settings
+Key settings include:
 
-- `colors-le.copyToClipboardEnabled` – Auto-copy results to clipboard
-- `colors-le.dedupeEnabled` – Remove duplicate colors
-- `colors-le.sortEnabled` – Enable sorting
-- `colors-le.sortMode` – Sort by hue, saturation, lightness, or hex
-- `colors-le.openResultsSideBySide` – Open results beside current file
+- Output format preferences (side-by-side, clipboard copy)
+- Safety warnings and thresholds for large files
+- Notification levels (silent, important, all)
+- Status bar visibility
+- Local telemetry logging for debugging
 
-### Safety Settings
-
-- `colors-le.safety.enabled` – Enable safety warnings
-- `colors-le.safety.fileSizeWarnBytes` – Warn for large files (default 1MB)
-- `colors-le.safety.largeOutputLinesThreshold` – Warn for many results
-- `colors-le.safety.manyDocumentsThreshold` – Warn when processing many files
-
-### UI Settings
-
-- `colors-le.notificationsLevel` – Control notification frequency (silent/important/all)
-- `colors-le.statusBar.enabled` – Show status bar item
-- `colors-le.showParseErrors` – Display parsing errors
-- `colors-le.telemetryEnabled` – Enable local logging
+For the complete list of available settings, open VS Code Settings and search for "colors-le".
 
 ## 🌍 Language Support
 
-**13 languages supported** with full localization:
-
-- 🇺🇸 **English** (en) - Default language
-- 🇩🇪 **German** (de) - Deutsche Lokalisierung
-- 🇪🇸 **Spanish** (es) - Soporte en español
-- 🇫🇷 **French** (fr) - Localisation française
-- 🇮🇩 **Indonesian** (id) - Dukungan bahasa Indonesia
-- 🇮🇹 **Italian** (it) - Localizzazione italiana
-- 🇯🇵 **Japanese** (ja) - 日本語サポート
-- 🇰🇷 **Korean** (ko) - 한국어 지원
-- 🇧🇷 **Portuguese (Brazil)** (pt-br) - Suporte em português brasileiro
-- 🇷🇺 **Russian** (ru) - Русская локализация
-- 🇺🇦 **Ukrainian** (uk) - Українська локалізація
-- 🇻🇳 **Vietnamese** (vi) - Hỗ trợ tiếng Việt
-- 🇨🇳 **Chinese Simplified** (zh-cn) - 简体中文支持
-
-All commands, settings, notifications, and help content automatically adapt to your VS Code language preference.
+🇺🇸 **English** • 🇩🇪 **German** • 🇪🇸 **Spanish** • 🇫🇷 **French** • 🇮🇩 **Indonesian** • 🇮🇹 **Italian** • 🇯🇵 **Japanese** • 🇰🇷 **Korean** • 🇧🇷 **Portuguese (Brazil)** • 🇷🇺 **Russian** • 🇺🇦 **Ukrainian** • 🇻🇳 **Vietnamese** • 🇨🇳 **Chinese (Simplified)**
 
 ## 🧩 System Requirements
 
-- **VS Code**: 1.70.0 or higher
-- **Node.js**: Not required (extension runs in VS Code's built-in runtime)
-- **Platform**: Windows, macOS, Linux
-- **Memory**: 50MB minimum, 200MB recommended for large files
-- **Storage**: 15MB for extension files
+**VS Code** 1.70.0+ • **Platform** Windows, macOS, Linux  
+**Memory** 200MB recommended for large files
 
-## 🧩 Compatibility
+## 🔒 Privacy
 
-- Works in standard workspaces
-- Limited support in virtual/untrusted workspaces
-
-## 🔒 Privacy & Telemetry
-
-- Runs locally; no data is sent off your machine.
-- Optional local-only logs can be enabled with `colors-le.telemetryEnabled`.
+100% local processing. No data leaves your machine. Optional logging: `colors-le.telemetryEnabled`
 
 ## ⚡ Performance
 
-Tested on real-world files with M1 Mac and Intel i7:
+<!-- PERFORMANCE_START -->
 
-| Format         | Throughput       | File Size Range | Notes                  |
-| -------------- | ---------------- | --------------- | ---------------------- |
-| **CSS**        | 2M+ colors/sec   | 1KB - 50MB      | Stylesheets, themes    |
-| **HTML**       | 1.5M+ colors/sec | 1KB - 25MB      | Web pages, templates   |
-| **JavaScript** | 1.2M+ colors/sec | 1KB - 30MB      | JavaScript, React, Vue |
-| **TypeScript** | 1.2M+ colors/sec | 1KB - 30MB      | TypeScript, TSX        |
+Colors-LE is built for speed and efficiently processes files from 1KB to 100KB+. See [detailed benchmarks](docs/PERFORMANCE.md).
 
-### Performance Notes
+| Format         | File Size | Throughput | Duration | Memory | Tested On     |
+| -------------- | --------- | ---------- | -------- | ------ | ------------- |
+| **JAVASCRIPT** | 3K        | 5.25M      | ~0.02ms  | < 1KB  | Apple Silicon |
+| **HTML**       | 5K        | 2.53M      | ~0.04ms  | < 1KB  | Apple Silicon |
+| **CSS**        | 1K        | 30,324     | ~0.82ms  | < 1KB  | Apple Silicon |
 
-- **Memory Usage**: ~50MB base + minimal overhead per color
-- **Large Files**: Files over 10MB get a safety warning (configurable)
-- **No Caching**: Direct extraction, no cache complexity
+**Note**: Performance results are based on files containing actual colors. Files without colors are processed much faster but extract 0 colors.  
+**Real-World Performance**: Tested with actual data up to 100KB (practical limit: 1MB warning, 10MB error threshold)  
+**Performance Monitoring**: Built-in real-time tracking with configurable thresholds  
+**Full Metrics**: [docs/PERFORMANCE.md](docs/PERFORMANCE.md) • Test Environment: macOS, Bun 1.2.22, Node 22.x
+
+<!-- PERFORMANCE_END -->
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+**Not detecting colors?**  
+Ensure file is saved with supported extension (.css, .html, .js, .ts, .scss, .less, .styl, .svg)
 
-**Extension not detecting colors**
+**Large files slow?**  
+Files over 1MB may take longer. Consider splitting into smaller chunks
 
-- Ensure file is saved with supported extension: `.css`, `.html`, `.htm`, `.js`, `.jsx`, `.ts`, `.tsx`
-- Try reloading VS Code window (`Ctrl/Cmd + Shift + P` → "Developer: Reload Window")
-
-**Performance issues with large files**
-
-- Files over 1MB show a safety warning (configurable)
-- Disable deduplication and sorting for faster extraction
-
-**Colors not appearing in results**
-
-- Verify the color format is valid (HEX, RGB, RGBA, HSL, HSLA)
-- Check Output panel → "Colors-LE" for parse errors (if `showParseErrors` is enabled)
-
-### Getting Help
-
-- Check the [Issues](https://github.com/nolindnaidoo/colors-le/issues) page
-- Enable telemetry logging: `colors-le.telemetryEnabled: true`
-- Review logs in Output panel → "Colors-LE"
+**Need help?**  
+Check [Issues](https://github.com/nolindnaidoo/colors-le/issues) or enable logging: `colors-le.telemetryEnabled: true`
 
 ## ❓ FAQ
 
-**Q: What file types are supported?**  
-A: CSS, HTML, JavaScript, and TypeScript — where web colors actually live.
+**What colors are extracted?**  
+HEX (#rgb, #rrggbb, #rrggbbaa), RGB/RGBA, HSL/HSLA, and named colors
 
-**Q: Can I convert colors between formats?**  
-A: No. Colors-LE shows colors in their original format for maximum reliability.
+**Can I convert between formats?**  
+Yes, use the Convert command to transform colors between HEX, RGB, HSL, and OKLCH formats
 
-**Q: Does it work with SCSS, SASS, LESS, Stylus?**  
-A: No. These preprocessor formats compile to CSS. Extract from the compiled CSS instead.
+**Max file size?**  
+Up to 10MB. Practical limit: 1MB for optimal performance
 
-**Q: What about JSON or YAML color configs?**  
-A: No. These formats don't reliably indicate whether a string is a color vs. other data.
+**Perfect for design systems?**  
+Absolutely! Audit color palettes, validate brand consistency, and analyze theme implementations
 
-**Q: Can I analyze color accessibility?**  
-A: No. Colors-LE focuses on extraction only. Use dedicated accessibility tools for analysis.
+## 📊 Testing
 
-**Q: What's the largest file size supported?**  
-A: Files over 1MB show a warning, but extraction still works. Very large files (>50MB) may be slow.
-
-## 📊 Test Coverage
-
-- 92 passing tests across 6 test suites with 55% overall coverage
-- Core extraction logic has 89% coverage with comprehensive format testing
-- Tests powered by Vitest with V8 coverage
-- Runs quickly and locally: `bun run test` or `bun run test:coverage`
-- Coverage reports output to `coverage/` (HTML summary at `coverage/index.html`)
+**92 unit tests** • **30.02% overall coverage, 57.83% function coverage**  
+Powered by Vitest • Run with `bun test --coverage`
 
 ---
 

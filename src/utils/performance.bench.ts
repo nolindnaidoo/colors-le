@@ -132,7 +132,7 @@ bench('extractColors: Memory usage - Large CSS', async () => {
 	await extractColors(content, 'css', { enablePerformanceMonitoring: true });
 
 	// Log memory usage if available
-	if (typeof process !== 'undefined' && process.memoryUsage) {
+	if (process?.memoryUsage) {
 		console.log('Memory usage:', process.memoryUsage());
 	}
 });
@@ -144,7 +144,7 @@ bench('extractColors: Memory usage - Large JavaScript', async () => {
 	});
 
 	// Log memory usage if available
-	if (typeof process !== 'undefined' && process.memoryUsage) {
+	if (process?.memoryUsage) {
 		console.log('Memory usage:', process.memoryUsage());
 	}
 });
@@ -154,7 +154,7 @@ bench('extractColors: Memory usage - Large HTML', async () => {
 	await extractColors(content, 'html', { enablePerformanceMonitoring: true });
 
 	// Log memory usage if available
-	if (typeof process !== 'undefined' && process.memoryUsage) {
+	if (process?.memoryUsage) {
 		console.log('Memory usage:', process.memoryUsage());
 	}
 });

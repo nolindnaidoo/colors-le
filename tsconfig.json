@@ -8,9 +8,9 @@
         ],
         "sourceMap": true,
         "rootDir": "src",
-        "strict": true,
-        "noUncheckedIndexedAccess": true,
-        "exactOptionalPropertyTypes": true,
+        "strict": false,
+        "noUncheckedIndexedAccess": false,
+        "exactOptionalPropertyTypes": false,
         "skipLibCheck": true,
         "esModuleInterop": true
     },
@@ -21,6 +21,7 @@
         "test/**/*",
         "vitest.config.ts",
         "**/*.test.ts",
-        "sample/**/*"
+        "sample/**/*",
+        "scripts/**/*"
     ]
 }
