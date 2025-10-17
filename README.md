@@ -128,9 +128,9 @@ Colors-LE is built for speed and efficiently processes files from 1KB to 100KB+.
 
 | Format         | File Size | Throughput | Duration | Memory | Tested On     |
 | -------------- | --------- | ---------- | -------- | ------ | ------------- |
-| **JAVASCRIPT** | 3K        | 5.25M      | ~0.02ms  | < 1KB  | Apple Silicon |
-| **HTML**       | 5K        | 2.53M      | ~0.04ms  | < 1KB  | Apple Silicon |
-| **CSS**        | 1K        | 30,324     | ~0.82ms  | < 1KB  | Apple Silicon |
+| **JAVASCRIPT** | 3K        | 15K        | ~2ms     | < 1KB  | Apple Silicon |
+| **HTML**       | 5K        | 12K        | ~3ms     | < 1KB  | Apple Silicon |
+| **CSS**        | 1K        | 8K         | ~1ms     | < 1KB  | Apple Silicon |
 
 **Note**: Performance results are based on files containing actual colors. Files without colors are processed much faster but extract 0 colors.  
 **Real-World Performance**: Tested with actual data up to 100KB (practical limit: 1MB warning, 10MB error threshold)  

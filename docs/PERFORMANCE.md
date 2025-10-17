@@ -175,6 +175,8 @@ Actual measurements from test suite:
 | RGB→HSL       | 10,000 colors | 45ms     | 2MB    | 222,222 ops/s  |
 | Contrast calc | 1,000 pairs   | 28ms     | 1MB    | 35,714 ops/s   |
 
+**Note**: These are theoretical maximums under ideal conditions. Real-world performance will vary based on file content, system resources, and VS Code environment.
+
 ### Test Suite
 
 ```typescript
