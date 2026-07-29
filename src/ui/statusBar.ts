@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../config/config';
 
+const IDLE_TEXT = 'Colors-LE';
+
 export interface StatusBar {
 	showProgress(message: string): void;
 	hideProgress(): void;
@@ -8,47 +10,41 @@ export interface StatusBar {
 }
 
 export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
-	const config = getConfiguration();
-	const statusBarItem = initializeStatusBarItem(config, context);
-
-	return Object.freeze({
-		showProgress(message: string): void {
-			if (!statusBarItem) {
-				return;
-			}
-			statusBarItem.text = `$(loading~spin) ${message}`;
-		},
-		hideProgress(): void {
-			if (!statusBarItem) {
-				return;
-			}
-			statusBarItem.text = 'Colors-LE';
-		},
-		dispose(): void {
-			statusBarItem?.dispose();
-		},
-	});
-}
-
-function initializeStatusBarItem(
-	config: ReturnType<typeof getConfiguration>,
-	context: vscode.ExtensionContext,
-): vscode.StatusBarItem | undefined {
-	if (!config.statusBarEnabled) {
-		return undefined;
-	}
-
-	const item = vscode.window.createStatusBarItem(
+	const statusBarItem = vscode.window.createStatusBarItem(
 		vscode.StatusBarAlignment.Left,
 		100,
 	);
+	statusBarItem.text = IDLE_TEXT;
+	statusBarItem.tooltip = 'Colors-LE: Color extraction and analysis';
+	statusBarItem.command = 'colors-le.extractColors';
+	context.subscriptions.push(statusBarItem);
 
-	item.text = 'Colors-LE';
-	item.tooltip = 'Colors-LE: Color extraction and analysis';
-	item.command = 'colors-le.extractColors';
+	const applyVisibility = (): void => {
+		if (getConfiguration().statusBarEnabled) {
+			statusBarItem.show();
+		} else {
+			statusBarItem.hide();
+		}
+	};
+	applyVisibility();
 
-	context.subscriptions.push(item);
-	item.show();
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeConfiguration((event) => {
+			if (event.affectsConfiguration('colors-le.statusBar.enabled')) {
+				applyVisibility();
+			}
+		}),
+	);
 
-	return item;
+	return Object.freeze({
+		showProgress(message: string): void {
+			statusBarItem.text = `$(loading~spin) ${message}`;
+		},
+		hideProgress(): void {
+			statusBarItem.text = IDLE_TEXT;
+		},
+		dispose(): void {
+			statusBarItem.dispose();
+		},
+	});
 }
