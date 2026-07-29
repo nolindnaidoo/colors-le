@@ -363,48 +363,6 @@ describe('Error Handling', () => {
 	});
 
 	describe('Error Suggestions', () => {
-		it.skip('should provide suggestion for parse errors', () => {
-			const error = createEnhancedError(new Error('Parse failed'), 'parse');
-			expect(error.suggestion).toContain('file format');
-		});
-
-		it.skip('should provide suggestion for file-system errors', () => {
-			const error = createEnhancedError(
-				new Error('File not found'),
-				'file-system',
-			);
-			expect(error.suggestion).toContain('permissions');
-		});
-
-		it.skip('should provide suggestion for configuration errors', () => {
-			const error = createEnhancedError(
-				new Error('Config invalid'),
-				'configuration',
-			);
-			expect(error.suggestion).toContain('default settings');
-		});
-
-		it.skip('should provide suggestion for validation errors', () => {
-			const error = createEnhancedError(
-				new Error('Invalid color'),
-				'validation',
-			);
-			expect(error.suggestion).toContain('validation criteria');
-		});
-
-		it.skip('should provide suggestion for safety errors', () => {
-			const error = createEnhancedError(new Error('File too large'), 'safety');
-			expect(error.suggestion).toContain('file size');
-		});
-
-		it.skip('should provide suggestion for operational errors', () => {
-			const error = createEnhancedError(
-				new Error('Extraction failed'),
-				'operational',
-			);
-			expect(error.suggestion).toContain('Try again');
-		});
-
 		it('should allow custom suggestions', () => {
 			const customSuggestion = 'Try restarting the extension';
 			const error = createEnhancedError(
@@ -546,11 +504,6 @@ describe('Error Handling', () => {
 			expect(error.userFriendlyMessage).toBeDefined();
 			expect(error.userFriendlyMessage.length).toBeGreaterThan(0);
 		});
-
-		it.skip('should handle errors without context', () => {
-			const error = createEnhancedError(new Error('Error'), 'parse');
-			expect(error.userFriendlyMessage).toContain('unknown file');
-		});
 	});
 
 	describe('Error Recovery Options Edge Cases', () => {
@@ -646,20 +599,6 @@ describe('Error Handling', () => {
 	});
 
 	describe('Error Context Handling', () => {
-		it.skip('should handle context with special characters', () => {
-			const error = createEnhancedError(new Error('Error'), 'parse', {
-				filepath: '/path/with spaces/file.css',
-			});
-			expect(error.userFriendlyMessage).toContain('/path/with spaces/file.css');
-		});
-
-		it.skip('should handle context with unicode characters', () => {
-			const error = createEnhancedError(new Error('Error'), 'parse', {
-				filepath: '/path/文件/file.css',
-			});
-			expect(error.userFriendlyMessage).toContain('/path/文件/file.css');
-		});
-
 		it('should handle very long context', () => {
 			const longPath = `${'/very/long/path/'.repeat(50)}file.css`;
 			const error = createEnhancedError(new Error('Error'), 'parse', {

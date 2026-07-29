@@ -14,14 +14,6 @@ export function extractFromHtml(content: string): Color[] {
 	const colors: Color[] = [];
 	const lines = content.split('\n');
 
-	// Helper function to check if position is inside an HTML comment
-	const _isInComment = (line: string, index: number): boolean => {
-		const before = line.substring(0, index);
-		const commentStart = before.lastIndexOf('<!--');
-		const commentEnd = before.lastIndexOf('-->');
-		return commentStart > commentEnd;
-	};
-
 	lines.forEach((line, lineIndex) => {
 		// Skip lines that are comments
 		if (line.trim().startsWith('<!--')) {

@@ -194,7 +194,6 @@ function isStyleContext(line: string, matchIndex: number): boolean {
 	// Check for object property patterns that might be style objects
 	// Look for patterns like: { color: '#fff', backgroundColor: '#000' }
 	const beforeMatchObj = line.substring(0, matchIndex);
-	const _afterMatch = line.substring(matchIndex);
 
 	// Check if we're inside an object literal with style-like properties
 	const objectPattern = /{[^}]*$/;

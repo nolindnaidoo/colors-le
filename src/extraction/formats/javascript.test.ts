@@ -15,9 +15,9 @@ describe('extractFromJavaScript', () => {
 
 		// Colors are deduplicated (no duplicates from regex + string literal matches)
 		expect(result.length).toBe(3);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
-		expect(result[2].value).toBe('rgba(0, 0, 255, 0.5)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
+		expect(result[2]?.value).toBe('rgba(0, 0, 255, 0.5)');
 	});
 
 	test('extractFromJavaScript: CSS-in-JS template literals', () => {
@@ -31,8 +31,8 @@ describe('extractFromJavaScript', () => {
 		const result = extractFromJavaScript(js);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('hsl(120, 100%, 50%)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('hsl(120, 100%, 50%)');
 	});
 
 	test('extractFromJavaScript: theme object colors', () => {
@@ -84,9 +84,9 @@ describe('extractFromJavaScript', () => {
 
 		// Colors are deduplicated (no duplicates from regex + string literal matches)
 		expect(result.length).toBe(3);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
-		expect(result[2].value).toBe('rgba(0, 0, 255, 0.5)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
+		expect(result[2]?.value).toBe('rgba(0, 0, 255, 0.5)');
 	});
 
 	test('extractFromJavaScript: should not extract from comments', () => {
@@ -102,7 +102,7 @@ describe('extractFromJavaScript', () => {
 		// Should only extract colors from style contexts, not comments
 		// Colors are deduplicated (no duplicates from regex + string literal matches)
 		expect(result.length).toBe(1);
-		expect(result[0].value).toBe('#00ff00');
+		expect(result[0]?.value).toBe('#00ff00');
 	});
 
 	test('extractFromJavaScript: should not extract from non-style contexts', () => {
@@ -139,8 +139,8 @@ describe('extractFromJavaScript', () => {
 		// Should only extract from style contexts
 		// Colors are deduplicated (no duplicates from regex + string literal matches)
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
 	});
 
 	test('extractFromJavaScript: styled-components pattern', () => {
@@ -154,8 +154,8 @@ describe('extractFromJavaScript', () => {
 		const result = extractFromJavaScript(js);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('hsl(120, 100%, 50%)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('hsl(120, 100%, 50%)');
 	});
 
 	test('extractFromJavaScript: emotion pattern', () => {
@@ -170,8 +170,8 @@ describe('extractFromJavaScript', () => {
 
 		// Colors are deduplicated (no duplicates from regex + string literal matches)
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
 	});
 
 	test('extractFromJavaScript: theme usage', () => {
@@ -208,8 +208,8 @@ describe('extractFromJavaScript', () => {
 		const result = extractFromJavaScript(js);
 
 		expect(result.length).toBe(1);
-		expect(result[0].position.line).toBe(3);
-		expect(result[0].position.column > 0).toBeTruthy();
+		expect(result[0]?.position?.line).toBe(3);
+		expect((result[0]?.position?.column ?? 0) > 0).toBeTruthy();
 	});
 
 	test('extractFromJavaScript: context tracking', () => {
@@ -218,7 +218,7 @@ describe('extractFromJavaScript', () => {
 		const result = extractFromJavaScript(js);
 
 		expect(result.length).toBe(1);
-		expect(result[0].context).toBe(`const styles = { color: '#ff0000' };`);
+		expect(result[0]?.context).toBe(`const styles = { color: '#ff0000' };`);
 	});
 
 	test('extractFromJavaScript: large JavaScript file', () => {
@@ -233,7 +233,7 @@ describe('extractFromJavaScript', () => {
 
 		// Should extract all colors from style contexts
 		expect(result.length).toBe(1000);
-		expect(result[0].value).toBe('#000000');
-		expect(result[999].value).toBe('#0003e7');
+		expect(result[0]?.value).toBe('#000000');
+		expect(result[999]?.value).toBe('#0003e7');
 	});
 });

@@ -61,5 +61,5 @@ export const Range = class Range {
 };
 
 export const WorkspaceEdit = class WorkspaceEdit {
-	replace(uri: any, range: any, text: string) {}
+	replace(_uri: any, _range: any, _text: string) {}
 };

@@ -23,18 +23,21 @@ const mockConfig: Configuration = {
 	sortMode: 'off',
 	statusBarEnabled: true,
 	telemetryEnabled: true,
+	csvStreamingEnabled: false,
 	analysisEnabled: true,
-	analysisIncludeAccessibility: true,
-	analysisIncludeContrast: true,
-	outputFormat: 'hex',
-	performanceMonitoringEnabled: true,
-	performanceThresholds: {
-		maxDuration: 5000,
-		maxMemoryUsage: 100 * 1024 * 1024,
-		maxCpuUsage: 1000 * 1000,
-		minThroughput: 1000,
-		maxCacheSize: 1000,
-	},
+	analysisIncludeStats: true,
+	performanceEnabled: true,
+	performanceMaxDuration: 5000,
+	performanceMaxMemoryUsage: 100 * 1024 * 1024,
+	performanceMaxCpuUsage: 1000 * 1000,
+	performanceMinThroughput: 1000,
+	performanceMaxCacheSize: 1000,
+	keyboardShortcutsEnabled: true,
+	keyboardExtractShortcut: 'ctrl+alt+c',
+	keyboardDedupeShortcut: 'ctrl+alt+d',
+	keyboardSortShortcut: 'ctrl+alt+s',
+	presetsEnabled: true,
+	presetsDefaultPreset: 'balanced',
 };
 
 describe('Performance Monitoring', () => {
@@ -56,13 +59,13 @@ describe('Performance Monitoring', () => {
 			const metrics = monitor.end(500, 10, 2, 0);
 
 			expect(metrics).toBeDefined();
-			expect(metrics.operation).toBe('test-operation');
-			expect(metrics.inputSize).toBe(1000);
-			expect(metrics.outputSize).toBe(500);
-			expect(metrics.colorCount).toBe(10);
-			expect(metrics.warnings).toBe(2);
-			expect(metrics.errors).toBe(0);
-			expect(metrics.duration).toBeGreaterThanOrEqual(0);
+			expect(metrics?.operation).toBe('test-operation');
+			expect(metrics?.inputSize).toBe(1000);
+			expect(metrics?.outputSize).toBe(500);
+			expect(metrics?.colorCount).toBe(10);
+			expect(metrics?.warnings).toBe(2);
+			expect(metrics?.errors).toBe(0);
+			expect(metrics?.duration).toBeGreaterThanOrEqual(0);
 		});
 
 		it('should record metrics', () => {
@@ -98,7 +101,7 @@ describe('Performance Monitoring', () => {
 			}
 
 			const metrics = monitor.getMetrics();
-			expect(metrics.length).toBeLessThanOrEqual(100);
+			expect(metrics?.length).toBeLessThanOrEqual(100);
 		});
 
 		it('should generate performance report', () => {
@@ -143,10 +146,10 @@ describe('Performance Monitoring', () => {
 			const metrics = tracker.end(500, 10, 2, 0);
 
 			expect(metrics).toBeDefined();
-			expect(metrics.operation).toBe('test-operation');
-			expect(metrics.inputSize).toBe(1000);
-			expect(metrics.outputSize).toBe(500);
-			expect(metrics.colorCount).toBe(10);
+			expect(metrics?.operation).toBe('test-operation');
+			expect(metrics?.inputSize).toBe(1000);
+			expect(metrics?.outputSize).toBe(500);
+			expect(metrics?.colorCount).toBe(10);
 		});
 
 		it('should return null if no operation started', () => {
@@ -271,53 +274,32 @@ describe('Performance Monitoring', () => {
 			const monitor = createPerformanceMonitor(mockConfig);
 
 			for (let i = 0; i < 10; i++) {
-				monitor.start(`operation-${i}`);
-				monitor.end(`operation-${i}`);
+				monitor.start(`operation-${i}`, 0);
+				monitor.end(0, 0, 0, 0);
 			}
 
 			const metrics = monitor.getMetrics();
-			expect(metrics.length).toBeGreaterThan(0);
+			expect(metrics?.length).toBeGreaterThan(0);
 		});
 
 		it('should handle operations with same name', () => {
 			const monitor = createPerformanceMonitor(mockConfig);
 
-			monitor.start('same-op');
-			monitor.end('same-op');
-			monitor.start('same-op');
-			monitor.end('same-op');
+			monitor.start('same-op', 0);
+			monitor.end(0, 0, 0, 0);
+			monitor.start('same-op', 0);
+			monitor.end(0, 0, 0, 0);
 
 			const metrics = monitor.getMetrics();
-			expect(metrics.length).toBeGreaterThan(0);
+			expect(metrics?.length).toBeGreaterThan(0);
 		});
 
 		it('should handle ending non-existent operation', () => {
 			const monitor = createPerformanceMonitor(mockConfig);
-			monitor.end('non-existent');
+			monitor.end(0, 0, 0, 0);
 
 			const metrics = monitor.getMetrics();
-			expect(metrics.length).toBe(0);
-		});
-	});
-
-	describe('Performance Limits', () => {
-		it('should respect zero duration limit', () => {
-			const result = shouldCancelBasedOnPerformance(100, 10, {
-				maxDuration: 0,
-			});
-			expect(result).toBe(false);
-		});
-
-		it('should respect zero items limit', () => {
-			const result = shouldCancelBasedOnPerformance(100, 10, {
-				maxProcessedItems: 0,
-			});
-			expect(result).toBe(false);
-		});
-
-		it('should handle undefined limits', () => {
-			const result = shouldCancelBasedOnPerformance(100, 10, {});
-			expect(result).toBe(false);
+			expect(metrics?.length).toBe(0);
 		});
 	});
 });

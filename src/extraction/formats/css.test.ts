@@ -7,10 +7,10 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[0].format).toBe('hex');
-		expect(result[1].value).toBe('#00ff00');
-		expect(result[1].format).toBe('hex');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[0]?.format).toBe('hex');
+		expect(result[1]?.value).toBe('#00ff00');
+		expect(result[1]?.format).toBe('hex');
 	});
 
 	it('should extract RGB colors', () => {
@@ -18,10 +18,10 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('rgb(255, 0, 0)');
-		expect(result[0].format).toBe('rgb');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
-		expect(result[1].format).toBe('rgb');
+		expect(result[0]?.value).toBe('rgb(255, 0, 0)');
+		expect(result[0]?.format).toBe('rgb');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
+		expect(result[1]?.format).toBe('rgb');
 	});
 
 	it('should extract RGBA colors', () => {
@@ -29,10 +29,10 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('rgba(255, 0, 0, 0.5)');
-		expect(result[0].format).toBe('rgba');
-		expect(result[1].value).toBe('rgba(0, 255, 0, 1)');
-		expect(result[1].format).toBe('rgba');
+		expect(result[0]?.value).toBe('rgba(255, 0, 0, 0.5)');
+		expect(result[0]?.format).toBe('rgba');
+		expect(result[1]?.value).toBe('rgba(0, 255, 0, 1)');
+		expect(result[1]?.format).toBe('rgba');
 	});
 
 	it('should extract HSL colors', () => {
@@ -40,10 +40,10 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('hsl(120, 100%, 50%)');
-		expect(result[0].format).toBe('hsl');
-		expect(result[1].value).toBe('hsl(240, 50%, 25%)');
-		expect(result[1].format).toBe('hsl');
+		expect(result[0]?.value).toBe('hsl(120, 100%, 50%)');
+		expect(result[0]?.format).toBe('hsl');
+		expect(result[1]?.value).toBe('hsl(240, 50%, 25%)');
+		expect(result[1]?.format).toBe('hsl');
 	});
 
 	it('should extract HSLA colors', () => {
@@ -51,10 +51,10 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('hsla(120, 100%, 50%, 0.8)');
-		expect(result[0].format).toBe('hsla');
-		expect(result[1].value).toBe('hsla(240, 50%, 25%, 0.3)');
-		expect(result[1].format).toBe('hsla');
+		expect(result[0]?.value).toBe('hsla(120, 100%, 50%, 0.8)');
+		expect(result[0]?.format).toBe('hsla');
+		expect(result[1]?.value).toBe('hsla(240, 50%, 25%, 0.3)');
+		expect(result[1]?.format).toBe('hsla');
 	});
 
 	it('should extract mixed color formats', () => {
@@ -71,11 +71,11 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(5);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
-		expect(result[2].value).toBe('rgba(0, 0, 255, 0.5)');
-		expect(result[3].value).toBe('hsl(60, 100%, 50%)');
-		expect(result[4].value).toBe('hsla(300, 100%, 50%, 0.8)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
+		expect(result[2]?.value).toBe('rgba(0, 0, 255, 0.5)');
+		expect(result[3]?.value).toBe('hsl(60, 100%, 50%)');
+		expect(result[4]?.value).toBe('hsla(300, 100%, 50%, 0.8)');
 	});
 
 	it('should extract short hex colors', () => {
@@ -83,9 +83,9 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(3);
-		expect(result[0].value).toBe('#f00');
-		expect(result[1].value).toBe('#0f0');
-		expect(result[2].value).toBe('#00f');
+		expect(result[0]?.value).toBe('#f00');
+		expect(result[1]?.value).toBe('#0f0');
+		expect(result[2]?.value).toBe('#00f');
 	});
 
 	it('should extract hex colors with alpha', () => {
@@ -93,8 +93,8 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000ff');
-		expect(result[1].value).toBe('#00ff0080');
+		expect(result[0]?.value).toBe('#ff0000ff');
+		expect(result[1]?.value).toBe('#00ff0080');
 	});
 
 	it('should handle CSS variables (not extract var() references)', () => {
@@ -112,8 +112,8 @@ describe('extractFromCss', () => {
 
 		// Should extract colors from CSS variables but not the var() references
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('#ff0000');
-		expect(result[1].value).toBe('rgb(0, 255, 0)');
+		expect(result[0]?.value).toBe('#ff0000');
+		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
 	});
 
 	it('should not extract colors from comments', () => {
@@ -128,7 +128,7 @@ describe('extractFromCss', () => {
 
 		// Should only extract colors outside comments
 		expect(result.length).toBe(1);
-		expect(result[0].value).toBe('#00ff00');
+		expect(result[0]?.value).toBe('#00ff00');
 	});
 
 	it('should handle malformed colors gracefully', () => {
@@ -146,8 +146,8 @@ describe('extractFromCss', () => {
 		// #gggggg is invalid hex chars, so regex won't match it (correct)
 		// rgb/hsl with out-of-range values still match the pattern
 		expect(result.length).toBe(2);
-		expect(result[0].value).toBe('rgb(300, 0, 0)');
-		expect(result[1].value).toBe('hsl(400, 100%, 50%)');
+		expect(result[0]?.value).toBe('rgb(300, 0, 0)');
+		expect(result[1]?.value).toBe('hsl(400, 100%, 50%)');
 	});
 
 	it('should handle empty CSS', () => {
@@ -170,8 +170,8 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(1);
-		expect(result[0].position.line).toBe(3);
-		expect(result[0].position.column).toBeGreaterThan(0);
+		expect(result[0]?.position?.line).toBe(3);
+		expect(result[0]?.position?.column).toBeGreaterThan(0);
 	});
 
 	it('should track context', () => {
@@ -180,7 +180,7 @@ describe('extractFromCss', () => {
 		const result = extractFromCss(css);
 
 		expect(result.length).toBe(1);
-		expect(result[0].context).toBe('.class { color: #ff0000; }');
+		expect(result[0]?.context).toBe('.class { color: #ff0000; }');
 	});
 
 	it('should handle large CSS file', () => {
@@ -194,7 +194,7 @@ describe('extractFromCss', () => {
 
 		// Should extract all colors
 		expect(result.length).toBe(1000);
-		expect(result[0].value).toBe('#000000');
-		expect(result[999].value).toBe('#0003e7');
+		expect(result[0]?.value).toBe('#000000');
+		expect(result[999]?.value).toBe('#0003e7');
 	});
 });

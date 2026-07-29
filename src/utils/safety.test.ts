@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { Configuration } from '../types';
 import { shouldCancelOperation } from './safety';
 
 // Standalone safety utility functions for testing
@@ -25,35 +24,6 @@ function countComplexPatterns(content: string): number {
 
 	return complexSelectors + mediaQueries + keyframes + functions + mixins;
 }
-
-const _mockConfig: Configuration = {
-	copyToClipboardEnabled: true,
-	dedupeEnabled: true,
-	notificationsLevel: 'all',
-	postProcessOpenInNewFile: false,
-	openResultsSideBySide: false,
-	safetyEnabled: true,
-	safetyFileSizeWarnBytes: 1000,
-	safetyLargeOutputLinesThreshold: 100,
-	safetyManyDocumentsThreshold: 50,
-	showParseErrors: true,
-	sortEnabled: true,
-	sortMode: 'off',
-	statusBarEnabled: true,
-	telemetryEnabled: true,
-	analysisEnabled: true,
-	analysisIncludeAccessibility: true,
-	analysisIncludeContrast: true,
-	outputFormat: 'hex',
-	performanceMonitoringEnabled: true,
-	performanceThresholds: {
-		maxDuration: 5000,
-		maxMemoryUsage: 100 * 1024 * 1024,
-		maxCpuUsage: 1000 * 1000,
-		minThroughput: 1000,
-		maxCacheSize: 1000,
-	},
-};
 
 describe('Safety Checks', () => {
 	describe('shouldCancelOperation', () => {

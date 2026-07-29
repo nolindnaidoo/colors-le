@@ -48,7 +48,6 @@ export function createEnhancedError(
 		suggestion?: string;
 	},
 ): EnhancedError {
-	const _errorType = getErrorType(error, category);
 	const userFriendlyMessage = getUserFriendlyMessage(
 		error,
 		category,
@@ -70,37 +69,6 @@ export function createEnhancedError(
 		severity,
 		timestamp: new Date(),
 	});
-}
-
-/**
- * Get error type for categorization
- */
-function getErrorType(_error: Error, category: ErrorCategory): string {
-	if (category === 'parse') {
-		return 'color-parse-error';
-	}
-
-	if (category === 'validation') {
-		return 'color-validation-error';
-	}
-
-	if (category === 'safety') {
-		return 'color-safety-error';
-	}
-
-	if (category === 'file-system') {
-		return 'color-file-system-error';
-	}
-
-	if (category === 'configuration') {
-		return 'color-configuration-error';
-	}
-
-	if (category === 'operational') {
-		return 'color-operational-error';
-	}
-
-	return 'unknown-error';
 }
 
 /**
