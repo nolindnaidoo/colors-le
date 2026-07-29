@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { getContrastRatio } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { formatDuration } from '../utils/performance';
+import { formatDuration } from '../utils/format';
 
 export interface ColorValidationOptions {
 	readonly checkContrast?: boolean | undefined;
@@ -53,22 +53,11 @@ export interface ValidationReport {
 	readonly timestamp: number;
 }
 
-interface ValidateDeps {
-	readonly performanceMonitor: {
-		startTimer: (operation: string) => { id: string; startTime: number };
-		endTimer: (timer: { id: string; startTime: number }) => {
-			duration: number;
-			memoryUsage: number;
-		};
-	};
-}
-
 /**
  * Register the validate colors command
  */
 export function registerValidateCommand(
 	context: vscode.ExtensionContext,
-	deps: ValidateDeps,
 ): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.validate',
@@ -80,7 +69,7 @@ export function registerValidateCommand(
 					return;
 				}
 
-				const timer = deps.performanceMonitor.startTimer('validate-colors');
+				const startTime = performance.now();
 
 				// Extract colors first
 				const result = await extractColors(
@@ -103,10 +92,10 @@ export function registerValidateCommand(
 
 				// Validate colors
 				const validationReport = validateColors(result.colors, options);
-				const metrics = deps.performanceMonitor.endTimer(timer);
+				const durationMs = performance.now() - startTime;
 
 				// Generate validation report
-				const report = generateValidationReport(validationReport, metrics);
+				const report = generateValidationReport(validationReport, durationMs);
 
 				// Create and show validation document
 				const doc = await vscode.workspace.openTextDocument({
@@ -529,7 +518,7 @@ export function validateColors(
  */
 function generateValidationReport(
 	report: ValidationReport,
-	metrics: { duration: number; memoryUsage: number },
+	durationMs: number,
 ): string {
 	const lines: string[] = [];
 
@@ -537,8 +526,7 @@ function generateValidationReport(
 	lines.push('# Color Validation Report');
 	lines.push('');
 	lines.push(`**Generated**: ${new Date().toISOString()}`);
-	lines.push(`**Validation Time**: ${formatDuration(metrics.duration)}`);
-	lines.push(`**Memory Usage**: ${formatMemoryUsage(metrics.memoryUsage)}`);
+	lines.push(`**Validation Time**: ${formatDuration(durationMs)}`);
 	lines.push('');
 
 	// Summary
@@ -822,10 +810,4 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } | null {
 		s: Math.round(s * 100),
 		l: Math.round(l * 100),
 	};
-}
-
-function formatMemoryUsage(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

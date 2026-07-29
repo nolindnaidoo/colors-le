@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Enable safety checks for large files and operations",
 	"manifest.settings.safety.warn.file-size.desc": "Warn when input file size exceeds this threshold in bytes",
 	"manifest.settings.safety.warn.large-output.desc": "Warn before opening/copying when result lines exceed this threshold",
-	"manifest.settings.safety.warn.many-documents.desc": "Warn before opening multiple result documents when count exceeds this threshold",
 	"manifest.settings.sort.mode.desc": "Selects how results are sorted when sorting is enabled",
 	"manifest.settings.sort.mode.option.off": "No sorting",
 	"manifest.settings.sort.mode.option.hue-asc": "Hue ascending",

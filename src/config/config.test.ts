@@ -28,7 +28,6 @@ describe('config defaults parity with package.json', () => {
 		'colors-le.safety.fileSizeWarnBytes': 'safetyFileSizeWarnBytes',
 		'colors-le.safety.largeOutputLinesThreshold':
 			'safetyLargeOutputLinesThreshold',
-		'colors-le.safety.manyDocumentsThreshold': 'safetyManyDocumentsThreshold',
 		'colors-le.sortMode': 'sortMode',
 		'colors-le.statusBar.enabled': 'statusBarEnabled',
 		'colors-le.telemetryEnabled': 'telemetryEnabled',

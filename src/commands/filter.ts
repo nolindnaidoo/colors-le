@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { formatDuration } from '../utils/performance';
+import { formatDuration } from '../utils/format';
 
 export interface ColorFilterOptions {
 	readonly formats?: readonly string[] | undefined;
@@ -31,23 +31,10 @@ export interface ColorFilterResult {
 	};
 }
 
-interface FilterDeps {
-	readonly performanceMonitor: {
-		startTimer: (operation: string) => { id: string; startTime: number };
-		endTimer: (timer: { id: string; startTime: number }) => {
-			duration: number;
-			memoryUsage: number;
-		};
-	};
-}
-
 /**
  * Register the filter colors command
  */
-export function registerFilterCommand(
-	context: vscode.ExtensionContext,
-	deps: FilterDeps,
-): void {
+export function registerFilterCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.filter',
 		async () => {
@@ -58,7 +45,7 @@ export function registerFilterCommand(
 					return;
 				}
 
-				const timer = deps.performanceMonitor.startTimer('filter-colors');
+				const startTime = performance.now();
 
 				// Extract colors first
 				const result = await extractColors(
@@ -81,10 +68,10 @@ export function registerFilterCommand(
 
 				// Apply filters
 				const filterResult = filterColors(result.colors, options);
-				const metrics = deps.performanceMonitor.endTimer(timer);
+				const durationMs = performance.now() - startTime;
 
 				// Generate filter report
-				const report = generateFilterReport(filterResult, metrics);
+				const report = generateFilterReport(filterResult, durationMs);
 
 				// Create and show filter document
 				const doc = await vscode.workspace.openTextDocument({
@@ -537,7 +524,7 @@ export function filterColors(
  */
 function generateFilterReport(
 	result: ColorFilterResult,
-	metrics: { duration: number; memoryUsage: number },
+	durationMs: number,
 ): string {
 	const report: string[] = [];
 
@@ -545,8 +532,7 @@ function generateFilterReport(
 	report.push('# Color Filter Report');
 	report.push('');
 	report.push(`**Generated**: ${new Date().toISOString()}`);
-	report.push(`**Filter Time**: ${formatDuration(metrics.duration)}`);
-	report.push(`**Memory Usage**: ${formatMemoryUsage(metrics.memoryUsage)}`);
+	report.push(`**Filter Time**: ${formatDuration(durationMs)}`);
 	report.push('');
 
 	// Summary
@@ -743,10 +729,4 @@ function isTransparentColor(color: string): boolean {
 	if (hex8?.[1] && Number.parseInt(hex8[1], 16) === 0) return true;
 
 	return false;
-}
-
-function formatMemoryUsage(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

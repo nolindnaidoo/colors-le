@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Sicherheitsprüfungen für große Dateien und Vorgänge aktivieren",
 	"manifest.settings.safety.warn.file-size.desc": "Warnung ausgeben, wenn die Größe der Eingabedatei diesen Schwellenwert in Byte überschreitet",
 	"manifest.settings.safety.warn.large-output.desc": "Warnung vor dem Öffnen/Kopieren ausgeben, wenn die Ergebniszeilen diesen Schwellenwert überschreiten",
-	"manifest.settings.safety.warn.many-documents.desc": "Warnung vor dem Öffnen mehrerer Ergebnisdokumente ausgeben, wenn die Anzahl diesen Schwellenwert überschreitet",
 	"manifest.settings.sort.mode.desc": "Wählt aus, wie die Ergebnisse sortiert werden, wenn die Sortierung aktiviert ist",
 	"manifest.settings.sort.mode.option.off": "Keine Sortierung",
 	"manifest.settings.sort.mode.option.hue-asc": "Farbton aufsteigend",

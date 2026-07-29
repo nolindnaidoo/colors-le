@@ -6,25 +6,12 @@ import {
 	getAvailableFormats,
 } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
-import { formatDuration } from '../utils/performance';
-
-interface ConvertDeps {
-	readonly performanceMonitor: {
-		startTimer: (operation: string) => { id: string; startTime: number };
-		endTimer: (timer: { id: string; startTime: number }) => {
-			duration: number;
-			memoryUsage: number;
-		};
-	};
-}
+import { formatDuration } from '../utils/format';
 
 /**
  * Register the convert colors command
  */
-export function registerConvertCommand(
-	context: vscode.ExtensionContext,
-	deps: ConvertDeps,
-): void {
+export function registerConvertCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.convert',
 		async () => {
@@ -35,7 +22,7 @@ export function registerConvertCommand(
 					return;
 				}
 
-				const timer = deps.performanceMonitor.startTimer('convert-colors');
+				const startTime = performance.now();
 
 				// Extract colors first
 				const result = await extractColors(
@@ -64,10 +51,14 @@ export function registerConvertCommand(
 
 				// Convert colors
 				const conversions = convertColors(result.colors, options);
-				const metrics = deps.performanceMonitor.endTimer(timer);
+				const durationMs = performance.now() - startTime;
 
 				// Generate conversion report
-				const report = generateConversionReport(conversions, options, metrics);
+				const report = generateConversionReport(
+					conversions,
+					options,
+					durationMs,
+				);
 
 				// Create and show conversion document
 				const doc = await vscode.workspace.openTextDocument({
@@ -214,7 +205,7 @@ async function promptForConversionOptions(
 function generateConversionReport(
 	conversions: readonly ColorConversionResult[],
 	options: ColorConversionOptions,
-	metrics: { duration: number; memoryUsage: number },
+	durationMs: number,
 ): string {
 	const report: string[] = [];
 
@@ -223,8 +214,7 @@ function generateConversionReport(
 	report.push('');
 	report.push(`**Generated**: ${new Date().toISOString()}`);
 	report.push(`**Target Format**: ${options.targetFormat.toUpperCase()}`);
-	report.push(`**Conversion Time**: ${formatDuration(metrics.duration)}`);
-	report.push(`**Memory Usage**: ${formatMemoryUsage(metrics.memoryUsage)}`);
+	report.push(`**Conversion Time**: ${formatDuration(durationMs)}`);
 	report.push('');
 
 	// Summary
@@ -356,13 +346,4 @@ function getFormatDescription(format: string): string {
 		default:
 			return 'Unknown format';
 	}
-}
-
-/**
- * Format memory usage in human-readable format
- */
-function formatMemoryUsage(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

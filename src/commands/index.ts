@@ -2,7 +2,6 @@ import type * as vscode from 'vscode';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
-import type { PerformanceMonitor } from '../utils/performance';
 import { registerAnalyzeCommand } from './analyze';
 import { registerConvertCommand } from './convert';
 import { registerDedupeCommand } from './dedupe';
@@ -18,38 +17,13 @@ export function registerCommands(
 		telemetry: Telemetry;
 		notifier: Notifier;
 		statusBar: StatusBar;
-		performanceMonitor: PerformanceMonitor;
 	}>,
 ): void {
-	// Create a simple adapter for the performance monitor
-	const performanceAdapter = {
-		startTimer: (operation: string) => {
-			const startTime = performance.now();
-			deps.performanceMonitor.start(operation, 0);
-			return { id: operation, startTime };
-		},
-		endTimer: (timer: { id: string; startTime: number }) => {
-			const result = deps.performanceMonitor.end(0, 0, 0, 0);
-			return {
-				duration: result?.duration || performance.now() - timer.startTime,
-				memoryUsage: result?.memoryUsage || 0,
-			};
-		},
-	};
-
 	registerExtractCommand(context, deps);
-	registerAnalyzeCommand(context, {
-		performanceMonitor: performanceAdapter,
-	});
-	registerConvertCommand(context, {
-		performanceMonitor: performanceAdapter,
-	});
-	registerFilterCommand(context, {
-		performanceMonitor: performanceAdapter,
-	});
-	registerValidateCommand(context, {
-		performanceMonitor: performanceAdapter,
-	});
+	registerAnalyzeCommand(context);
+	registerConvertCommand(context);
+	registerFilterCommand(context);
+	registerValidateCommand(context);
 	registerDedupeCommand(context, deps);
 	registerSortCommand(context, deps);
 	registerHelpCommand(context, deps);

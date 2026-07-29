@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Bật kiểm tra an toàn cho tệp và thao tác lớn",
 	"manifest.settings.safety.warn.file-size.desc": "Cảnh báo khi kích thước tệp đầu vào vượt quá ngưỡng này (bytes)",
 	"manifest.settings.safety.warn.large-output.desc": "Cảnh báo trước khi mở/sao chép khi số dòng kết quả vượt quá ngưỡng này",
-	"manifest.settings.safety.warn.many-documents.desc": "Cảnh báo trước khi mở nhiều tài liệu kết quả khi số lượng vượt quá ngưỡng này",
 	"manifest.settings.sort.mode.desc": "Chọn cách sắp xếp kết quả khi bật tính năng sắp xếp",
 	"manifest.settings.sort.mode.option.off": "Không sắp xếp",
 	"manifest.settings.sort.mode.option.hue-asc": "Sắc độ tăng dần",

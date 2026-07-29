@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Ativar verificações de segurança para arquivos e operações grandes",
 	"manifest.settings.safety.warn.file-size.desc": "Avisar quando o tamanho do arquivo de entrada exceder este limite em bytes",
 	"manifest.settings.safety.warn.large-output.desc": "Avisar antes de abrir/copiar quando as linhas de resultado excederem este limite",
-	"manifest.settings.safety.warn.many-documents.desc": "Avisar antes de abrir vários documentos de resultado quando a contagem exceder este limite",
 	"manifest.settings.sort.mode.desc": "Seleciona como os resultados são classificados quando a classificação está ativada",
 	"manifest.settings.sort.mode.option.off": "Sem classificação",
 	"manifest.settings.sort.mode.option.hue-asc": "Matiz ascendente",

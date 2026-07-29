@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Aktifkan pemeriksaan keamanan untuk file besar dan operasi",
 	"manifest.settings.safety.warn.file-size.desc": "Peringatkan saat ukuran file input melebihi ambang batas ini dalam byte",
 	"manifest.settings.safety.warn.large-output.desc": "Peringatkan sebelum membuka/menyalin saat baris hasil melebihi ambang batas ini",
-	"manifest.settings.safety.warn.many-documents.desc": "Peringatkan sebelum membuka dokumen hasil multiple saat jumlah melebihi ambang batas ini",
 	"manifest.settings.sort.mode.desc": "Memilih cara hasil disortir saat penyortiran diaktifkan",
 	"manifest.settings.sort.mode.option.off": "Tanpa penyortiran",
 	"manifest.settings.sort.mode.option.hue-asc": "Nada naik",

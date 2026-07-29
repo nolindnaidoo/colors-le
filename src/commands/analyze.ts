@@ -15,25 +15,12 @@ import {
 } from '../analysis/colorAnalysis';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { formatDuration } from '../utils/performance';
-
-interface AnalyzeDeps {
-	readonly performanceMonitor: {
-		startTimer: (operation: string) => { id: string; startTime: number };
-		endTimer: (timer: { id: string; startTime: number }) => {
-			duration: number;
-			memoryUsage: number;
-		};
-	};
-}
+import { formatDuration } from '../utils/format';
 
 /**
  * Register the analyze colors command
  */
-export function registerAnalyzeCommand(
-	context: vscode.ExtensionContext,
-	deps: AnalyzeDeps,
-): void {
+export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.analyze',
 		async () => {
@@ -44,7 +31,7 @@ export function registerAnalyzeCommand(
 					return;
 				}
 
-				const timer = deps.performanceMonitor.startTimer('analyze-colors');
+				const startTime = performance.now();
 
 				// Extract colors first
 				const result = await extractColors(
@@ -67,7 +54,7 @@ export function registerAnalyzeCommand(
 				const gaps = detectColorGaps(result.colors);
 				const palette = analyzePalette(result.colors);
 
-				const metrics = deps.performanceMonitor.endTimer(timer);
+				const durationMs = performance.now() - startTime;
 
 				// Generate analysis report
 				const report = generateAnalysisReport(
@@ -78,7 +65,7 @@ export function registerAnalyzeCommand(
 					clusters,
 					gaps,
 					palette,
-					metrics,
+					durationMs,
 				);
 
 				// Create and show analysis document
@@ -119,7 +106,7 @@ function generateAnalysisReport(
 	clusters: readonly ColorCluster[],
 	gaps: readonly ColorGap[],
 	palette: PaletteAnalysis,
-	metrics: { duration: number; memoryUsage: number },
+	durationMs: number,
 ): string {
 	const report: string[] = [];
 
@@ -127,8 +114,7 @@ function generateAnalysisReport(
 	report.push('# Color Analysis Report');
 	report.push('');
 	report.push(`**Generated**: ${new Date().toISOString()}`);
-	report.push(`**Analysis Time**: ${formatDuration(metrics.duration)}`);
-	report.push(`**Memory Usage**: ${formatMemoryUsage(metrics.memoryUsage)}`);
+	report.push(`**Analysis Time**: ${formatDuration(durationMs)}`);
 	report.push('');
 
 	// Overview
@@ -380,13 +366,4 @@ function groupAnomaliesByType(
 	}
 
 	return grouped;
-}
-
-/**
- * Format memory usage in human-readable format
- */
-function formatMemoryUsage(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

@@ -1,19 +1,12 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../config/config';
-import { type ExtractionOptions, extractColors } from '../extraction/extract';
+import { extractColors } from '../extraction/extract';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { dedupeColors } from '../utils/dedupe';
-import {
-	createEnhancedError,
-	createErrorSummary,
-	formatErrorSummary,
-} from '../utils/errorHandling';
-import {
-	handleSafetyChecksWithUserConfirmation,
-	type SafetyCheckOptions,
-} from '../utils/safety';
+import { sanitizeErrorMessage } from '../utils/errors';
+import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
 
 export function registerExtractCommand(
 	context: vscode.ExtensionContext,
@@ -30,90 +23,56 @@ export function registerExtractCommand(
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
-				const error = createEnhancedError(
-					new Error('No active editor found'),
-					'operational',
-					{},
-					{
-						recoverable: false,
-						severity: 'low',
-						suggestion: 'Open a file to extract colors from',
-					},
+				deps.notifier.showError(
+					'No active editor found. Open a file to extract colors from.',
 				);
-				await deps.notifier.showEnhancedError(error);
 				return;
 			}
 
 			const document = editor.document;
 			const config = getConfiguration();
 
-			// Enhanced safety checks with user confirmation
-			const safetyOptions: SafetyCheckOptions = {
-				showProgress: true,
-				allowOverride: true,
-				customThresholds: {
-					fileSizeBytes: config.safetyFileSizeWarnBytes,
-					lineCount: config.safetyLargeOutputLinesThreshold,
-				},
-			};
-
 			const safetyResult = await handleSafetyChecksWithUserConfirmation(
 				document,
 				config,
-				safetyOptions,
+				{
+					allowOverride: true,
+					customThresholds: {
+						fileSizeBytes: config.safetyFileSizeWarnBytes,
+						lineCount: config.safetyLargeOutputLinesThreshold,
+					},
+				},
 			);
 			if (!safetyResult.proceed) {
-				if (safetyResult.error) {
-					await deps.notifier.showEnhancedError(safetyResult.error);
-				} else {
-					deps.notifier.showWarning(safetyResult.message);
-				}
+				deps.notifier.showWarning(safetyResult.message);
 				return;
 			}
-
-			// Show warnings if any
-			if (safetyResult.warnings.length > 0) {
-				for (const warning of safetyResult.warnings) {
-					deps.notifier.showWarning(warning);
-				}
+			for (const warning of safetyResult.warnings) {
+				deps.notifier.showWarning(warning);
 			}
 
 			try {
-				// Enhanced extraction with progress and error handling
-				const extractionOptions: ExtractionOptions = {
-					filepath: document.fileName,
-					showProgress: true,
-					includeMetadata: true,
-					timeoutMs: 30000, // 30 seconds
-					enablePerformanceMonitoring: false,
-				};
-
 				const result = await deps.notifier.showProgress(
 					'Extracting colors...',
-					async (
-						progress: vscode.Progress<{ message?: string; increment?: number }>,
-						token: vscode.CancellationToken,
-					) => {
-						// Check for cancellation before starting
+					async (progress, token) => {
 						if (token.isCancellationRequested) {
 							throw new Error('Operation cancelled by user');
 						}
-
-						progress.report({
-							message: 'Analyzing file...',
-						});
+						progress.report({ message: 'Analyzing file...' });
 
 						const extractionResult = await extractColors(
 							document.getText(),
 							document.languageId,
-							extractionOptions,
+							{
+								filepath: document.fileName,
+								includeMetadata: true,
+								timeoutMs: 30000,
+							},
 						);
 
-						// Check for cancellation after extraction
 						if (token.isCancellationRequested) {
 							throw new Error('Operation cancelled by user');
 						}
-
 						progress.report({
 							message: 'Formatting results...',
 							increment: 50,
@@ -123,35 +82,16 @@ export function registerExtractCommand(
 					},
 				);
 
-				// Handle extraction errors
 				if (!result.success && result.errors.length > 0) {
-					const enhancedErrors = result.errors.map((error) =>
-						createEnhancedError(
-							new Error(error.message),
-							error.type === 'parse-error' ? 'parse' : 'validation',
-							{ filepath: error.filepath },
-							{
-								recoverable: true,
-								severity: 'medium',
-							},
-						),
-					);
-
-					const errorSummary = createErrorSummary(enhancedErrors);
-					deps.notifier.showErrorSummary(errorSummary);
-
-					// Show detailed error summary in output
-					const summaryText = formatErrorSummary(errorSummary);
-					console.log(summaryText);
-
+					const messages = result.errors
+						.map((error) => sanitizeErrorMessage(error.message))
+						.join('; ');
+					deps.notifier.showError(`Extraction failed: ${messages}`);
 					return;
 				}
 
-				// Handle warnings
-				if (result.warnings && result.warnings.length > 0) {
-					for (const warning of result.warnings) {
-						deps.notifier.showWarning(warning);
-					}
+				for (const warning of result.warnings) {
+					deps.notifier.showWarning(warning);
 				}
 
 				if (result.colors.length === 0) {
@@ -167,7 +107,6 @@ export function registerExtractCommand(
 					formattedColors = dedupeColors(formattedColors);
 				}
 
-				// Open results with enhanced error handling
 				try {
 					if (config.openResultsSideBySide) {
 						const doc = await vscode.workspace.openTextDocument({
@@ -176,7 +115,6 @@ export function registerExtractCommand(
 						});
 						await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
 					} else {
-						// Replace current selection or entire document
 						const edit = new vscode.WorkspaceEdit();
 						edit.replace(
 							document.uri,
@@ -189,81 +127,42 @@ export function registerExtractCommand(
 						await vscode.workspace.applyEdit(edit);
 					}
 				} catch (error) {
-					const enhancedError = createEnhancedError(
-						error instanceof Error
-							? error
-							: new Error('Failed to open results'),
-						'operational',
-						{ resultCount: result.colors.length },
-						{
-							recoverable: true,
-							severity: 'medium',
-							suggestion: 'Try copying results to clipboard instead',
-						},
+					const message =
+						error instanceof Error ? error.message : 'Failed to open results';
+					deps.notifier.showError(
+						`Failed to open results: ${sanitizeErrorMessage(message)}. Try copying results to clipboard instead.`,
 					);
-					await deps.notifier.showEnhancedError(enhancedError);
 				}
 
-				// Copy to clipboard if enabled
 				if (config.copyToClipboardEnabled) {
-					try {
-						const clipboardText = formattedColors.join('\n');
-						// Check clipboard text length to prevent memory issues
-						if (clipboardText.length > 1000000) {
-							// 1MB limit
-							deps.notifier.showWarning(
-								`Results too large for clipboard (${clipboardText.length} characters), skipping clipboard copy`,
-							);
-						} else {
-							await vscode.env.clipboard.writeText(clipboardText);
-							deps.notifier.showInfo(
-								`Extracted ${result.colors.length} colors and copied to clipboard`,
-							);
-						}
-					} catch (error) {
-						const enhancedError = createEnhancedError(
-							error instanceof Error
-								? error
-								: new Error('Failed to copy to clipboard'),
-							'operational',
-							{ resultCount: result.colors.length },
-							{
-								recoverable: true,
-								severity: 'low',
-								suggestion: 'Results are displayed in the editor',
-							},
+					const clipboardText = formattedColors.join('\n');
+					if (clipboardText.length > 1000000) {
+						deps.notifier.showWarning(
+							`Results too large for clipboard (${clipboardText.length} characters), skipping clipboard copy`,
 						);
-						await deps.notifier.showEnhancedError(enhancedError);
+					} else {
+						await vscode.env.clipboard.writeText(clipboardText);
+						deps.notifier.showInfo(
+							`Extracted ${result.colors.length} colors and copied to clipboard`,
+						);
 					}
 				} else {
 					deps.notifier.showInfo(`Extracted ${result.colors.length} colors`);
 				}
 
-				// Enhanced telemetry with performance metrics
 				deps.telemetry.event('extract-success', {
 					count: result.colors.length,
 					fileType: result.metadata?.fileType,
 					processingTimeMs: result.metadata?.processingTimeMs,
-					warnings: result.warnings?.length || 0,
-					performanceMetrics: result.metadata?.performanceMetrics,
+					warnings: result.warnings.length,
 				});
 			} catch (error) {
-				const enhancedError = createEnhancedError(
-					error instanceof Error ? error : new Error('Unknown error occurred'),
-					'operational',
-					{ fileName: document.fileName, languageId: document.languageId },
-					{
-						recoverable: true,
-						severity: 'high',
-						suggestion: 'Try with a smaller file or check file syntax',
-					},
+				const message =
+					error instanceof Error ? error.message : 'Unknown error occurred';
+				deps.notifier.showError(
+					`Color extraction failed: ${sanitizeErrorMessage(message)}`,
 				);
-
-				await deps.notifier.showEnhancedError(enhancedError);
-				deps.telemetry.event('extract-error', {
-					error: enhancedError.userMessage,
-					severity: enhancedError.severity,
-				});
+				deps.telemetry.event('extract-error', { error: message });
 			} finally {
 				deps.statusBar.hideProgress();
 			}

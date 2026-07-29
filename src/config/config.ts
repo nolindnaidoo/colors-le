@@ -14,7 +14,6 @@ export const CONFIG_DEFAULTS = Object.freeze({
 	safetyEnabled: true,
 	safetyFileSizeWarnBytes: 1_000_000,
 	safetyLargeOutputLinesThreshold: 50_000,
-	safetyManyDocumentsThreshold: 8,
 	sortMode: 'off' as const,
 	statusBarEnabled: true,
 	telemetryEnabled: false,
@@ -56,12 +55,6 @@ export function getConfiguration(): Configuration {
 			'safety.largeOutputLinesThreshold',
 			CONFIG_DEFAULTS.safetyLargeOutputLinesThreshold,
 			100,
-		),
-		safetyManyDocumentsThreshold: readNumber(
-			config,
-			'safety.manyDocumentsThreshold',
-			CONFIG_DEFAULTS.safetyManyDocumentsThreshold,
-			1,
 		),
 		sortMode: readSortMode(config),
 		statusBarEnabled: readBoolean(

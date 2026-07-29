@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "大容量ファイルと操作の安全チェックを有効化",
 	"manifest.settings.safety.warn.file-size.desc": "入力ファイルサイズがこのバイト数を超える場合に警告",
 	"manifest.settings.safety.warn.large-output.desc": "結果行数がこの閾値を超える場合に開く/コピー前に警告",
-	"manifest.settings.safety.warn.many-documents.desc": "結果ドキュメント数がこの閾値を超える場合に複数開く前に警告",
 	"manifest.settings.sort.mode.desc": "並べ替え有効時の結果表示順を選択",
 	"manifest.settings.sort.mode.option.off": "並べ替えなし",
 	"manifest.settings.sort.mode.option.hue-asc": "色相昇順",

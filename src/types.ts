@@ -2,14 +2,13 @@ export interface ExtractionResult {
 	readonly success: boolean;
 	readonly colors: readonly Color[];
 	readonly errors: readonly ParseError[];
-	readonly warnings?: readonly string[] | undefined;
+	readonly warnings: readonly string[];
 	readonly metadata?:
 		| {
 				readonly fileType: FileType;
 				readonly totalLines: number;
 				readonly processedLines: number;
 				readonly processingTimeMs: number;
-				readonly performanceMetrics?: PerformanceMetrics | undefined;
 		  }
 		| undefined;
 }
@@ -74,24 +73,7 @@ export interface Configuration {
 	readonly safetyEnabled: boolean;
 	readonly safetyFileSizeWarnBytes: number;
 	readonly safetyLargeOutputLinesThreshold: number;
-	readonly safetyManyDocumentsThreshold: number;
 	readonly sortMode: SortMode;
 	readonly statusBarEnabled: boolean;
 	readonly telemetryEnabled: boolean;
-}
-
-export interface PerformanceMetrics {
-	readonly operation: string;
-	readonly startTime: number;
-	readonly endTime: number;
-	readonly duration: number;
-	readonly inputSize: number;
-	readonly outputSize: number;
-	readonly colorCount: number;
-	readonly memoryUsage: number;
-	readonly cpuUsage: number;
-	readonly cacheHits: number;
-	readonly cacheMisses: number;
-	readonly warnings: number;
-	readonly errors: number;
 }

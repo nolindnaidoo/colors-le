@@ -1,196 +1,96 @@
-import { describe, expect, it } from 'vitest';
-import { shouldCancelOperation } from './safety';
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+	_createDocument,
+	_resetMockState,
+	_respondToWarning,
+} from '../__mocks__/vscode';
+import { CONFIG_DEFAULTS } from '../config/config';
+import type { Configuration } from '../types';
+import {
+	handleSafetyChecks,
+	handleSafetyChecksWithUserConfirmation,
+} from './safety';
 
-// Standalone safety utility functions for testing
-function estimateColorCount(content: string): number {
-	// Simple heuristic based on common color patterns
-	const hexColors = (content.match(/#[0-9a-fA-F]{3,8}/g) || []).length;
-	const rgbColors = (content.match(/rgb\([^)]+\)/g) || []).length;
-	const rgbaColors = (content.match(/rgba\([^)]+\)/g) || []).length;
-	const hslColors = (content.match(/hsl\([^)]+\)/g) || []).length;
-	const hslaColors = (content.match(/hsla\([^)]+\)/g) || []).length;
+const baseConfig: Configuration = { ...CONFIG_DEFAULTS };
 
-	return hexColors + rgbColors + rgbaColors + hslColors + hslaColors;
+function doc(content: string) {
+	// The mock document is structurally compatible with vscode.TextDocument
+	// for everything safety checks touch (getText only).
+	return _createDocument({ content }) as never;
 }
 
-function countComplexPatterns(content: string): number {
-	// Count complex selectors, nested rules, etc.
-	const complexSelectors = (content.match(/[.#][^{]*[>:][^{]*\{/g) || [])
-		.length;
-	const mediaQueries = (content.match(/@media[^{]*\{/g) || []).length;
-	const keyframes = (content.match(/@keyframes[^{]*\{/g) || []).length;
-	const functions = (content.match(/var\([^)]+\)/g) || []).length;
-	const mixins = (content.match(/@mixin[^{]*\{/g) || []).length;
+describe('handleSafetyChecks', () => {
+	beforeEach(() => _resetMockState());
 
-	return complexSelectors + mediaQueries + keyframes + functions + mixins;
-}
-
-describe('Safety Checks', () => {
-	describe('shouldCancelOperation', () => {
-		it('should cancel when processed items exceed threshold', () => {
-			const startTime = Date.now();
-			const shouldCancel = shouldCancelOperation(
-				15000,
-				10000,
-				startTime,
-				30000,
-			);
-
-			expect(shouldCancel).toBe(true);
-		});
-
-		it('should cancel when time exceeds limit', () => {
-			const startTime = Date.now() - 35000; // 35 seconds ago
-			const shouldCancel = shouldCancelOperation(100, 10000, startTime, 30000);
-
-			expect(shouldCancel).toBe(true);
-		});
-
-		it('should not cancel when within limits', () => {
-			const startTime = Date.now();
-			const shouldCancel = shouldCancelOperation(100, 10000, startTime, 30000);
-
-			expect(shouldCancel).toBe(false);
-		});
-
-		it('should respect custom time limit', () => {
-			const startTime = Date.now() - 5000; // 5 seconds ago
-			const shouldCancel = shouldCancelOperation(100, 10000, startTime, 3000);
-
-			expect(shouldCancel).toBe(true);
-		});
+	it('passes small documents', () => {
+		const result = handleSafetyChecks(doc('a { color: #fff; }'), baseConfig);
+		expect(result.proceed).toBe(true);
+		expect(result.warnings).toEqual([]);
 	});
 
-	describe('estimateColorCount', () => {
-		it('should count hex colors', () => {
-			const content = `
-        .header { color: #ff0000; }
-        .footer { background: #00ff00; }
-        .sidebar { border: 1px solid #0000ff; }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(3);
-		});
-
-		it('should count rgb colors', () => {
-			const content = `
-        .header { color: rgb(255, 0, 0); }
-        .footer { background: rgb(0, 255, 0); }
-        .sidebar { border: 1px solid rgb(0, 0, 255); }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(3);
-		});
-
-		it('should count rgba colors', () => {
-			const content = `
-        .header { color: rgba(255, 0, 0, 0.5); }
-        .footer { background: rgba(0, 255, 0, 0.8); }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(2);
-		});
-
-		it('should count hsl colors', () => {
-			const content = `
-        .header { color: hsl(0, 100%, 50%); }
-        .footer { background: hsl(120, 100%, 50%); }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(2);
-		});
-
-		it('should count hsla colors', () => {
-			const content = `
-        .header { color: hsla(0, 100%, 50%, 0.5); }
-        .footer { background: hsla(120, 100%, 50%, 0.8); }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(2);
-		});
-
-		it('should count mixed color formats', () => {
-			const content = `
-        .header { color: #ff0000; }
-        .footer { background: rgb(0, 255, 0); }
-        .sidebar { border: 1px solid hsl(240, 100%, 50%); }
-        .content { color: rgba(255, 0, 255, 0.5); }
-      `;
-			const count = estimateColorCount(content);
-
-			expect(count).toBe(4);
-		});
+	it('skips all checks when safety is disabled', () => {
+		const config = { ...baseConfig, safetyEnabled: false };
+		const huge = 'x'.repeat(2_000_000);
+		expect(handleSafetyChecks(doc(huge), config).proceed).toBe(true);
 	});
 
-	describe('countComplexPatterns', () => {
-		it('should count complex selectors', () => {
-			const content = `
-        .header > .nav ul li:first-child:hover { color: #ff0000; }
-        .footer .links a[href^="http"]:not(.external) { color: #00ff00; }
-        .sidebar .widget:nth-child(odd) .title { color: #0000ff; }
-      `;
-			const count = countComplexPatterns(content);
+	it('blocks documents over the file-size threshold', () => {
+		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
+		const result = handleSafetyChecks(doc('x'.repeat(2000)), config);
+		expect(result.proceed).toBe(false);
+		expect(result.message).toContain('exceeds safety threshold');
+	});
 
-			expect(count).toBeGreaterThanOrEqual(1);
-		});
+	it('warns on many lines without blocking', () => {
+		const config = { ...baseConfig, safetyLargeOutputLinesThreshold: 10 };
+		const result = handleSafetyChecks(doc('a\n'.repeat(50)), config);
+		expect(result.proceed).toBe(true);
+		expect(result.warnings.some((w) => w.includes('Large file'))).toBe(true);
+	});
 
-		it('should count media queries', () => {
-			const content = `
-        @media (max-width: 768px) { .header { color: #ff0000; } }
-        @media (min-width: 1024px) { .footer { color: #00ff00; } }
-        @media (prefers-color-scheme: dark) { .sidebar { color: #0000ff; } }
-      `;
-			const count = countComplexPatterns(content);
+	it('warns on very color-dense content', () => {
+		const dense = '#fff '.repeat(1500);
+		const result = handleSafetyChecks(doc(dense), baseConfig);
+		expect(
+			result.warnings.some((w) => w.includes('Large number of colors')),
+		).toBe(true);
+	});
+});
 
-			expect(count).toBeGreaterThanOrEqual(3);
-		});
+describe('handleSafetyChecksWithUserConfirmation', () => {
+	beforeEach(() => _resetMockState());
 
-		it('should count keyframes', () => {
-			const content = `
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-      `;
-			const count = countComplexPatterns(content);
+	it('returns blocked result when override not allowed', async () => {
+		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
+		const result = await handleSafetyChecksWithUserConfirmation(
+			doc('x'.repeat(2000)),
+			config,
+		);
+		expect(result.proceed).toBe(false);
+	});
 
-			expect(count).toBe(2);
-		});
+	it('proceeds when the user confirms the override', async () => {
+		_respondToWarning((items) =>
+			items.find((item) => item === 'Continue Anyway'),
+		);
+		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
+		const result = await handleSafetyChecksWithUserConfirmation(
+			doc('x'.repeat(2000)),
+			config,
+			{ allowOverride: true },
+		);
+		expect(result.proceed).toBe(true);
+		expect(result.message).toContain('override approved');
+	});
 
-		it('should count functions', () => {
-			const content = `
-        .header { color: var(--primary-color); }
-        .footer { background: calc(100% - 20px); }
-        .sidebar { width: min(100%, 300px); }
-      `;
-			const count = countComplexPatterns(content);
-
-			expect(count).toBeGreaterThanOrEqual(1);
-		});
-
-		it('should count mixins', () => {
-			const content = `
-        @mixin button-style { color: #ff0000; }
-        @mixin card-style { background: #00ff00; }
-      `;
-			const count = countComplexPatterns(content);
-
-			expect(count).toBe(2);
-		});
-
-		it('should count mixed patterns', () => {
-			const content = `
-        .header > .nav:hover { color: #ff0000; }
-        @media (max-width: 768px) { .footer { color: #00ff00; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .sidebar { color: var(--primary-color); }
-      `;
-			const count = countComplexPatterns(content);
-
-			expect(count).toBeGreaterThanOrEqual(3);
-		});
+	it('stays blocked when the user cancels', async () => {
+		_respondToWarning(() => 'Cancel');
+		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
+		const result = await handleSafetyChecksWithUserConfirmation(
+			doc('x'.repeat(2000)),
+			config,
+			{ allowOverride: true },
+		);
+		expect(result.proceed).toBe(false);
 	});
 });

@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "启用大文件及操作的安全检查",
 	"manifest.settings.safety.warn.file-size.desc": "当输入文件大小超过此字节阈值时发出警告",
 	"manifest.settings.safety.warn.large-output.desc": "当结果行数超过此阈值时在打开/复制前发出警告",
-	"manifest.settings.safety.warn.many-documents.desc": "当结果文档数量超过此阈值时在打开前发出警告",
 	"manifest.settings.sort.mode.desc": "启用排序时选择结果排序方式",
 	"manifest.settings.sort.mode.option.off": "不排序",
 	"manifest.settings.sort.mode.option.hue-asc": "色相升序",

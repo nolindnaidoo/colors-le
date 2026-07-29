@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Activer les contrôles de sécurité pour les fichiers et les opérations volumineux",
 	"manifest.settings.safety.warn.file-size.desc": "Avertir lorsque la taille du fichier d'entrée dépasse ce seuil en octets",
 	"manifest.settings.safety.warn.large-output.desc": "Avertir avant d'ouvrir/copier lorsque les lignes de résultats dépassent ce seuil",
-	"manifest.settings.safety.warn.many-documents.desc": "Avertir avant d'ouvrir plusieurs documents de résultats lorsque le nombre dépasse ce seuil",
 	"manifest.settings.sort.mode.desc": "Sélectionne la manière dont les résultats sont triés lorsque le tri est activé",
 	"manifest.settings.sort.mode.option.off": "Pas de tri",
 	"manifest.settings.sort.mode.option.hue-asc": "Teinte ascendante",

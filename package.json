@@ -211,12 +211,6 @@
 					"minimum": 100,
 					"description": "%manifest.settings.safety.warn.large-output.desc%"
 				},
-				"colors-le.safety.manyDocumentsThreshold": {
-					"type": "number",
-					"default": 8,
-					"minimum": 1,
-					"description": "%manifest.settings.safety.warn.many-documents.desc%"
-				},
 				"colors-le.sortMode": {
 					"type": "string",
 					"default": "off",

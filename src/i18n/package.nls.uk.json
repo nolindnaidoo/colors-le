@@ -20,7 +20,6 @@
 	"manifest.settings.safety.enabled.desc": "Увімкнути перевірки безпеки для великих файлів та операцій",
 	"manifest.settings.safety.warn.file-size.desc": "Попереджати, коли розмір вхідного файлу перевищує цей поріг у байтах",
 	"manifest.settings.safety.warn.large-output.desc": "Попереджати перед відкриттям/копіюванням, коли рядки результатів перевищують цей поріг",
-	"manifest.settings.safety.warn.many-documents.desc": "Попереджати перед відкриттям декількох документів результатів, коли кількість перевищує цей поріг",
 	"manifest.settings.sort.mode.desc": "Вибирає спосіб сортування результатів, коли сортування ввімкнено",
 	"manifest.settings.sort.mode.option.off": "Без сортування",
 	"manifest.settings.sort.mode.option.hue-asc": "Відтінок за зростанням",
