@@ -24,6 +24,12 @@ export default defineConfig({
         'src/extraction/__fixtures__/**',
         'src/i18n/**',
       ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
     },
   },
   resolve: {
