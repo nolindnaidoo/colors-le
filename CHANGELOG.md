@@ -5,78 +5,111 @@ All notable changes to Colors-LE will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.8.0] - 2025-10-26
+## [2.0.0] - 2026-07-29
 
-### Security & Enterprise Readiness
+Full rehabilitation release. The headline: **v1.x VSIXes built from this
+repo could not activate** — the build had no bundler while the package
+excluded `node_modules`, so the extension crashed on load with
+`Cannot find module 'vscode-nls'`. 2.0.0 ships a self-contained esbuild
+bundle, verified by a packaging gate and a real extension-host
+integration suite on every CI run.
 
-- **Error Handling Hardening** - Expanded from 45% to 89% coverage with 44 comprehensive tests:
-  - Path sanitization for sensitive directories
-  - Error categorization (parse, file-system, configuration, validation, safety, operational)
-  - Recovery options with retry mechanisms
-  - User-friendly error messages
-  - Error context handling without information leakage
-  - Severity classification (critical, error, warning, info)
-- **Color Format Validation** - Comprehensive testing for:
-  - HEX color parsing (#RGB, #RRGGBB, #RRGGBBAA)
-  - RGB/RGBA validation and conversion
-  - HSL/HSLA validation and conversion
-  - Named color recognition
-  - CSS variable handling
-  - Malformed input rejection
-- **Test Suite Expansion** - Increased from 76 to 219 unit tests (+188%)
-  - 89% function coverage, 74% line coverage
-  - Zero critical vulnerabilities
-  - Enterprise-grade reliability
+### Fixed
 
-### Quality Improvements
+- **Packaging**: `dist/extension.js` is now a single self-contained
+  bundle (VSIX: 62 files → 21). A bundle gate (static require scan +
+  loading the bundle with `vscode` stubbed) blocks any regression.
+- **Extract truncated everything past the 8th color**: `maxColors` was
+  wired to `safety.manyDocumentsThreshold` (default 8). Extraction is
+  now uncapped; the large-output safety warning still applies.
+- **Analyze/Convert/Filter/Validate never matched the file type**: all
+  four passed the file *path* where a language id was expected, so every
+  file was parsed by the CSS fallback — SCSS variables, JS string
+  colors, and SVG attribute colors were invisible to them.
+- **Whole-document edits**: `Range(0,0,lineCount,0)` stopped at the
+  start of the last line, silently dropping the final line of any
+  document not ending in a newline (extract-in-place, dedupe, sort).
+- **Config**: non-numeric setting overrides no longer produce `NaN`
+  thresholds; non-boolean values no longer coerce by truthiness;
+  `openResultsSideBySide` code fallback (false) now provably matches
+  the manifest default (true), asserted by a parity test over every
+  declared setting; the undeclared `notificationLevel` fallback read is
+  gone.
+- **Status bar** reacts to `statusBar.enabled` changes without reload;
+  **telemetry** reacts to `telemetryEnabled` the same way.
+- **Context menu**: the `resourceExtname in .css || …` when-clause never
+  matched ('in' tests context-key lists, not literals) — the menu item
+  had never appeared. Replaced with an `editorLangId` regex that also
+  covers jsx/tsx.
+- **jsx/tsx**: `javascriptreact`/`typescriptreact` language ids now
+  dispatch to the JS extractor (previously fell through to the CSS
+  fallback).
+- **Runtime localization**: `vscode-nls` was wired without bundles, so
+  direct call sites always showed dev-mode English while the Localizer
+  wrapper showed raw keys like `runtime.error.no-active-editor`. All
+  runtime strings are now plain English; the 13 nls catalogues keep
+  localizing the manifest (commands/settings UI) via `%key%`
+  substitution, now in exact key-parity.
 
-- **Type Safety** - 100% TypeScript strict mode compliance
-- **Immutability** - All exports frozen with `Object.freeze()`
-- **Dependency Security** - Zero vulnerabilities in dependency chain
+### Changed — extraction output
 
-## [1.7.0] - 2025-01-27
+- **One shared heuristics module** replaces seven divergent per-format
+  extractors; all formats match whole content instead of per-line:
+  - Multiline functional colors (`rgb(` spanning lines) now extract
+    everywhere; reported values normalize internal whitespace.
+  - Real 1-based line/column positions in every format — SCSS/LESS/
+    Stylus previously reported 0-based columns and synthetic contexts
+    (`"SCSS variable"`); context is now the real source line.
+  - Comments: block comments spanning lines are respected everywhere
+    (v1 leaked colors from comment lines without the opening `/*`);
+    `//` line comments respected in SCSS/LESS/Stylus and JS/TS; comment
+    markers inside strings no longer start comments.
+  - Named colors are uniform: declaration values in the CSS family
+    (plain CSS previously extracted none), style contexts and color
+    attributes in HTML/SVG, whole-string literals in JS/TS.
+    `rebeccapurple` joins the keyword set.
+  - 4-digit hex (`#rgba`) is now recognized everywhere.
+  - JS/TS: the style-context guess is gone — colors in ANY string or
+    template literal extract (theme objects previously yielded zero
+    colors). Documented tradeoff: a hex inside a URL string matches.
+  - HTML/SVG: colors are recognized only in style attributes, `<style>`
+    blocks, and color attributes (`bgcolor`/`color`; `fill`/`stroke`/
+    `stop-color`/`flood-color`/`lighting-color`) — bare hex elsewhere
+    (`href="#section"`, data-attributes) no longer extracts.
+  - Output is document-ordered and deduped by position; duplicate
+    values each keep their own real position.
+- Reports from Analyze/Convert/Filter/Validate no longer print a
+  "Memory Usage" line (it showed current process heap, not the cost of
+  the operation).
 
-### Initial Public Release
+### Added
 
-Colors-LE brings zero-hassle color extraction to VS Code. Simple, reliable, focused.
+- `dedupeEnabled` and `notificationsLevel` are now actually wired:
+  extraction can auto-dedupe its output, and `all`/`important`/`silent`
+  genuinely govern notifications (silent = errors only).
+- Golden characterization snapshots pin extractor output per format;
+  CI (3 OSes) runs lint → typecheck → coverage (thresholds
+  80/80/75/80) → build → bundle gate → package → real extension-host
+  integration tests; a manual release workflow publishes to the
+  VS Code Marketplace and Open VSX.
 
-#### Supported File Types
+### Removed
 
-- **CSS** - Stylesheets with all standard color formats
-- **HTML** - Inline styles and style tags
-- **JavaScript** - JS, JSX with styled components support
-- **TypeScript** - TS, TSX with styled components support
-- **SVG** - Scalable Vector Graphics files
+- 19 settings that were never read by any code path (`analysis.*`,
+  `performance.*`, `keyboard.*`, `presets.*`, `csv.streamingEnabled`,
+  `postProcess.openInNewFile`, `safety.manyDocumentsThreshold`,
+  `showParseErrors`, `sortEnabled`). 10 real settings remain.
+- The CSV-streaming toggle command — there is no CSV feature in
+  colors-le; it was template residue.
+- `vscode-nls` (see Fixed), the never-running performance monitor, the
+  enhanced-error framework (categories/severity/recovery options that
+  fed console.log), and the fabricated docs
+  (`ENTERPRISE_QUALITY.md`, generated `docs/PERFORMANCE.md`, invented
+  test/coverage claims).
 
-#### Color Formats
+## Pre-2.0 releases
 
-- **HEX** - 3-digit (#fff), 6-digit (#ffffff), 8-digit with alpha (#ffffffaa)
-- **RGB/RGBA** - rgb(255, 255, 255), rgba(255, 255, 255, 0.5)
-- **HSL/HSLA** - hsl(0, 0%, 100%), hsla(0, 0%, 100%, 0.5)
-
-#### Features
-
-- **Multi-language support** - Comprehensive localization for 12+ languages
-- **Original format output** - Shows colors exactly as they appear in your code
-- **Smart deduplication** - Optional removal of duplicate colors
-- **Multiple sort modes** - Sort by hue, saturation, lightness, or hex value
-- **Safety warnings** - Alerts for large files (configurable thresholds)
-- **Clipboard integration** - Optional auto-copy to clipboard
-- **One-command extraction** - `Ctrl+Alt+C` (`Cmd+Alt+C` on macOS)
-- **Side-by-side results** - Open results alongside source files
-- **Minimal notifications** - Silent by default, configurable levels
-- **Robust infrastructure** - Verified activation events, command registry, and components
-- **Developer-friendly** - 13 essential settings, 76 passing tests (76.76% function coverage, 73.88% line coverage), TypeScript strict mode, functional programming, MIT licensed
-
-#### Performance
-
-- **High-speed processing** - Efficiently processes large design systems
-- **Large file support** - Handles enterprise codebases without slowdown
-- **Memory efficient** - Optimized for large design systems
-
-#### Use Cases
-
-- **Design System Auditing** - Extract all colors from stylesheets for consistency validation
-- **Theme Development** - Pull color palettes from CSS variables and design tokens
-- **Brand Compliance** - Find all brand colors across your codebase for validation
-- **Accessibility Analysis** - Extract colors for contrast ratio and accessibility testing
+Versions 1.0.0–1.8.1 predate the rehabilitation. Their changelog
+entries claimed features and quality bars that did not hold up against
+the code (see 2.0.0 Fixed) and have been removed rather than restated.
+Tags remain in git history.

@@ -2,21 +2,21 @@
 	"name": "colors-le",
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE",
-	"description": "Zero Hassle Color Extraction from CSS, HTML, and JavaScript",
-	"version": "1.8.1",
+	"description": "Zero Hassle Color Extraction from CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, and SVG",
+	"version": "2.0.0",
 	"license": "MIT",
 	"author": {
-		"name": "OffensiveEdge",
-		"url": "https://github.com/OffensiveEdge"
+		"name": "nolindnaidoo",
+		"url": "https://github.com/nolindnaidoo"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/OffensiveEdge/colors-le.git"
+		"url": "https://github.com/nolindnaidoo/colors-le.git"
 	},
 	"bugs": {
-		"url": "https://github.com/OffensiveEdge/colors-le/issues"
+		"url": "https://github.com/nolindnaidoo/colors-le/issues"
 	},
-	"homepage": "https://github.com/OffensiveEdge/colors-le#readme",
+	"homepage": "https://github.com/nolindnaidoo/colors-le#readme",
 	"engines": {
 		"vscode": "^1.90.0",
 		"node": ">=20.0.0"
@@ -30,18 +30,19 @@
 		"colors",
 		"color",
 		"extract",
-		"extractor",
 		"extraction",
-		"css",
-		"html",
-		"javascript",
 		"palette",
 		"hex",
 		"rgb",
 		"hsl",
-		"svg",
-		"icons",
-		"vector"
+		"css",
+		"scss",
+		"less",
+		"stylus",
+		"html",
+		"javascript",
+		"typescript",
+		"svg"
 	],
 	"icon": "src/assets/images/icon.png",
 	"main": "./dist/extension.js",
