@@ -1,0 +1,14 @@
+$primary: #3366ff;
+$accent: crimson;
+$alpha: rgba(10, 20, 30, 0.4);
+
+.card {
+	color: $primary;
+	background: lighten(#3366ff, 10%);
+	border: 1px solid darken($primary, 5%);
+	outline-color: #{$primary};
+	box-shadow: 0 0 2px hsl(120, 40%, 30%);
+	text-shadow: 1px 1px #99aabb;
+	background: #445566;
+	color: rebeccapurple;
+}

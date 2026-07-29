@@ -1,0 +1,586 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extraction characterization > colors.css as css 1`] = `
+{
+  "colors": [
+    {
+      "context": "--brand: #ff0000;",
+      "format": "hex",
+      "position": {
+        "column": 11,
+        "line": 3,
+      },
+      "value": "#ff0000",
+    },
+    {
+      "context": "--brand-short: #f00;",
+      "format": "hex",
+      "position": {
+        "column": 17,
+        "line": 4,
+      },
+      "value": "#f00",
+    },
+    {
+      "context": "--brand-alpha: #ff0000aa;",
+      "format": "hex",
+      "position": {
+        "column": 17,
+        "line": 5,
+      },
+      "value": "#ff0000aa",
+    },
+    {
+      "context": "color: rgb(16, 32, 48);",
+      "format": "rgb",
+      "position": {
+        "column": 9,
+        "line": 9,
+      },
+      "value": "rgb(16, 32, 48)",
+    },
+    {
+      "context": "background: rgba(255, 128, 0, 0.5);",
+      "format": "rgba",
+      "position": {
+        "column": 14,
+        "line": 10,
+      },
+      "value": "rgba(255, 128, 0, 0.5)",
+    },
+    {
+      "context": "border-color: hsl(210, 50%, 40%);",
+      "format": "hsl",
+      "position": {
+        "column": 16,
+        "line": 11,
+      },
+      "value": "hsl(210, 50%, 40%)",
+    },
+    {
+      "context": "outline-color: hsla(210, 50%, 40%, 0.25);",
+      "format": "hsla",
+      "position": {
+        "column": 17,
+        "line": 12,
+      },
+      "value": "hsla(210, 50%, 40%, 0.25)",
+    },
+    {
+      "context": "* multi-line comment: #123456 should be ignored but the",
+      "format": "hex",
+      "position": {
+        "column": 24,
+        "line": 17,
+      },
+      "value": "#123456",
+    },
+    {
+      "context": "#00ff00",
+      "format": "hex",
+      "position": {
+        "column": 3,
+        "line": 26,
+      },
+      "value": "#00ff00",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.html as html 1`] = `
+{
+  "colors": [
+    {
+      "context": "<body style="background: #112233; color: rgb(4, 5, 6)">",
+      "format": "hex",
+      "position": {
+        "column": 26,
+        "line": 3,
+      },
+      "value": "#112233",
+    },
+    {
+      "context": "<body style="background: #112233; color: rgb(4, 5, 6)">",
+      "format": "rgb",
+      "position": {
+        "column": 42,
+        "line": 3,
+      },
+      "value": "rgb(4, 5, 6)",
+    },
+    {
+      "context": "<div style='border-color: hsl(300, 60%, 50%)'>Hello</div>",
+      "format": "hsl",
+      "position": {
+        "column": 28,
+        "line": 4,
+      },
+      "value": "hsl(300, 60%, 50%)",
+    },
+    {
+      "context": ".inline { color: #445566; }",
+      "format": "hex",
+      "position": {
+        "column": 20,
+        "line": 6,
+      },
+      "value": "#445566",
+    },
+    {
+      "context": "<span style="color: rgba(7, 8, 9, 0.75); background: #fff">x</span>",
+      "format": "hex",
+      "position": {
+        "column": 55,
+        "line": 9,
+      },
+      "value": "#fff",
+    },
+    {
+      "context": "<span style="color: rgba(7, 8, 9, 0.75); background: #fff">x</span>",
+      "format": "rgba",
+      "position": {
+        "column": 22,
+        "line": 9,
+      },
+      "value": "rgba(7, 8, 9, 0.75)",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.js as javascript 1`] = `
+{
+  "colors": [
+    {
+      "context": "color: #123abc;",
+      "format": "hex",
+      "position": {
+        "column": 9,
+        "line": 10,
+      },
+      "value": "#123abc",
+    },
+    {
+      "context": "background: hsla(10, 20%, 30%, 0.5);",
+      "format": "hsla",
+      "position": {
+        "column": 14,
+        "line": 11,
+      },
+      "value": "hsla(10, 20%, 30%, 0.5)",
+    },
+    {
+      "context": "document.body.style.background = "rgba(1, 2, 3, 0.9)";",
+      "format": "rgba",
+      "position": {
+        "column": 34,
+        "line": 15,
+      },
+      "value": "rgba(1, 2, 3, 0.9)",
+    },
+    {
+      "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
+      "format": "hex",
+      "position": {
+        "column": 25,
+        "line": 16,
+      },
+      "value": "#abcdef",
+    },
+    {
+      "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
+      "format": "hsl",
+      "position": {
+        "column": 53,
+        "line": 16,
+      },
+      "value": "hsl(90, 10%, 20%)",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.js as typescript 1`] = `
+{
+  "colors": [
+    {
+      "context": "color: #123abc;",
+      "format": "hex",
+      "position": {
+        "column": 9,
+        "line": 10,
+      },
+      "value": "#123abc",
+    },
+    {
+      "context": "background: hsla(10, 20%, 30%, 0.5);",
+      "format": "hsla",
+      "position": {
+        "column": 14,
+        "line": 11,
+      },
+      "value": "hsla(10, 20%, 30%, 0.5)",
+    },
+    {
+      "context": "document.body.style.background = "rgba(1, 2, 3, 0.9)";",
+      "format": "rgba",
+      "position": {
+        "column": 34,
+        "line": 15,
+      },
+      "value": "rgba(1, 2, 3, 0.9)",
+    },
+    {
+      "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
+      "format": "hex",
+      "position": {
+        "column": 25,
+        "line": 16,
+      },
+      "value": "#abcdef",
+    },
+    {
+      "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
+      "format": "hsl",
+      "position": {
+        "column": 53,
+        "line": 16,
+      },
+      "value": "hsl(90, 10%, 20%)",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.less as less 1`] = `
+{
+  "colors": [
+    {
+      "context": "LESS variable",
+      "format": "hex",
+      "position": {
+        "column": 0,
+        "line": 1,
+      },
+      "value": "#00aaff",
+    },
+    {
+      "context": "LESS variable",
+      "format": "named",
+      "position": {
+        "column": 0,
+        "line": 2,
+      },
+      "value": "seagreen",
+    },
+    {
+      "context": "LESS variable",
+      "format": "hsla",
+      "position": {
+        "column": 0,
+        "line": 3,
+      },
+      "value": "hsla(120, 30%, 40%, 0.6)",
+    },
+    {
+      "context": "LESS mixin",
+      "format": "rgba",
+      "position": {
+        "column": 1,
+        "line": 7,
+      },
+      "value": "rgba(0, 170, 255, 0.25)",
+    },
+    {
+      "context": "LESS property",
+      "format": "hex",
+      "position": {
+        "column": 8,
+        "line": 8,
+      },
+      "value": "#fff",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.scss as scss 1`] = `
+{
+  "colors": [
+    {
+      "context": "SCSS variable",
+      "format": "hex",
+      "position": {
+        "column": 0,
+        "line": 1,
+      },
+      "value": "#3366ff",
+    },
+    {
+      "context": "SCSS variable",
+      "format": "named",
+      "position": {
+        "column": 0,
+        "line": 2,
+      },
+      "value": "crimson",
+    },
+    {
+      "context": "SCSS property",
+      "format": "hex",
+      "position": {
+        "column": 13,
+        "line": 7,
+      },
+      "value": "#3366ff",
+    },
+    {
+      "context": "SCSS property",
+      "format": "hex",
+      "position": {
+        "column": 1,
+        "line": 12,
+      },
+      "value": "#445566",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.styl as stylus 1`] = `
+{
+  "colors": [
+    {
+      "context": "Stylus variable",
+      "format": "hex",
+      "position": {
+        "column": 0,
+        "line": 1,
+      },
+      "value": "#deadbe",
+    },
+    {
+      "context": "Stylus variable",
+      "format": "hex",
+      "position": {
+        "column": 10,
+        "line": 1,
+      },
+      "value": "#deadbe",
+    },
+    {
+      "context": "Stylus variable",
+      "format": "named",
+      "position": {
+        "column": 0,
+        "line": 2,
+      },
+      "value": "tomato",
+    },
+    {
+      "context": "Stylus variable",
+      "format": "rgb",
+      "position": {
+        "column": 0,
+        "line": 3,
+      },
+      "value": "rgb(9, 8, 7)",
+    },
+    {
+      "context": "Stylus variable",
+      "format": "rgb",
+      "position": {
+        "column": 15,
+        "line": 3,
+      },
+      "value": "rgb(9, 8, 7)",
+    },
+    {
+      "context": "Stylus declaration",
+      "format": "hex",
+      "position": {
+        "column": 2,
+        "line": 7,
+      },
+      "value": "#cafe00",
+    },
+    {
+      "context": "Stylus declaration",
+      "format": "hex",
+      "position": {
+        "column": 13,
+        "line": 7,
+      },
+      "value": "#cafe00",
+    },
+    {
+      "context": "Stylus function",
+      "format": "rgba",
+      "position": {
+        "column": 15,
+        "line": 8,
+      },
+      "value": "rgba(1, 2, 3, 0.5)",
+    },
+    {
+      "context": "Stylus property",
+      "format": "hex",
+      "position": {
+        "column": 1,
+        "line": 11,
+      },
+      "value": "#fedcba",
+    },
+    {
+      "context": "Stylus property",
+      "format": "hex",
+      "position": {
+        "column": 2,
+        "line": 11,
+      },
+      "value": "#fedcba",
+    },
+    {
+      "context": "Stylus property",
+      "format": "hex",
+      "position": {
+        "column": 9,
+        "line": 11,
+      },
+      "value": "#fedcba",
+    },
+    {
+      "context": "Stylus function",
+      "format": "hsl",
+      "position": {
+        "column": 1,
+        "line": 12,
+      },
+      "value": "hsl(45, 80%, 60%)",
+    },
+    {
+      "context": "Stylus function",
+      "format": "hsl",
+      "position": {
+        "column": 2,
+        "line": 12,
+      },
+      "value": "hsl(45, 80%, 60%)",
+    },
+    {
+      "context": "Stylus function",
+      "format": "hsl",
+      "position": {
+        "column": 14,
+        "line": 12,
+      },
+      "value": "hsl(45, 80%, 60%)",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > colors.svg as xml 1`] = `
+{
+  "colors": [
+    {
+      "context": "<rect fill="#ff8800" stroke="rgb(1, 2, 3)" width="10" height="10"/>",
+      "format": "hex",
+      "position": {
+        "column": 14,
+        "line": 3,
+      },
+      "value": "#ff8800",
+    },
+    {
+      "context": "<rect fill="#ff8800" stroke="rgb(1, 2, 3)" width="10" height="10"/>",
+      "format": "rgb",
+      "position": {
+        "column": 31,
+        "line": 3,
+      },
+      "value": "rgb(1, 2, 3)",
+    },
+    {
+      "context": "<circle fill="goldenrod" style="stroke: #00ffcc; fill-opacity: 0.5" r="4"/>",
+      "format": "hex",
+      "position": {
+        "column": 42,
+        "line": 4,
+      },
+      "value": "#00ffcc",
+    },
+    {
+      "context": "<stop stop-color="#abc" offset="0"/>",
+      "format": "hex",
+      "position": {
+        "column": 21,
+        "line": 6,
+      },
+      "value": "#abc",
+    },
+    {
+      "context": "<stop stop-color="hsla(200, 50%, 50%, 0.8)" offset="1"/>",
+      "format": "hsla",
+      "position": {
+        "column": 21,
+        "line": 7,
+      },
+      "value": "hsla(200, 50%, 50%, 0.8)",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > unknown language falls back to CSS extraction 1`] = `
+{
+  "colors": [
+    {
+      "context": "accent = "#ff8800"  # python, but hex still found",
+      "format": "hex",
+      "position": {
+        "column": 11,
+        "line": 1,
+      },
+      "value": "#ff8800",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;

@@ -1,0 +1,10 @@
+<!-- icon palette #010203 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+	<rect fill="#ff8800" stroke="rgb(1, 2, 3)" width="10" height="10"/>
+	<circle fill="goldenrod" style="stroke: #00ffcc; fill-opacity: 0.5" r="4"/>
+	<linearGradient id="g">
+		<stop stop-color="#abc" offset="0"/>
+		<stop stop-color="hsla(200, 50%, 50%, 0.8)" offset="1"/>
+	</linearGradient>
+	<text color="navy">x</text>
+</svg>

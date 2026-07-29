@@ -1,0 +1,28 @@
+/* palette #abcdef inside a same-line comment */
+:root {
+	--brand: #ff0000;
+	--brand-short: #f00;
+	--brand-alpha: #ff0000aa;
+}
+
+.button {
+	color: rgb(16, 32, 48);
+	background: rgba(255, 128, 0, 0.5);
+	border-color: hsl(210, 50%, 40%);
+	outline-color: hsla(210, 50%, 40%, 0.25);
+	box-shadow: 0 0 4px navy;
+}
+
+/*
+ * multi-line comment: #123456 should be ignored but the
+ * per-line comment check cannot see the opening delimiter
+ */
+
+.gradient {
+	background: linear-gradient(
+		to right,
+		rgb(1,
+		2, 3),
+		#00ff00
+	);
+}
