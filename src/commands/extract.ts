@@ -4,6 +4,7 @@ import { type ExtractionOptions, extractColors } from '../extraction/extract';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
+import { dedupeColors } from '../utils/dedupe';
 import {
 	createEnhancedError,
 	createErrorSummary,
@@ -160,7 +161,12 @@ export function registerExtractCommand(
 				}
 
 				// Output colors in original format (Zero Hassle)
-				const formattedColors = result.colors.map((color) => color.value);
+				let formattedColors: readonly string[] = result.colors.map(
+					(color) => color.value,
+				);
+				if (config.dedupeEnabled) {
+					formattedColors = dedupeColors(formattedColors);
+				}
 
 				// Open results with enhanced error handling
 				try {

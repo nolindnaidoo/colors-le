@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getConfiguration } from '../config/config';
 import type {
 	EnhancedError,
 	ErrorRecoveryOptions,
@@ -46,11 +47,18 @@ export interface Notifier {
 
 export function createNotifier(): Notifier {
 	return Object.freeze({
+		// notificationsLevel governs info/warning visibility: 'all' shows
+		// everything, 'important' shows warnings and errors, 'silent' shows
+		// errors only. Errors (incl. enhanced errors) always show.
 		showInfo(message: string): void {
-			vscode.window.showInformationMessage(message);
+			if (getConfiguration().notificationsLevel === 'all') {
+				vscode.window.showInformationMessage(message);
+			}
 		},
 		showWarning(message: string): void {
-			vscode.window.showWarningMessage(message);
+			if (getConfiguration().notificationsLevel !== 'silent') {
+				vscode.window.showWarningMessage(message);
+			}
 		},
 		showError(message: string): void {
 			vscode.window.showErrorMessage(message);
