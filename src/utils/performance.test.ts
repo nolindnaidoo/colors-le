@@ -3,8 +3,6 @@ import type { Configuration } from '../types';
 import {
 	createPerformanceMonitor,
 	createPerformanceTracker,
-	createPerformanceWarning,
-	formatPerformanceReport,
 	shouldCancelBasedOnPerformance,
 } from './performance';
 
@@ -160,39 +158,6 @@ describe('Performance Monitoring', () => {
 		});
 	});
 
-	describe('formatPerformanceReport', () => {
-		it('should format performance report', () => {
-			const report = {
-				metrics: {
-					operation: 'test-operation',
-					startTime: 0,
-					endTime: 1000,
-					duration: 1000,
-					inputSize: 1000,
-					outputSize: 500,
-					colorCount: 10,
-					memoryUsage: 1024,
-					cpuUsage: 100,
-					cacheHits: 5,
-					cacheMisses: 2,
-					warnings: 1,
-					errors: 0,
-				},
-				averageDuration: 1000,
-				throughput: 10,
-				memoryEfficiency: 100,
-				cacheEfficiency: 71.4,
-				recommendations: ['Test recommendation'],
-			};
-
-			const formatted = formatPerformanceReport(report);
-			expect(formatted).toBeDefined();
-			expect(formatted).toContain('test-operation');
-			expect(formatted).toContain('1000.00ms');
-			expect(formatted).toContain('10 colors/sec');
-		});
-	});
-
 	describe('shouldCancelBasedOnPerformance', () => {
 		it('should cancel when duration exceeds limit', () => {
 			const startTime = Date.now() - 35000; // 35 seconds ago
@@ -239,33 +204,6 @@ describe('Performance Monitoring', () => {
 			);
 
 			expect(shouldCancel).toBe(true);
-		});
-	});
-
-	describe('createPerformanceWarning', () => {
-		it('should create performance warning', () => {
-			const warning = createPerformanceWarning('Test warning', {
-				test: 'value',
-			});
-
-			expect(warning.message).toBe('Test warning');
-			expect(warning.category).toBe('safety');
-			expect(warning.severity).toBe('medium');
-			expect(warning.recoverable).toBe(true);
-		});
-
-		it('should create warning with empty context', () => {
-			const warning = createPerformanceWarning('Warning', {});
-			expect(warning.message).toBe('Warning');
-		});
-
-		it('should create warning with complex context', () => {
-			const warning = createPerformanceWarning('Complex warning', {
-				operation: 'extract',
-				duration: 5000,
-				items: 1000,
-			});
-			expect(warning.category).toBe('safety');
 		});
 	});
 

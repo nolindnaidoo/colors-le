@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-	attemptRecovery,
 	createEnhancedError,
 	createErrorHandler,
-	createErrorLogger,
-	createErrorNotifier,
 	createErrorSummary,
-	createPerformanceError,
 	formatErrorSummary,
-	getErrorRecoveryOptions,
-	handleError,
 	sanitizeErrorMessage,
 } from './errorHandling';
 
@@ -60,38 +54,6 @@ describe('Error Handling', () => {
 
 			expect(parsingError.severity).toBe('medium');
 			expect(safetyError.severity).toBe('medium');
-		});
-	});
-
-	describe('getErrorRecoveryOptions', () => {
-		it('should return recovery options for parsing error', () => {
-			const error = createEnhancedError(new Error('Parse error'), 'parse');
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
-		});
-
-		it('should return recovery options for file system error', () => {
-			const error = createEnhancedError(
-				new Error('File error'),
-				'file-system',
-				{},
-				{ recoverable: true },
-			);
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(true);
-			expect(options.maxRetries).toBe(3);
-			expect(options.retryDelay).toBe(1000);
-		});
-
-		it('should return no recovery for non-recoverable error', () => {
-			const error = createEnhancedError(new Error('Safety error'), 'safety');
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
 		});
 	});
 
@@ -241,56 +203,6 @@ describe('Error Handling', () => {
 		});
 	});
 
-	describe('Error Recovery Options', () => {
-		it('should provide retry options for operational errors', () => {
-			const error = createEnhancedError(
-				new Error('Extraction failed'),
-				'operational',
-			);
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(true);
-			expect(options.maxRetries).toBe(2);
-			expect(options.retryDelay).toBe(2000);
-		});
-
-		it('should provide no retry for parse errors', () => {
-			const error = createEnhancedError(new Error('Parse failed'), 'parse');
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
-		});
-
-		it('should provide fallback for configuration errors', () => {
-			const error = createEnhancedError(
-				new Error('Config invalid'),
-				'configuration',
-			);
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-			expect(options.fallbackAction).toBeDefined();
-		});
-
-		it('should provide no recovery for validation errors', () => {
-			const error = createEnhancedError(
-				new Error('Validation failed'),
-				'validation',
-			);
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-		});
-
-		it('should provide no recovery for safety errors', () => {
-			const error = createEnhancedError(new Error('File too large'), 'safety');
-			const options = getErrorRecoveryOptions(error);
-
-			expect(options.retryable).toBe(false);
-		});
-	});
-
 	describe('Error Sanitization', () => {
 		it('should sanitize Windows paths', () => {
 			const message = 'Error in C:\\Users\\username\\file.css';
@@ -425,12 +337,6 @@ describe('Error Handling', () => {
 			const error = createEnhancedError(new Error('Test'), 'parse');
 			expect(Object.isFrozen(error)).toBe(true);
 		});
-
-		it('should freeze recovery options', () => {
-			const error = createEnhancedError(new Error('Test'), 'file-system');
-			const options = getErrorRecoveryOptions(error);
-			expect(Object.isFrozen(options)).toBe(true);
-		});
 	});
 
 	describe('Error Code Generation', () => {
@@ -503,32 +409,6 @@ describe('Error Handling', () => {
 			const error = createEnhancedError(new Error('Unknown error'), 'parse');
 			expect(error.userFriendlyMessage).toBeDefined();
 			expect(error.userFriendlyMessage.length).toBeGreaterThan(0);
-		});
-	});
-
-	describe('Error Recovery Options Edge Cases', () => {
-		it('should provide no recovery for validation errors', () => {
-			const error = createEnhancedError(
-				new Error('Validation failed'),
-				'validation',
-			);
-			const options = getErrorRecoveryOptions(error);
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
-		});
-
-		it('should provide no recovery for safety errors', () => {
-			const error = createEnhancedError(new Error('File too large'), 'safety');
-			const options = getErrorRecoveryOptions(error);
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
-		});
-
-		it('should provide no recovery for parse errors', () => {
-			const error = createEnhancedError(new Error('Parse failed'), 'parse');
-			const options = getErrorRecoveryOptions(error);
-			expect(options.retryable).toBe(false);
-			expect(options.maxRetries).toBe(0);
 		});
 	});
 
@@ -639,26 +519,6 @@ describe('Error Handling', () => {
 		});
 	});
 
-	describe('handleError', () => {
-		it('should handle recoverable errors', () => {
-			const error = createEnhancedError(
-				new Error('Recoverable error'),
-				'parse',
-			);
-			handleError(error);
-			expect(true).toBe(true);
-		});
-
-		it('should handle non-recoverable errors', () => {
-			const error = createEnhancedError(
-				new Error('Non-recoverable error'),
-				'safety',
-			);
-			handleError(error);
-			expect(true).toBe(true);
-		});
-	});
-
 	describe('createErrorHandler', () => {
 		it('should create error handler', () => {
 			const handler = createErrorHandler();
@@ -683,99 +543,6 @@ describe('Error Handling', () => {
 			const handler = createErrorHandler();
 			handler.dispose();
 			expect(true).toBe(true);
-		});
-	});
-
-	describe('createErrorLogger', () => {
-		it('should create error logger', () => {
-			const logger = createErrorLogger();
-			expect(logger).toBeDefined();
-			expect(typeof logger.log).toBe('function');
-			expect(typeof logger.dispose).toBe('function');
-		});
-
-		it('should freeze error logger', () => {
-			const logger = createErrorLogger();
-			expect(Object.isFrozen(logger)).toBe(true);
-		});
-
-		it('should log errors', () => {
-			const logger = createErrorLogger();
-			const error = createEnhancedError(new Error('Test error'), 'parse');
-			logger.log(error);
-			expect(true).toBe(true);
-		});
-
-		it('should dispose logger', () => {
-			const logger = createErrorLogger();
-			logger.dispose();
-			expect(true).toBe(true);
-		});
-	});
-
-	describe('createErrorNotifier', () => {
-		it('should create error notifier', () => {
-			const notifier = createErrorNotifier();
-			expect(notifier).toBeDefined();
-			expect(typeof notifier.notify).toBe('function');
-			expect(typeof notifier.dispose).toBe('function');
-		});
-
-		it('should freeze error notifier', () => {
-			const notifier = createErrorNotifier();
-			expect(Object.isFrozen(notifier)).toBe(true);
-		});
-
-		it('should notify errors', () => {
-			const notifier = createErrorNotifier();
-			const error = createEnhancedError(new Error('Test error'), 'parse');
-			notifier.notify(error);
-			expect(true).toBe(true);
-		});
-
-		it('should dispose notifier', () => {
-			const notifier = createErrorNotifier();
-			notifier.dispose();
-			expect(true).toBe(true);
-		});
-	});
-
-	describe('createPerformanceError', () => {
-		it('should create performance error', () => {
-			const error = createPerformanceError('extraction', new Error('Timeout'));
-			expect(error.category).toBe('operational');
-			expect(error.message).toContain('Timeout');
-		});
-
-		it('should include operation in error', () => {
-			const error = createPerformanceError('validation', new Error('Too slow'));
-			expect(error.category).toBe('operational');
-		});
-	});
-
-	describe('attemptRecovery', () => {
-		it('should attempt recovery for recoverable errors', async () => {
-			const error = createEnhancedError(
-				new Error('Recoverable'),
-				'file-system',
-			);
-			const recovered = await attemptRecovery(error);
-			expect(typeof recovered).toBe('boolean');
-		});
-
-		it('should not recover non-recoverable errors', async () => {
-			const error = createEnhancedError(new Error('Non-recoverable'), 'safety');
-			const recovered = await attemptRecovery(error);
-			expect(recovered).toBe(false);
-		});
-
-		it('should handle operational errors', async () => {
-			const error = createEnhancedError(
-				new Error('Operational error'),
-				'operational',
-			);
-			const recovered = await attemptRecovery(error);
-			expect(typeof recovered).toBe('boolean');
 		});
 	});
 });

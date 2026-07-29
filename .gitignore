@@ -34,9 +34,7 @@ lerna-debug.log*
 # Coverage directory used by tools like istanbul
 *.lcov
 
-# Coverage - ignore all except main summary
-coverage/*
-!coverage/index.html
+coverage/
 
 # Dependency directories
 node_modules/
@@ -107,6 +105,7 @@ dist/
 *.bmp
 *.webp
 *.svg
+!src/extraction/__fixtures__/*.svg
 *.tiff
 
 .env

@@ -10,7 +10,6 @@ import { registerExtractCommand } from './extract';
 import { registerFilterCommand } from './filter';
 import { registerHelpCommand } from './help';
 import { registerSortCommand } from './sort';
-import { registerToggleCsvStreamingCommand } from './toggleCsvStreaming';
 import { registerValidateCommand } from './validate';
 
 export function registerCommands(
@@ -54,5 +53,4 @@ export function registerCommands(
 	registerDedupeCommand(context, deps);
 	registerSortCommand(context, deps);
 	registerHelpCommand(context, deps);
-	registerToggleCsvStreamingCommand(context, deps.telemetry);
 }

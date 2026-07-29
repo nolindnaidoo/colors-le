@@ -21,16 +21,20 @@ export function registerHelpCommand(
 
 ## Commands
 - **Extract Colors** (Ctrl+Alt+C / Cmd+Alt+C): Extract colors from the current document
+- **Analyze Colors**: Analyze the current document's colors (distribution, stats)
+- **Convert Colors**: Convert extracted colors to another format
+- **Filter Colors**: Filter extracted colors by format
+- **Validate Colors**: Validate colors and check contrast
 - **Deduplicate Colors**: Remove duplicate colors from the current document
 - **Sort Colors**: Sort colors by various criteria (hue, saturation, lightness, hex)
 - **Open Settings**: Configure Colors-LE settings
 - **Help**: Open this help documentation
 
 ## Supported File Types
-- CSS - Stylesheets, CSS variables, gradients
+- CSS, SCSS, LESS, Stylus
 - HTML - Inline styles, embedded style tags
-- JavaScript - JS, JSX with styled-components
-- TypeScript - TS, TSX with styled-components
+- JavaScript / TypeScript - string literals and style objects
+- SVG - fill/stroke/stop-color attributes and inline styles
 
 ## Color Formats Supported
 - Hexadecimal: #FF0000, #f00, #ff0000aa
@@ -54,19 +58,9 @@ export function registerHelpCommand(
 ## Settings
 Access settings via Command Palette: "Colors-LE: Open Settings"
 
-Key settings:
-- Copy to clipboard (auto-copy results)
-- Deduplication (remove duplicates)
-- Sorting mode (hue, saturation, lightness, hex)
-- Side-by-side view (open results beside source)
-- Safety checks (file size warnings)
-- Notification levels (silent, important, all)
-- Status bar (show/hide)
-- Telemetry (local logging)
-
 ## Support
-- GitHub Issues: https://github.com/OffensiveEdge/colors-le/issues
-- Documentation: https://github.com/OffensiveEdge/colors-le#readme
+- GitHub Issues: https://github.com/nolindnaidoo/colors-le/issues
+- Documentation: https://github.com/nolindnaidoo/colors-le#readme
 		`.trim();
 
 			const doc = await vscode.workspace.openTextDocument({

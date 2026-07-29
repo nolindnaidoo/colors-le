@@ -160,43 +160,6 @@ function getErrorSuggestion(_error: Error, category: ErrorCategory): string {
 }
 
 /**
- * Get error recovery options
- */
-export function getErrorRecoveryOptions(
-	error: EnhancedError,
-): ErrorRecoveryOptions {
-	switch (error.category) {
-		case 'file-system':
-			return Object.freeze({
-				retryable: true,
-				maxRetries: 3,
-				retryDelay: 1000,
-			});
-		case 'operational':
-			return Object.freeze({
-				retryable: true,
-				maxRetries: 2,
-				retryDelay: 2000,
-			});
-		case 'configuration':
-			return Object.freeze({
-				retryable: false,
-				maxRetries: 0,
-				retryDelay: 0,
-				fallbackAction: async () => {
-					// Fallback to default configuration
-				},
-			});
-		default:
-			return Object.freeze({
-				retryable: false,
-				maxRetries: 0,
-				retryDelay: 0,
-			});
-	}
-}
-
-/**
  * Sanitize error message for display
  */
 export function sanitizeErrorMessage(message: string): string {
@@ -208,35 +171,6 @@ export function sanitizeErrorMessage(message: string): string {
 		.replace(/password[=:]\s*[^\s]+/gi, 'password=***')
 		.replace(/token[=:]\s*[^\s]+/gi, 'token=***')
 		.replace(/key[=:]\s*[^\s]+/gi, 'key=***');
-}
-
-/**
- * Handle error with appropriate user feedback
- */
-export function handleError(error: EnhancedError): void {
-	const sanitizedMessage = sanitizeErrorMessage(error.userFriendlyMessage);
-	const timestamp = error.timestamp.toISOString();
-	const logLevel = error.recoverable ? 'WARN' : 'ERROR';
-
-	const logEntry = Object.freeze({
-		timestamp,
-		level: logLevel,
-		category: error.category,
-		message: sanitizedMessage,
-		suggestion: error.suggestion,
-		recoverable: error.recoverable,
-		severity: error.severity,
-		originalError: error.originalError.message,
-	});
-
-	const logMessage = `[Colors-LE] ${logLevel}: ${sanitizedMessage}`;
-
-	if (error.recoverable) {
-		console.warn(logMessage, logEntry);
-		return;
-	}
-
-	console.error(logMessage, logEntry);
 }
 
 export interface ErrorSummary {
@@ -327,19 +261,32 @@ export interface ErrorHandler {
 }
 
 /**
- * Error Logger interface for dependency injection
+ * Handle error with appropriate user feedback
  */
-export interface ErrorLogger {
-	log(error: EnhancedError): void;
-	dispose(): void;
-}
+function handleError(error: EnhancedError): void {
+	const sanitizedMessage = sanitizeErrorMessage(error.userFriendlyMessage);
+	const timestamp = error.timestamp.toISOString();
+	const logLevel = error.recoverable ? 'WARN' : 'ERROR';
 
-/**
- * Error Notifier interface for dependency injection
- */
-export interface ErrorNotifier {
-	notify(error: EnhancedError): void;
-	dispose(): void;
+	const logEntry = Object.freeze({
+		timestamp,
+		level: logLevel,
+		category: error.category,
+		message: sanitizedMessage,
+		suggestion: error.suggestion,
+		recoverable: error.recoverable,
+		severity: error.severity,
+		originalError: error.originalError.message,
+	});
+
+	const logMessage = `[Colors-LE] ${logLevel}: ${sanitizedMessage}`;
+
+	if (error.recoverable) {
+		console.warn(logMessage, logEntry);
+		return;
+	}
+
+	console.error(logMessage, logEntry);
 }
 
 /**
@@ -354,55 +301,6 @@ export function createErrorHandler(): ErrorHandler {
 			// Cleanup if needed
 		},
 	});
-}
-
-/**
- * Create error logger instance
- */
-export function createErrorLogger(): ErrorLogger {
-	return Object.freeze({
-		log(error: EnhancedError): void {
-			const sanitizedMessage = sanitizeErrorMessage(error.message);
-			console.error(`[Colors-LE] ${sanitizedMessage}`);
-		},
-		dispose(): void {
-			// Cleanup if needed
-		},
-	});
-}
-
-/**
- * Create error notifier instance
- */
-export function createErrorNotifier(): ErrorNotifier {
-	return Object.freeze({
-		notify(error: EnhancedError): void {
-			const sanitizedMessage = sanitizeErrorMessage(error.userFriendlyMessage);
-			console.warn(`[Colors-LE] ${sanitizedMessage}`);
-		},
-		dispose(): void {
-			// Cleanup if needed
-		},
-	});
-}
-
-/**
- * Create performance error for performance monitoring
- */
-export function createPerformanceError(
-	operation: string,
-	error: Error,
-): EnhancedError {
-	return createEnhancedError(
-		error,
-		'operational',
-		{ operation },
-		{
-			recoverable: true,
-			severity: 'medium',
-			suggestion: 'Consider optimizing the operation or reducing input size',
-		},
-	);
 }
 
 /**
@@ -438,25 +336,3 @@ export const defaultRecoveryStrategies: ErrorRecoveryStrategy[] = [
 		},
 	},
 ];
-
-/**
- * Attempt to recover from an error using available strategies
- */
-export async function attemptRecovery(error: EnhancedError): Promise<boolean> {
-	for (const strategy of defaultRecoveryStrategies) {
-		if (strategy.canRecover(error)) {
-			try {
-				const recovered = await strategy.recover(error);
-				if (recovered) {
-					console.info(
-						`[Colors-LE] Successfully recovered from ${error.category} error`,
-					);
-					return true;
-				}
-			} catch (recoveryError) {
-				console.error(`[Colors-LE] Recovery failed: ${recoveryError}`);
-			}
-		}
-	}
-	return false;
-}

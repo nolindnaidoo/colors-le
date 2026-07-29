@@ -11,7 +11,6 @@
 	"manifest.command.sort.title": "Sort Colors",
 	"manifest.command.settings.title": "Open Settings",
 	"manifest.command.help.title": "Help & Troubleshooting",
-	"manifest.command.csv.toggle-streaming.title": "Toggle CSV Streaming",
 	"manifest.settings.title": "Colors-LE Settings",
 	"manifest.settings.copy.clipboard.desc": "Automatically copy extraction results to the clipboard",
 	"manifest.settings.dedupe.desc": "Enable automatic deduplication of extracted colors",
