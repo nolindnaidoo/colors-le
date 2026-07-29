@@ -1,7 +1,3 @@
-import * as nls from 'vscode-nls';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-
 /**
  * Enhanced error handling utilities for Colors-LE
  * Provides sophisticated error categorization, recovery, and user feedback
@@ -115,54 +111,30 @@ function getUserFriendlyMessage(
 ): string {
 	if (category === 'parse') {
 		const fileContext = context || 'unknown file';
-		return localize(
-			'runtime.error.parse',
-			'Failed to parse color values: {0}',
-			fileContext,
-		);
+		return `Failed to parse color values: ${fileContext}`;
 	}
 
 	if (category === 'file-system') {
-		return localize(
-			'runtime.error.file-system',
-			'File system error: {0}',
-			error.message,
-		);
+		return `File system error: ${error.message}`;
 	}
 
 	if (category === 'configuration') {
-		return localize(
-			'runtime.error.configuration',
-			'Configuration error: {0}',
-			error.message,
-		);
+		return `Configuration error: ${error.message}`;
 	}
 
 	if (category === 'validation') {
-		return localize(
-			'runtime.error.validation',
-			'Color validation failed: {0}',
-			error.message,
-		);
+		return `Color validation failed: ${error.message}`;
 	}
 
 	if (category === 'safety') {
-		return localize(
-			'runtime.error.safety',
-			'Safety threshold exceeded: {0}',
-			error.message,
-		);
+		return `Safety threshold exceeded: ${error.message}`;
 	}
 
 	if (category === 'operational') {
-		return localize(
-			'runtime.error.operational',
-			'Color extraction failed: {0}',
-			error.message,
-		);
+		return `Color extraction failed: ${error.message}`;
 	}
 
-	return localize('runtime.error.unknown', 'Unknown error: {0}', error.message);
+	return `Unknown error: ${error.message}`;
 }
 
 /**
@@ -171,40 +143,19 @@ function getUserFriendlyMessage(
 function getErrorSuggestion(_error: Error, category: ErrorCategory): string {
 	switch (category) {
 		case 'parse':
-			return localize(
-				'runtime.error.parse.suggestion',
-				'Check the file format and ensure color values are valid',
-			);
+			return 'Check the file format and ensure color values are valid';
 		case 'file-system':
-			return localize(
-				'runtime.error.file-system.suggestion',
-				'Check file permissions and ensure the file exists',
-			);
+			return 'Check file permissions and ensure the file exists';
 		case 'configuration':
-			return localize(
-				'runtime.error.configuration.suggestion',
-				'Reset to default settings or check configuration syntax',
-			);
+			return 'Reset to default settings or check configuration syntax';
 		case 'validation':
-			return localize(
-				'runtime.error.validation.suggestion',
-				'Review color values and ensure they meet validation criteria',
-			);
+			return 'Review color values and ensure they meet validation criteria';
 		case 'safety':
-			return localize(
-				'runtime.error.safety.suggestion',
-				'Reduce file size or adjust safety thresholds',
-			);
+			return 'Reduce file size or adjust safety thresholds';
 		case 'operational':
-			return localize(
-				'runtime.error.operational.suggestion',
-				'Try again or check system resources',
-			);
+			return 'Try again or check system resources';
 		default:
-			return localize(
-				'runtime.error.unknown.suggestion',
-				'Check the logs for more details and consider reporting this issue',
-			);
+			return 'Check the logs for more details and consider reporting this issue';
 	}
 }
 
@@ -449,10 +400,7 @@ export function createPerformanceError(
 		{
 			recoverable: true,
 			severity: 'medium',
-			suggestion: localize(
-				'runtime.performance.error.suggestion',
-				'Consider optimizing the operation or reducing input size',
-			),
+			suggestion: 'Consider optimizing the operation or reducing input size',
 		},
 	);
 }
@@ -512,5 +460,3 @@ export async function attemptRecovery(error: EnhancedError): Promise<boolean> {
 	}
 	return false;
 }
-
-void localize;

@@ -1,7 +1,4 @@
 import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export function registerCodeActions(context: vscode.ExtensionContext): void {
 	// Quick Fix to trigger color extraction across supported languages
@@ -23,12 +20,12 @@ export function registerCodeActions(context: vscode.ExtensionContext): void {
 			const text = document.getText();
 			if (!text || text.trim().length === 0) return undefined;
 			const action = new vscode.CodeAction(
-				localize('runtime.codeaction.extract.title', 'Extract colors'),
+				'Extract colors',
 				vscode.CodeActionKind.QuickFix,
 			);
 			action.command = {
 				command: 'colors-le.extractColors',
-				title: localize('runtime.codeaction.extract.title', 'Extract colors'),
+				title: 'Extract colors',
 			};
 			action.isPreferred = true;
 			return [action];

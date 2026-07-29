@@ -6,7 +6,6 @@ import {
 	getAvailableFormats,
 } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
-import { createLocalizer } from '../utils/localization';
 import { formatDuration } from '../utils/performance';
 
 interface ConvertDeps {
@@ -29,17 +28,10 @@ export function registerConvertCommand(
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.convert',
 		async () => {
-			const localizer = createLocalizer();
-
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage(
-						localizer.localize(
-							'runtime.error.no-active-editor',
-							'No active editor found',
-						),
-					);
+					await vscode.window.showWarningMessage('No active editor found');
 					return;
 				}
 
@@ -53,10 +45,7 @@ export function registerConvertCommand(
 
 				if (!result.success || result.colors.length === 0) {
 					await vscode.window.showInformationMessage(
-						localizer.localize(
-							'runtime.convert.no-colors',
-							'No colors found to convert',
-						),
+						'No colors found to convert',
 					);
 					return;
 				}
@@ -95,22 +84,13 @@ export function registerConvertCommand(
 				const failureCount = conversions.length - successCount;
 
 				await vscode.window.showInformationMessage(
-					localizer.localize(
-						'runtime.convert.success',
-						'Color conversion completed. {0} successful, {1} failed.',
-						successCount.toString(),
-						failureCount.toString(),
-					),
+					`Color conversion completed. ${successCount.toString()} successful, ${failureCount.toString()} failed.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
 				await vscode.window.showErrorMessage(
-					localizer.localize(
-						'runtime.convert.error',
-						'Conversion failed: {0}',
-						errorMessage,
-					),
+					`Conversion failed: ${errorMessage}`,
 				);
 			}
 		},

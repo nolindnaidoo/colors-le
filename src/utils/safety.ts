@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
 import type { Configuration } from '../types';
 import { createEnhancedError, type EnhancedError } from './errorHandling';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export interface SafetyResult {
 	readonly proceed: boolean;
@@ -43,12 +40,7 @@ export function handleSafetyChecks(
 	if (exceedsFileSize) {
 		const error = createEnhancedError(
 			new Error(
-				localize(
-					'runtime.safety.file-size',
-					'File size ({0} bytes) exceeds safety threshold ({1} bytes)',
-					content.length,
-					fileSizeThreshold,
-				),
+				`File size (${content.length} bytes) exceeds safety threshold (${fileSizeThreshold} bytes)`,
 			),
 			'safety',
 			{
@@ -59,10 +51,8 @@ export function handleSafetyChecks(
 			{
 				recoverable: false,
 				severity: 'high',
-				suggestion: localize(
-					'runtime.safety.file-size.suggestion',
+				suggestion:
 					'Consider splitting the file or increasing the safety threshold in settings',
-				),
 			},
 		);
 
@@ -77,12 +67,8 @@ export function handleSafetyChecks(
 	const warnings = collectSafetyWarnings(content, config, options);
 	const hasWarnings = warnings.length > 0;
 	const message = hasWarnings
-		? localize(
-				'runtime.safety.warnings',
-				'Safety checks passed with {0} warnings',
-				warnings.length,
-			)
-		: localize('runtime.safety.passed', 'Safety checks passed');
+		? `Safety checks passed with ${warnings.length} warnings`
+		: 'Safety checks passed';
 
 	return Object.freeze({
 		proceed: true,
@@ -105,12 +91,7 @@ function collectSafetyWarnings(
 	const exceedsLineCount = lines.length > lineCountThreshold;
 	if (exceedsLineCount) {
 		warnings.push(
-			localize(
-				'runtime.safety.line-count.warning',
-				'Large file detected: {0} lines (threshold: {1})',
-				lines.length,
-				lineCountThreshold,
-			),
+			`Large file detected: ${lines.length} lines (threshold: ${lineCountThreshold})`,
 		);
 	}
 
@@ -118,24 +99,14 @@ function collectSafetyWarnings(
 	const hasManyColors = estimatedColors > 1000;
 	if (hasManyColors) {
 		warnings.push(
-			localize(
-				'runtime.safety.color-count.warning',
-				'Large number of colors detected: estimated {0} colors',
-				estimatedColors,
-			),
+			`Large number of colors detected: estimated ${estimatedColors} colors`,
 		);
 	}
 
 	const complexPatterns = countComplexPatterns(content);
 	const hasComplexPatterns = complexPatterns > 100;
 	if (hasComplexPatterns) {
-		warnings.push(
-			localize(
-				'runtime.safety.complex-patterns.warning',
-				'Complex CSS patterns detected: {0} patterns',
-				complexPatterns,
-			),
-		);
+		warnings.push(`Complex CSS patterns detected: ${complexPatterns} patterns`);
 	}
 
 	return warnings;
@@ -158,20 +129,15 @@ export async function handleSafetyChecksWithUserConfirmation(
 		return result;
 	}
 
-	const continueLabel = localize(
-		'runtime.safety.override.continue',
-		'Continue Anyway',
-	);
-	const cancelLabel = localize('runtime.safety.override.cancel', 'Cancel');
+	const continueLabel = 'Continue Anyway';
+	const cancelLabel = 'Cancel';
 
 	const userChoice = await vscode.window.showWarningMessage(
 		result.message,
 		{
 			modal: true,
-			detail: localize(
-				'runtime.safety.override.detail',
+			detail:
 				'This operation may take a long time or consume significant resources. Do you want to continue?',
-			),
 		},
 		continueLabel,
 		cancelLabel,
@@ -185,10 +151,7 @@ export async function handleSafetyChecksWithUserConfirmation(
 	return Object.freeze({
 		...result,
 		proceed: true,
-		message: localize(
-			'runtime.safety.override.approved',
-			'Safety override approved by user',
-		),
+		message: 'Safety override approved by user',
 	});
 }
 
@@ -263,10 +226,8 @@ export function createSafetyWarning(
 	details: Readonly<Record<string, unknown>> = {},
 ): EnhancedError {
 	const error = new Error(message);
-	const suggestion = localize(
-		'runtime.safety.warning.suggestion',
-		'Consider adjusting safety settings or breaking down the operation',
-	);
+	const suggestion =
+		'Consider adjusting safety settings or breaking down the operation';
 
 	return createEnhancedError(error, 'safety', details, {
 		severity: 'medium',
@@ -274,5 +235,3 @@ export function createSafetyWarning(
 		suggestion,
 	});
 }
-
-void localize;

@@ -15,7 +15,6 @@ import {
 } from '../analysis/colorAnalysis';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { createLocalizer } from '../utils/localization';
 import { formatDuration } from '../utils/performance';
 
 interface AnalyzeDeps {
@@ -38,17 +37,10 @@ export function registerAnalyzeCommand(
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.analyze',
 		async () => {
-			const localizer = createLocalizer();
-
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage(
-						localizer.localize(
-							'runtime.error.no-active-editor',
-							'No active editor found',
-						),
-					);
+					await vscode.window.showWarningMessage('No active editor found');
 					return;
 				}
 
@@ -62,10 +54,7 @@ export function registerAnalyzeCommand(
 
 				if (!result.success || result.colors.length === 0) {
 					await vscode.window.showInformationMessage(
-						localizer.localize(
-							'runtime.analyze.no-colors',
-							'No colors found to analyze',
-						),
+						'No colors found to analyze',
 					);
 					return;
 				}
@@ -104,22 +93,13 @@ export function registerAnalyzeCommand(
 				});
 
 				await vscode.window.showInformationMessage(
-					localizer.localize(
-						'runtime.analyze.success',
-						'Color analysis completed. Found {0} colors with {1} unique values.',
-						statistics.total.toString(),
-						statistics.unique.toString(),
-					),
+					`Color analysis completed. Found ${statistics.total.toString()} colors with ${statistics.unique.toString()} unique values.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
 				await vscode.window.showErrorMessage(
-					localizer.localize(
-						'runtime.analyze.error',
-						'Analysis failed: {0}',
-						errorMessage,
-					),
+					`Analysis failed: ${errorMessage}`,
 				);
 			}
 		},

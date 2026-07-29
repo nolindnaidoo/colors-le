@@ -1,12 +1,9 @@
 import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
 import { getConfiguration } from '../config/config';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { sortColors } from '../utils/sort';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export function registerSortCommand(
 	context: vscode.ExtensionContext,
@@ -23,16 +20,12 @@ export function registerSortCommand(
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
-				deps.notifier.showWarning(
-					localize('runtime.sort.no-editor', 'No active editor found'),
-				);
+				deps.notifier.showWarning('No active editor found');
 				return;
 			}
 
 			try {
-				deps.statusBar.showProgress(
-					localize('runtime.sort.progress', 'Sorting colors...'),
-				);
+				deps.statusBar.showProgress('Sorting colors...');
 
 				const document = editor.document;
 				const text = document.getText();
@@ -83,12 +76,7 @@ export function registerSortCommand(
 				await vscode.workspace.applyEdit(edit);
 
 				deps.notifier.showInfo(
-					localize(
-						'runtime.sort.success',
-						'Sorted {0} colors by {1}',
-						sortedLines.length,
-						config.sortMode,
-					),
+					`Sorted ${sortedLines.length} colors by ${config.sortMode}`,
 				);
 				deps.telemetry.event('sort-success', {
 					mode: config.sortMode,
@@ -96,15 +84,8 @@ export function registerSortCommand(
 				});
 			} catch (error) {
 				const message =
-					error instanceof Error
-						? error.message
-						: localize(
-								'runtime.error.unknown-fallback',
-								'Unknown error occurred',
-							);
-				deps.notifier.showError(
-					localize('runtime.sort.error', 'Sorting failed: {0}', message),
-				);
+					error instanceof Error ? error.message : 'Unknown error occurred';
+				deps.notifier.showError(`Sorting failed: ${message}`);
 				deps.telemetry.event('sort-error', { error: message });
 			} finally {
 				deps.statusBar.hideProgress();

@@ -1,4 +1,3 @@
-import * as nls from 'vscode-nls';
 import { getConfiguration } from '../config/config';
 import type { Color, ExtractionResult, FileType, ParseError } from '../types';
 import { createEnhancedError } from '../utils/errorHandling';
@@ -13,8 +12,6 @@ import { extractFromLESS } from './formats/less';
 import { extractFromSCSS } from './formats/scss';
 import { extractFromStylus } from './formats/stylus';
 import { extractFromSvg } from './formats/svg';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export interface ExtractionOptions {
 	readonly filepath?: string;
@@ -61,10 +58,7 @@ export async function extractColors(
 	);
 	if (shouldCancel) {
 		extractionContext.warnings.push(
-			localize(
-				'runtime.extraction.cancelled',
-				'Operation cancelled due to performance constraints',
-			),
+			'Operation cancelled due to performance constraints',
 		);
 		return buildExtractionResult(
 			extractionContext,
@@ -114,12 +108,7 @@ function createEmptyExtractionResult(
 	performanceTracker: ReturnType<typeof createPerformanceTracker> | null,
 ): ExtractionResult {
 	const error = createEnhancedError(
-		new Error(
-			localize(
-				'runtime.extraction.empty-content',
-				'Content is empty or invalid',
-			),
-		),
+		new Error('Content is empty or invalid'),
 		'validation',
 		{ contentLength: content.length },
 		{
@@ -211,11 +200,7 @@ function extractColorsByFileType(
 		default:
 			// Fallback to CSS extraction for unknown types
 			console.warn(
-				localize(
-					'runtime.extraction.fallback',
-					'Unknown file type "{0}", using CSS extraction as fallback',
-					languageId,
-				),
+				`Unknown file type "${languageId}", using CSS extraction as fallback`,
 			);
 			return extractFromCss(content);
 	}
@@ -239,18 +224,13 @@ function createExtractionError(
 			{
 				recoverable: true,
 				severity: 'medium',
-				suggestion: localize(
-					'runtime.extraction.parse-error.suggestion',
-					'Try checking file syntax or using a different file format',
-				),
+				suggestion: 'Try checking file syntax or using a different file format',
 			},
 		);
 	}
 
 	return createEnhancedError(
-		new Error(
-			localize('runtime.extraction.unknown-error', 'Unknown parsing error'),
-		),
+		new Error('Unknown parsing error'),
 		'parse',
 		{ fileType, languageId },
 		{
@@ -274,12 +254,7 @@ function applyColorLimits(
 	}
 
 	context.warnings.push(
-		localize(
-			'runtime.extraction.color-limit',
-			'Color count ({0}) exceeds limit ({1}), truncating results',
-			context.colors.length,
-			options.maxColors,
-		),
+		`Color count (${context.colors.length}) exceeds limit (${options.maxColors}), truncating results`,
 	);
 
 	context.colors.splice(
@@ -306,12 +281,7 @@ function checkTimeout(
 	}
 
 	context.warnings.push(
-		localize(
-			'runtime.extraction.timeout',
-			'Processing time ({0}ms) exceeded timeout ({1}ms)',
-			processingTime,
-			options.timeoutMs,
-		),
+		`Processing time (${processingTime}ms) exceeded timeout (${options.timeoutMs}ms)`,
 	);
 }
 
@@ -330,12 +300,7 @@ function checkPerformanceLimits(
 		return;
 	}
 
-	context.warnings.push(
-		localize(
-			'runtime.extraction.performance-cancelled',
-			'Operation cancelled due to performance limits',
-		),
-	);
+	context.warnings.push('Operation cancelled due to performance limits');
 }
 
 function buildExtractionResult(

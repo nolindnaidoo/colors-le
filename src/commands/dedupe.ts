@@ -1,11 +1,8 @@
 import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { dedupeColors } from '../utils/dedupe';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export function registerDedupeCommand(
 	context: vscode.ExtensionContext,
@@ -22,16 +19,12 @@ export function registerDedupeCommand(
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
-				deps.notifier.showWarning(
-					localize('runtime.dedupe.no-editor', 'No active editor found'),
-				);
+				deps.notifier.showWarning('No active editor found');
 				return;
 			}
 
 			try {
-				deps.statusBar.showProgress(
-					localize('runtime.dedupe.progress', 'Deduplicating colors...'),
-				);
+				deps.statusBar.showProgress('Deduplicating colors...');
 
 				const document = editor.document;
 				const text = document.getText();
@@ -85,12 +78,7 @@ export function registerDedupeCommand(
 				const removedCount = originalCount - dedupedCount;
 
 				deps.notifier.showInfo(
-					localize(
-						'runtime.dedupe.success',
-						'Removed {0} duplicate colors ({1} remaining)',
-						removedCount,
-						dedupedCount,
-					),
+					`Removed ${removedCount} duplicate colors (${dedupedCount} remaining)`,
 				);
 				deps.telemetry.event('dedupe-success', {
 					original: originalCount,
@@ -98,19 +86,8 @@ export function registerDedupeCommand(
 				});
 			} catch (error) {
 				const message =
-					error instanceof Error
-						? error.message
-						: localize(
-								'runtime.error.unknown-fallback',
-								'Unknown error occurred',
-							);
-				deps.notifier.showError(
-					localize(
-						'runtime.dedupe.error',
-						'Deduplication failed: {0}',
-						message,
-					),
-				);
+					error instanceof Error ? error.message : 'Unknown error occurred';
+				deps.notifier.showError(`Deduplication failed: ${message}`);
 				deps.telemetry.event('dedupe-error', { error: message });
 			} finally {
 				deps.statusBar.hideProgress();

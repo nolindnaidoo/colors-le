@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { createLocalizer } from '../utils/localization';
 import { formatDuration } from '../utils/performance';
 
 export interface ColorFilterOptions {
@@ -52,17 +51,10 @@ export function registerFilterCommand(
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.filter',
 		async () => {
-			const localizer = createLocalizer();
-
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage(
-						localizer.localize(
-							'runtime.error.no-active-editor',
-							'No active editor found',
-						),
-					);
+					await vscode.window.showWarningMessage('No active editor found');
 					return;
 				}
 
@@ -76,10 +68,7 @@ export function registerFilterCommand(
 
 				if (!result.success || result.colors.length === 0) {
 					await vscode.window.showInformationMessage(
-						localizer.localize(
-							'runtime.filter.no-colors',
-							'No colors found to filter',
-						),
+						'No colors found to filter',
 					);
 					return;
 				}
@@ -109,22 +98,13 @@ export function registerFilterCommand(
 				});
 
 				await vscode.window.showInformationMessage(
-					localizer.localize(
-						'runtime.filter.success',
-						'Color filtering completed. {0} colors kept, {1} excluded.',
-						filterResult.summary.kept.toString(),
-						filterResult.summary.excluded.toString(),
-					),
+					`Color filtering completed. ${filterResult.summary.kept.toString()} colors kept, ${filterResult.summary.excluded.toString()} excluded.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
 				await vscode.window.showErrorMessage(
-					localizer.localize(
-						'runtime.filter.error',
-						'Filtering failed: {0}',
-						errorMessage,
-					),
+					`Filtering failed: ${errorMessage}`,
 				);
 			}
 		},

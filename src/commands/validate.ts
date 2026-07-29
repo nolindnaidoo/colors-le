@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { getContrastRatio } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { createLocalizer } from '../utils/localization';
 import { formatDuration } from '../utils/performance';
 
 export interface ColorValidationOptions {
@@ -74,17 +73,10 @@ export function registerValidateCommand(
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.validate',
 		async () => {
-			const localizer = createLocalizer();
-
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage(
-						localizer.localize(
-							'runtime.error.no-active-editor',
-							'No active editor found',
-						),
-					);
+					await vscode.window.showWarningMessage('No active editor found');
 					return;
 				}
 
@@ -98,10 +90,7 @@ export function registerValidateCommand(
 
 				if (!result.success || result.colors.length === 0) {
 					await vscode.window.showInformationMessage(
-						localizer.localize(
-							'runtime.validate.no-colors',
-							'No colors found to validate',
-						),
+						'No colors found to validate',
 					);
 					return;
 				}
@@ -133,24 +122,13 @@ export function registerValidateCommand(
 				const { valid, invalid, errors, warnings } = validationReport.summary;
 
 				await vscode.window.showInformationMessage(
-					localizer.localize(
-						'runtime.validate.success',
-						'Color validation completed. {0} valid, {1} invalid, {2} errors, {3} warnings.',
-						valid.toString(),
-						invalid.toString(),
-						errors.toString(),
-						warnings.toString(),
-					),
+					`Color validation completed. ${valid.toString()} valid, ${invalid.toString()} invalid, ${errors.toString()} errors, ${warnings.toString()} warnings.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
 				await vscode.window.showErrorMessage(
-					localizer.localize(
-						'runtime.validate.error',
-						'Validation failed: {0}',
-						errorMessage,
-					),
+					`Validation failed: ${errorMessage}`,
 				);
 			}
 		},

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as nls from 'vscode-nls';
 import { getConfiguration } from '../config/config';
 import { type ExtractionOptions, extractColors } from '../extraction/extract';
 import type { Telemetry } from '../telemetry/telemetry';
@@ -14,8 +13,6 @@ import {
 	handleSafetyChecksWithUserConfirmation,
 	type SafetyCheckOptions,
 } from '../utils/safety';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export function registerExtractCommand(
 	context: vscode.ExtensionContext,
@@ -33,18 +30,13 @@ export function registerExtractCommand(
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
 				const error = createEnhancedError(
-					new Error(
-						localize('runtime.extract.no-editor', 'No active editor found'),
-					),
+					new Error('No active editor found'),
 					'operational',
 					{},
 					{
 						recoverable: false,
 						severity: 'low',
-						suggestion: localize(
-							'runtime.extract.no-editor.suggestion',
-							'Open a file to extract colors from',
-						),
+						suggestion: 'Open a file to extract colors from',
 					},
 				);
 				await deps.notifier.showEnhancedError(error);
@@ -97,7 +89,7 @@ export function registerExtractCommand(
 				};
 
 				const result = await deps.notifier.showProgress(
-					localize('runtime.extract.progress', 'Extracting colors...'),
+					'Extracting colors...',
 					async (
 						progress: vscode.Progress<{ message?: string; increment?: number }>,
 						token: vscode.CancellationToken,
@@ -108,10 +100,7 @@ export function registerExtractCommand(
 						}
 
 						progress.report({
-							message: localize(
-								'runtime.extract.progress.analyzing',
-								'Analyzing file...',
-							),
+							message: 'Analyzing file...',
 						});
 
 						const extractionResult = await extractColors(
@@ -126,10 +115,7 @@ export function registerExtractCommand(
 						}
 
 						progress.report({
-							message: localize(
-								'runtime.extract.progress.formatting',
-								'Formatting results...',
-							),
+							message: 'Formatting results...',
 							increment: 50,
 						});
 
@@ -169,12 +155,7 @@ export function registerExtractCommand(
 				}
 
 				if (result.colors.length === 0) {
-					deps.notifier.showInfo(
-						localize(
-							'runtime.extract.no-colors',
-							'No colors found in the current document',
-						),
-					);
+					deps.notifier.showInfo('No colors found in the current document');
 					return;
 				}
 
@@ -209,10 +190,7 @@ export function registerExtractCommand(
 						{
 							recoverable: true,
 							severity: 'medium',
-							suggestion: localize(
-								'runtime.extract.open-results.suggestion',
-								'Try copying results to clipboard instead',
-							),
+							suggestion: 'Try copying results to clipboard instead',
 						},
 					);
 					await deps.notifier.showEnhancedError(enhancedError);
@@ -226,20 +204,12 @@ export function registerExtractCommand(
 						if (clipboardText.length > 1000000) {
 							// 1MB limit
 							deps.notifier.showWarning(
-								localize(
-									'runtime.extract.clipboard.too-large',
-									'Results too large for clipboard ({0} characters), skipping clipboard copy',
-									clipboardText.length,
-								),
+								`Results too large for clipboard (${clipboardText.length} characters), skipping clipboard copy`,
 							);
 						} else {
 							await vscode.env.clipboard.writeText(clipboardText);
 							deps.notifier.showInfo(
-								localize(
-									'runtime.extract.success.clipboard',
-									'Extracted {0} colors and copied to clipboard',
-									result.colors.length,
-								),
+								`Extracted ${result.colors.length} colors and copied to clipboard`,
 							);
 						}
 					} catch (error) {
@@ -252,22 +222,13 @@ export function registerExtractCommand(
 							{
 								recoverable: true,
 								severity: 'low',
-								suggestion: localize(
-									'runtime.extract.clipboard.suggestion',
-									'Results are displayed in the editor',
-								),
+								suggestion: 'Results are displayed in the editor',
 							},
 						);
 						await deps.notifier.showEnhancedError(enhancedError);
 					}
 				} else {
-					deps.notifier.showInfo(
-						localize(
-							'runtime.extract.success',
-							'Extracted {0} colors',
-							result.colors.length,
-						),
-					);
+					deps.notifier.showInfo(`Extracted ${result.colors.length} colors`);
 				}
 
 				// Enhanced telemetry with performance metrics
@@ -280,23 +241,13 @@ export function registerExtractCommand(
 				});
 			} catch (error) {
 				const enhancedError = createEnhancedError(
-					error instanceof Error
-						? error
-						: new Error(
-								localize(
-									'runtime.error.unknown-fallback',
-									'Unknown error occurred',
-								),
-							),
+					error instanceof Error ? error : new Error('Unknown error occurred'),
 					'operational',
 					{ fileName: document.fileName, languageId: document.languageId },
 					{
 						recoverable: true,
 						severity: 'high',
-						suggestion: localize(
-							'runtime.extract.error.suggestion',
-							'Try with a smaller file or check file syntax',
-						),
+						suggestion: 'Try with a smaller file or check file syntax',
 					},
 				);
 
@@ -313,5 +264,3 @@ export function registerExtractCommand(
 
 	context.subscriptions.push(command);
 }
-
-void localize;

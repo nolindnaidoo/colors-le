@@ -1,8 +1,5 @@
-import * as nls from 'vscode-nls';
 import type { Configuration } from '../types';
 import { createEnhancedError, type EnhancedError } from './errorHandling';
-
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Performance monitoring and optimization utilities for Colors-LE
@@ -146,25 +143,14 @@ export class PerformanceMonitor {
 		// Log slow operations
 		if (metrics.duration > this.thresholds.maxDuration) {
 			console.warn(
-				localize(
-					'runtime.performance.slow-operation',
-					'Slow operation detected: {0} took {1}ms (threshold: {2}ms)',
-					metrics.operation,
-					metrics.duration.toFixed(2),
-					this.thresholds.maxDuration,
-				),
+				`Slow operation detected: ${metrics.operation} took ${metrics.duration.toFixed(2)}ms (threshold: ${this.thresholds.maxDuration}ms)`,
 			);
 		}
 
 		// Log high memory usage
 		if (metrics.memoryUsage > this.thresholds.maxMemoryUsage) {
 			console.warn(
-				localize(
-					'runtime.performance.high-memory',
-					'High memory usage detected: {0}MB (threshold: {1}MB)',
-					(metrics.memoryUsage / 1024 / 1024).toFixed(1),
-					(this.thresholds.maxMemoryUsage / 1024 / 1024).toFixed(1),
-				),
+				`High memory usage detected: ${(metrics.memoryUsage / 1024 / 1024).toFixed(1)}MB (threshold: ${(this.thresholds.maxMemoryUsage / 1024 / 1024).toFixed(1)}MB)`,
 			);
 		}
 	}
@@ -330,28 +316,19 @@ export class PerformanceMonitor {
 
 		if (averageDuration > this.thresholds.maxDuration) {
 			recommendations.push(
-				localize(
-					'runtime.performance.recommendation.slow',
-					'Consider optimizing color extraction algorithms or reducing file size',
-				),
+				'Consider optimizing color extraction algorithms or reducing file size',
 			);
 		}
 
 		if (throughput < this.thresholds.minThroughput) {
 			recommendations.push(
-				localize(
-					'runtime.performance.recommendation.low-throughput',
-					'Throughput is below optimal. Consider caching or parallel processing',
-				),
+				'Throughput is below optimal. Consider caching or parallel processing',
 			);
 		}
 
 		if (memoryEfficiency < 1000) {
 			recommendations.push(
-				localize(
-					'runtime.performance.recommendation.memory',
-					'Memory efficiency is low. Consider streaming or chunked processing',
-				),
+				'Memory efficiency is low. Consider streaming or chunked processing',
 			);
 		}
 
@@ -359,10 +336,7 @@ export class PerformanceMonitor {
 			metrics.reduce((sum, m) => sum + m.errors, 0) / metrics.length;
 		if (errorRate > 0.1) {
 			recommendations.push(
-				localize(
-					'runtime.performance.recommendation.errors',
-					'High error rate detected. Review error handling and input validation',
-				),
+				'High error rate detected. Review error handling and input validation',
 			);
 		}
 
@@ -477,36 +451,16 @@ export function createPerformanceTracker(
  * Format performance report for display
  */
 export function formatPerformanceReport(report: PerformanceReport): string {
-	let output = localize(
-		'runtime.performance.report.header',
-		'Performance Report:\n',
-	);
-	output += `${localize('runtime.performance.report.operation', 'Operation')}: ${
-		report.metrics.operation
-	}\n`;
-	output += `${localize(
-		'runtime.performance.report.duration',
-		'Duration',
-	)}: ${report.metrics.duration.toFixed(2)}ms\n`;
-	output += `${localize(
-		'runtime.performance.report.average',
-		'Average Duration',
-	)}: ${report.averageDuration.toFixed(2)}ms\n`;
-	output += `${localize(
-		'runtime.performance.report.throughput',
-		'Throughput',
-	)}: ${report.throughput.toFixed(0)} colors/sec\n`;
-	output += `${localize(
-		'runtime.performance.report.memory',
-		'Memory Efficiency',
-	)}: ${report.memoryEfficiency.toFixed(0)} colors/MB\n`;
-	output += `${localize(
-		'runtime.performance.report.cache',
-		'Cache Efficiency',
-	)}: ${report.cacheEfficiency.toFixed(1)}%\n`;
+	let output = 'Performance Report:\n';
+	output += `${'Operation'}: ${report.metrics.operation}\n`;
+	output += `${'Duration'}: ${report.metrics.duration.toFixed(2)}ms\n`;
+	output += `${'Average Duration'}: ${report.averageDuration.toFixed(2)}ms\n`;
+	output += `${'Throughput'}: ${report.throughput.toFixed(0)} colors/sec\n`;
+	output += `${'Memory Efficiency'}: ${report.memoryEfficiency.toFixed(0)} colors/MB\n`;
+	output += `${'Cache Efficiency'}: ${report.cacheEfficiency.toFixed(1)}%\n`;
 
 	if (report.recommendations.length > 0) {
-		output += `\n${localize('runtime.performance.report.recommendations', 'Recommendations')}:\n`;
+		output += `\n${'Recommendations'}:\n`;
 		for (const recommendation of report.recommendations) {
 			output += `  • ${recommendation}\n`;
 		}
@@ -538,10 +492,7 @@ export function createPerformanceWarning(
 	return createEnhancedError(new Error(message), 'safety', details, {
 		severity: 'medium',
 		recoverable: true,
-		suggestion: localize(
-			'runtime.performance.warning.suggestion',
-			'Consider optimizing the operation or reducing input size',
-		),
+		suggestion: 'Consider optimizing the operation or reducing input size',
 	});
 }
 
@@ -858,5 +809,3 @@ export function createPerformanceReport(metrics: PerformanceMetrics): string {
 
 	return report.join('\n');
 }
-
-void localize;
