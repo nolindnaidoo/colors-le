@@ -1,4 +1,3 @@
-import { getConfiguration } from '../config/config';
 import type { Color, ExtractionResult, FileType, ParseError } from '../types';
 import { createEnhancedError } from '../utils/errorHandling';
 import {
@@ -95,7 +94,7 @@ function initializePerformanceTracker(
 		return null;
 	}
 
-	const tracker = createPerformanceTracker(getConfiguration());
+	const tracker = createPerformanceTracker();
 	tracker.start('extract-colors', content.length);
 	return tracker;
 }

@@ -1,47 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { Configuration } from '../types';
 import {
 	createPerformanceMonitor,
 	createPerformanceTracker,
 	shouldCancelBasedOnPerformance,
 } from './performance';
 
-const mockConfig: Configuration = {
-	copyToClipboardEnabled: true,
-	dedupeEnabled: true,
-	notificationsLevel: 'all',
-	postProcessOpenInNewFile: false,
-	openResultsSideBySide: false,
-	safetyEnabled: true,
-	safetyFileSizeWarnBytes: 1000,
-	safetyLargeOutputLinesThreshold: 100,
-	safetyManyDocumentsThreshold: 50,
-	showParseErrors: true,
-	sortEnabled: true,
-	sortMode: 'off',
-	statusBarEnabled: true,
-	telemetryEnabled: true,
-	csvStreamingEnabled: false,
-	analysisEnabled: true,
-	analysisIncludeStats: true,
-	performanceEnabled: true,
-	performanceMaxDuration: 5000,
-	performanceMaxMemoryUsage: 100 * 1024 * 1024,
-	performanceMaxCpuUsage: 1000 * 1000,
-	performanceMinThroughput: 1000,
-	performanceMaxCacheSize: 1000,
-	keyboardShortcutsEnabled: true,
-	keyboardExtractShortcut: 'ctrl+alt+c',
-	keyboardDedupeShortcut: 'ctrl+alt+d',
-	keyboardSortShortcut: 'ctrl+alt+s',
-	presetsEnabled: true,
-	presetsDefaultPreset: 'balanced',
-};
-
 describe('Performance Monitoring', () => {
 	describe('createPerformanceMonitor', () => {
 		it('should create performance monitor with thresholds', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			expect(monitor).toBeDefined();
 			expect(typeof monitor.start).toBe('function');
@@ -51,7 +18,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should track operation performance', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			monitor.start('test-operation', 1000);
 			const metrics = monitor.end(500, 10, 2, 0);
@@ -67,7 +34,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should record metrics', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			monitor.start('test-operation', 1000);
 			const metrics = monitor.end(500, 10, 2, 0);
@@ -78,7 +45,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should clear metrics', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			monitor.start('test-operation', 1000);
 			monitor.end(500, 10, 2, 0);
@@ -90,7 +57,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should limit stored metrics to prevent memory leaks', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			// Add more than 100 metrics
 			for (let i = 0; i < 150; i++) {
@@ -103,7 +70,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should generate performance report', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			monitor.start('test-operation', 1000);
 			monitor.end(500, 10, 2, 0);
@@ -116,7 +83,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should handle cache operations', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			const result1 = monitor.getCached('test-key', () => 'cached-value');
 			const result2 = monitor.getCached('test-key', () => 'new-value');
@@ -128,7 +95,7 @@ describe('Performance Monitoring', () => {
 
 	describe('createPerformanceTracker', () => {
 		it('should create performance tracker', () => {
-			const tracker = createPerformanceTracker(mockConfig);
+			const tracker = createPerformanceTracker();
 
 			expect(tracker).toBeDefined();
 			expect(typeof tracker.start).toBe('function');
@@ -138,7 +105,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should track operation with tracker', () => {
-			const tracker = createPerformanceTracker(mockConfig);
+			const tracker = createPerformanceTracker();
 
 			tracker.start('test-operation', 1000);
 			const metrics = tracker.end(500, 10, 2, 0);
@@ -151,7 +118,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should return null if no operation started', () => {
-			const tracker = createPerformanceTracker(mockConfig);
+			const tracker = createPerformanceTracker();
 
 			const metrics = tracker.end(500, 10, 2, 0);
 			expect(metrics).toBeNull();
@@ -209,7 +176,7 @@ describe('Performance Monitoring', () => {
 
 	describe('Performance Edge Cases', () => {
 		it('should handle rapid start/end cycles', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			for (let i = 0; i < 10; i++) {
 				monitor.start(`operation-${i}`, 0);
@@ -221,7 +188,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should handle operations with same name', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 
 			monitor.start('same-op', 0);
 			monitor.end(0, 0, 0, 0);
@@ -233,7 +200,7 @@ describe('Performance Monitoring', () => {
 		});
 
 		it('should handle ending non-existent operation', () => {
-			const monitor = createPerformanceMonitor(mockConfig);
+			const monitor = createPerformanceMonitor();
 			monitor.end(0, 0, 0, 0);
 
 			const metrics = monitor.getMetrics();

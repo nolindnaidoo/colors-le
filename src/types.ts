@@ -75,32 +75,9 @@ export interface Configuration {
 	readonly safetyFileSizeWarnBytes: number;
 	readonly safetyLargeOutputLinesThreshold: number;
 	readonly safetyManyDocumentsThreshold: number;
-	readonly showParseErrors: boolean;
-	readonly sortEnabled: boolean;
 	readonly sortMode: SortMode;
 	readonly statusBarEnabled: boolean;
 	readonly telemetryEnabled: boolean;
-	readonly csvStreamingEnabled: boolean;
-	readonly postProcessOpenInNewFile: boolean;
-	readonly analysisEnabled: boolean;
-	readonly analysisIncludeStats: boolean;
-	readonly performanceEnabled: boolean;
-	readonly performanceMaxDuration: number;
-	readonly performanceMaxMemoryUsage: number;
-	readonly performanceMaxCpuUsage: number;
-	readonly performanceMinThroughput: number;
-	readonly performanceMaxCacheSize: number;
-	readonly keyboardShortcutsEnabled: boolean;
-	readonly keyboardExtractShortcut: string;
-	readonly keyboardDedupeShortcut: string;
-	readonly keyboardSortShortcut: string;
-	readonly presetsEnabled: boolean;
-	readonly presetsDefaultPreset:
-		| 'minimal'
-		| 'balanced'
-		| 'comprehensive'
-		| 'performance'
-		| 'colors';
 }
 
 export interface PerformanceMetrics {

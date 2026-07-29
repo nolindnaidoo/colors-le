@@ -1,102 +1,120 @@
 import * as vscode from 'vscode';
 import type { Configuration, SortMode } from '../types';
 
+/**
+ * Fallback values, kept identical to the defaults declared in
+ * package.json contributes.configuration. A unit test asserts parity so
+ * the two can never drift again.
+ */
+export const CONFIG_DEFAULTS = Object.freeze({
+	copyToClipboardEnabled: false,
+	dedupeEnabled: false,
+	notificationsLevel: 'silent' as const,
+	openResultsSideBySide: true,
+	safetyEnabled: true,
+	safetyFileSizeWarnBytes: 1_000_000,
+	safetyLargeOutputLinesThreshold: 50_000,
+	safetyManyDocumentsThreshold: 8,
+	sortMode: 'off' as const,
+	statusBarEnabled: true,
+	telemetryEnabled: false,
+});
+
 export function getConfiguration(): Configuration {
 	const config = vscode.workspace.getConfiguration('colors-le');
 
-	// Backward-compat: support both `notificationLevel` (preferred) and legacy `notificationsLevel`
-	const notifRaw = config.get(
-		'notificationLevel',
-		config.get('notificationsLevel', 'silent'),
-	) as unknown as string;
-	const notificationsLevel = isValidNotificationLevel(notifRaw)
-		? notifRaw
-		: 'silent';
-
-	const sortModeRaw = config.get('sortMode', 'off');
-	const sortMode = isValidSortMode(sortModeRaw) ? sortModeRaw : 'off';
-
-	const presetsDefaultPresetRaw = config.get(
-		'presets.defaultPreset',
-		'balanced',
-	);
-	const presetsDefaultPreset = isValidPreset(presetsDefaultPresetRaw)
-		? presetsDefaultPresetRaw
-		: 'balanced';
-
 	return Object.freeze({
-		copyToClipboardEnabled: Boolean(
-			config.get('copyToClipboardEnabled', false),
+		copyToClipboardEnabled: readBoolean(
+			config,
+			'copyToClipboardEnabled',
+			CONFIG_DEFAULTS.copyToClipboardEnabled,
 		),
-		dedupeEnabled: Boolean(config.get('dedupeEnabled', false)),
-		notificationsLevel,
-		openResultsSideBySide: Boolean(config.get('openResultsSideBySide', false)),
-		safetyEnabled: Boolean(config.get('safety.enabled', true)),
-		safetyFileSizeWarnBytes: Math.max(
+		dedupeEnabled: readBoolean(
+			config,
+			'dedupeEnabled',
+			CONFIG_DEFAULTS.dedupeEnabled,
+		),
+		notificationsLevel: readNotificationLevel(config),
+		openResultsSideBySide: readBoolean(
+			config,
+			'openResultsSideBySide',
+			CONFIG_DEFAULTS.openResultsSideBySide,
+		),
+		safetyEnabled: readBoolean(
+			config,
+			'safety.enabled',
+			CONFIG_DEFAULTS.safetyEnabled,
+		),
+		safetyFileSizeWarnBytes: readNumber(
+			config,
+			'safety.fileSizeWarnBytes',
+			CONFIG_DEFAULTS.safetyFileSizeWarnBytes,
 			1000,
-			Number(config.get('safety.fileSizeWarnBytes', 1000000)),
 		),
-		safetyLargeOutputLinesThreshold: Math.max(
+		safetyLargeOutputLinesThreshold: readNumber(
+			config,
+			'safety.largeOutputLinesThreshold',
+			CONFIG_DEFAULTS.safetyLargeOutputLinesThreshold,
 			100,
-			Number(config.get('safety.largeOutputLinesThreshold', 50000)),
 		),
-		safetyManyDocumentsThreshold: Math.max(
+		safetyManyDocumentsThreshold: readNumber(
+			config,
+			'safety.manyDocumentsThreshold',
+			CONFIG_DEFAULTS.safetyManyDocumentsThreshold,
 			1,
-			Number(config.get('safety.manyDocumentsThreshold', 8)),
 		),
-		showParseErrors: Boolean(config.get('showParseErrors', false)),
-		sortEnabled: Boolean(config.get('sortEnabled', false)),
-		sortMode,
-		statusBarEnabled: Boolean(config.get('statusBar.enabled', true)),
-		telemetryEnabled: Boolean(config.get('telemetryEnabled', false)),
-		csvStreamingEnabled: Boolean(config.get('csv.streamingEnabled', false)),
-		postProcessOpenInNewFile: Boolean(
-			config.get('postProcess.openInNewFile', true),
+		sortMode: readSortMode(config),
+		statusBarEnabled: readBoolean(
+			config,
+			'statusBar.enabled',
+			CONFIG_DEFAULTS.statusBarEnabled,
 		),
-		analysisEnabled: Boolean(config.get('analysis.enabled', true)),
-		analysisIncludeStats: Boolean(config.get('analysis.includeStats', true)),
-		performanceEnabled: Boolean(config.get('performance.enabled', true)),
-		performanceMaxDuration: Math.max(
-			1000,
-			Number(config.get('performance.maxDuration', 5000)),
+		telemetryEnabled: readBoolean(
+			config,
+			'telemetryEnabled',
+			CONFIG_DEFAULTS.telemetryEnabled,
 		),
-		performanceMaxMemoryUsage: Math.max(
-			1048576,
-			Number(config.get('performance.maxMemoryUsage', 104857600)),
-		),
-		performanceMaxCpuUsage: Math.max(
-			100000,
-			Number(config.get('performance.maxCpuUsage', 1000000)),
-		),
-		performanceMinThroughput: Math.max(
-			100,
-			Number(config.get('performance.minThroughput', 1000)),
-		),
-		performanceMaxCacheSize: Math.max(
-			100,
-			Number(config.get('performance.maxCacheSize', 1000)),
-		),
-		keyboardShortcutsEnabled: Boolean(
-			config.get('keyboard.shortcuts.enabled', true),
-		),
-		keyboardExtractShortcut: String(
-			config.get('keyboard.extractShortcut', 'ctrl+alt+c'),
-		),
-		keyboardDedupeShortcut: String(
-			config.get('keyboard.dedupeShortcut', 'ctrl+alt+d'),
-		),
-		keyboardSortShortcut: String(
-			config.get('keyboard.sortShortcut', 'ctrl+alt+s'),
-		),
-		presetsEnabled: Boolean(config.get('presets.enabled', true)),
-		presetsDefaultPreset,
 	});
+}
+
+function readBoolean(
+	config: vscode.WorkspaceConfiguration,
+	key: string,
+	defaultValue: boolean,
+): boolean {
+	const value = config.get(key, defaultValue);
+	return typeof value === 'boolean' ? value : defaultValue;
+}
+
+function readNumber(
+	config: vscode.WorkspaceConfiguration,
+	key: string,
+	defaultValue: number,
+	minValue: number,
+): number {
+	const value = Number(config.get(key, defaultValue));
+	if (!Number.isFinite(value)) {
+		return defaultValue;
+	}
+	return Math.max(minValue, value);
 }
 
 export type NotificationLevel = 'all' | 'important' | 'silent';
 
 export function isValidNotificationLevel(v: unknown): v is NotificationLevel {
 	return v === 'all' || v === 'important' || v === 'silent';
+}
+
+function readNotificationLevel(
+	config: vscode.WorkspaceConfiguration,
+): NotificationLevel {
+	const raw = config.get<string>(
+		'notificationsLevel',
+		CONFIG_DEFAULTS.notificationsLevel,
+	);
+	return isValidNotificationLevel(raw)
+		? raw
+		: CONFIG_DEFAULTS.notificationsLevel;
 }
 
 export function isValidSortMode(v: unknown): v is SortMode {
@@ -113,19 +131,7 @@ export function isValidSortMode(v: unknown): v is SortMode {
 	);
 }
 
-export type Preset =
-	| 'minimal'
-	| 'balanced'
-	| 'comprehensive'
-	| 'performance'
-	| 'colors';
-
-export function isValidPreset(v: unknown): v is Preset {
-	return (
-		v === 'minimal' ||
-		v === 'balanced' ||
-		v === 'comprehensive' ||
-		v === 'performance' ||
-		v === 'colors'
-	);
+function readSortMode(config: vscode.WorkspaceConfiguration): SortMode {
+	const raw = config.get<string>('sortMode', CONFIG_DEFAULTS.sortMode);
+	return isValidSortMode(raw) ? raw : CONFIG_DEFAULTS.sortMode;
 }

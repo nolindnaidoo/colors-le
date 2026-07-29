@@ -1,5 +1,3 @@
-import type { Configuration } from '../types';
-
 /**
  * Performance monitoring and optimization utilities for Colors-LE
  * Provides performance metrics, monitoring, and optimization strategies
@@ -381,15 +379,13 @@ export class PerformanceMonitor {
 /**
  * Create performance monitor instance
  */
-export function createPerformanceMonitor(
-	config?: Configuration,
-): PerformanceMonitor {
+export function createPerformanceMonitor(): PerformanceMonitor {
 	const thresholds: PerformanceThresholds = {
-		maxDuration: config?.performanceMaxDuration ?? 5000, // 5 seconds
-		maxMemoryUsage: config?.performanceMaxMemoryUsage ?? 100 * 1024 * 1024, // 100MB
-		maxCpuUsage: config?.performanceMaxCpuUsage ?? 1000 * 1000, // 1 second CPU time
-		minThroughput: config?.performanceMinThroughput ?? 1000, // 1000 colors per second
-		maxCacheSize: config?.performanceMaxCacheSize ?? 1000, // 1000 cache entries
+		maxDuration: 5000, // 5 seconds
+		maxMemoryUsage: 100 * 1024 * 1024, // 100MB
+		maxCpuUsage: 1000 * 1000, // 1 second CPU time
+		minThroughput: 1000, // 1000 colors per second
+		maxCacheSize: 1000, // 1000 cache entries
 	};
 
 	return new PerformanceMonitor(thresholds);
@@ -398,10 +394,8 @@ export function createPerformanceMonitor(
 /**
  * Create performance tracker for individual operations
  */
-export function createPerformanceTracker(
-	config: Configuration,
-): PerformanceTracker {
-	const monitor = createPerformanceMonitor(config);
+export function createPerformanceTracker(): PerformanceTracker {
+	const monitor = createPerformanceMonitor();
 	let currentOperation: {
 		operation: string;
 		startTime: number;
