@@ -84,7 +84,6 @@ export function registerExtractCommand(
 					filepath: document.fileName,
 					showProgress: true,
 					includeMetadata: true,
-					maxColors: config.safetyManyDocumentsThreshold,
 					timeoutMs: 30000, // 30 seconds
 					enablePerformanceMonitoring: false,
 				};
