@@ -67,13 +67,22 @@ exports[`extraction characterization > colors.css as css 1`] = `
       "value": "hsla(210, 50%, 40%, 0.25)",
     },
     {
-      "context": "* multi-line comment: #123456 should be ignored but the",
-      "format": "hex",
+      "context": "box-shadow: 0 0 4px navy;",
+      "format": "named",
       "position": {
-        "column": 24,
-        "line": 17,
+        "column": 22,
+        "line": 13,
       },
-      "value": "#123456",
+      "value": "navy",
+    },
+    {
+      "context": "rgb(1,",
+      "format": "rgb",
+      "position": {
+        "column": 3,
+        "line": 24,
+      },
+      "value": "rgb(1, 2, 3)",
     },
     {
       "context": "#00ff00",
@@ -133,21 +142,21 @@ exports[`extraction characterization > colors.html as html 1`] = `
     },
     {
       "context": "<span style="color: rgba(7, 8, 9, 0.75); background: #fff">x</span>",
-      "format": "hex",
-      "position": {
-        "column": 55,
-        "line": 9,
-      },
-      "value": "#fff",
-    },
-    {
-      "context": "<span style="color: rgba(7, 8, 9, 0.75); background: #fff">x</span>",
       "format": "rgba",
       "position": {
         "column": 22,
         "line": 9,
       },
       "value": "rgba(7, 8, 9, 0.75)",
+    },
+    {
+      "context": "<span style="color: rgba(7, 8, 9, 0.75); background: #fff">x</span>",
+      "format": "hex",
+      "position": {
+        "column": 55,
+        "line": 9,
+      },
+      "value": "#fff",
     },
   ],
   "errors": [],
@@ -160,6 +169,33 @@ exports[`extraction characterization > colors.html as html 1`] = `
 exports[`extraction characterization > colors.js as javascript 1`] = `
 {
   "colors": [
+    {
+      "context": "primary: '#0af',",
+      "format": "hex",
+      "position": {
+        "column": 12,
+        "line": 3,
+      },
+      "value": "#0af",
+    },
+    {
+      "context": "secondary: 'rgb(10, 20, 30)',",
+      "format": "rgb",
+      "position": {
+        "column": 14,
+        "line": 4,
+      },
+      "value": "rgb(10, 20, 30)",
+    },
+    {
+      "context": "danger: 'crimson',",
+      "format": "named",
+      "position": {
+        "column": 11,
+        "line": 5,
+      },
+      "value": "crimson",
+    },
     {
       "context": "color: #123abc;",
       "format": "hex",
@@ -179,10 +215,19 @@ exports[`extraction characterization > colors.js as javascript 1`] = `
       "value": "hsla(10, 20%, 30%, 0.5)",
     },
     {
+      "context": "const el = document.getElementById('#ff9900');",
+      "format": "hex",
+      "position": {
+        "column": 37,
+        "line": 14,
+      },
+      "value": "#ff9900",
+    },
+    {
       "context": "document.body.style.background = "rgba(1, 2, 3, 0.9)";",
       "format": "rgba",
       "position": {
-        "column": 34,
+        "column": 35,
         "line": 15,
       },
       "value": "rgba(1, 2, 3, 0.9)",
@@ -191,7 +236,7 @@ exports[`extraction characterization > colors.js as javascript 1`] = `
       "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
       "format": "hex",
       "position": {
-        "column": 25,
+        "column": 26,
         "line": 16,
       },
       "value": "#abcdef",
@@ -200,7 +245,7 @@ exports[`extraction characterization > colors.js as javascript 1`] = `
       "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
       "format": "hsl",
       "position": {
-        "column": 53,
+        "column": 54,
         "line": 16,
       },
       "value": "hsl(90, 10%, 20%)",
@@ -217,6 +262,33 @@ exports[`extraction characterization > colors.js as typescript 1`] = `
 {
   "colors": [
     {
+      "context": "primary: '#0af',",
+      "format": "hex",
+      "position": {
+        "column": 12,
+        "line": 3,
+      },
+      "value": "#0af",
+    },
+    {
+      "context": "secondary: 'rgb(10, 20, 30)',",
+      "format": "rgb",
+      "position": {
+        "column": 14,
+        "line": 4,
+      },
+      "value": "rgb(10, 20, 30)",
+    },
+    {
+      "context": "danger: 'crimson',",
+      "format": "named",
+      "position": {
+        "column": 11,
+        "line": 5,
+      },
+      "value": "crimson",
+    },
+    {
       "context": "color: #123abc;",
       "format": "hex",
       "position": {
@@ -235,10 +307,19 @@ exports[`extraction characterization > colors.js as typescript 1`] = `
       "value": "hsla(10, 20%, 30%, 0.5)",
     },
     {
+      "context": "const el = document.getElementById('#ff9900');",
+      "format": "hex",
+      "position": {
+        "column": 37,
+        "line": 14,
+      },
+      "value": "#ff9900",
+    },
+    {
       "context": "document.body.style.background = "rgba(1, 2, 3, 0.9)";",
       "format": "rgba",
       "position": {
-        "column": 34,
+        "column": 35,
         "line": 15,
       },
       "value": "rgba(1, 2, 3, 0.9)",
@@ -247,7 +328,7 @@ exports[`extraction characterization > colors.js as typescript 1`] = `
       "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
       "format": "hex",
       "position": {
-        "column": 25,
+        "column": 26,
         "line": 16,
       },
       "value": "#abcdef",
@@ -256,7 +337,7 @@ exports[`extraction characterization > colors.js as typescript 1`] = `
       "context": "const styled = { color: "#abcdef", backgroundColor: "hsl(90, 10%, 20%)" };",
       "format": "hsl",
       "position": {
-        "column": 53,
+        "column": 54,
         "line": 16,
       },
       "value": "hsl(90, 10%, 20%)",
@@ -273,49 +354,67 @@ exports[`extraction characterization > colors.less as less 1`] = `
 {
   "colors": [
     {
-      "context": "LESS variable",
+      "context": "@primary: #00aaff;",
       "format": "hex",
       "position": {
-        "column": 0,
+        "column": 11,
         "line": 1,
       },
       "value": "#00aaff",
     },
     {
-      "context": "LESS variable",
+      "context": "@named: seagreen;",
       "format": "named",
       "position": {
-        "column": 0,
+        "column": 9,
         "line": 2,
       },
       "value": "seagreen",
     },
     {
-      "context": "LESS variable",
+      "context": "@alpha: hsla(120, 30%, 40%, 0.6);",
       "format": "hsla",
       "position": {
-        "column": 0,
+        "column": 9,
         "line": 3,
       },
       "value": "hsla(120, 30%, 40%, 0.6)",
     },
     {
-      "context": "LESS mixin",
+      "context": "background: rgba(0, 170, 255, 0.25);",
       "format": "rgba",
       "position": {
-        "column": 1,
+        "column": 14,
         "line": 7,
       },
       "value": "rgba(0, 170, 255, 0.25)",
     },
     {
-      "context": "LESS property",
+      "context": "border-color: #fff;",
       "format": "hex",
       "position": {
-        "column": 8,
+        "column": 16,
         "line": 8,
       },
       "value": "#fff",
+    },
+    {
+      "context": "box-shadow: 0 0 3px #a1b2c3;",
+      "format": "hex",
+      "position": {
+        "column": 22,
+        "line": 9,
+      },
+      "value": "#a1b2c3",
+    },
+    {
+      "context": "outline: 1px solid tomato;",
+      "format": "named",
+      "position": {
+        "column": 21,
+        "line": 10,
+      },
+      "value": "tomato",
     },
   ],
   "errors": [],
@@ -329,40 +428,76 @@ exports[`extraction characterization > colors.scss as scss 1`] = `
 {
   "colors": [
     {
-      "context": "SCSS variable",
+      "context": "$primary: #3366ff;",
       "format": "hex",
       "position": {
-        "column": 0,
+        "column": 11,
         "line": 1,
       },
       "value": "#3366ff",
     },
     {
-      "context": "SCSS variable",
+      "context": "$accent: crimson;",
       "format": "named",
       "position": {
-        "column": 0,
+        "column": 10,
         "line": 2,
       },
       "value": "crimson",
     },
     {
-      "context": "SCSS property",
+      "context": "$alpha: rgba(10, 20, 30, 0.4);",
+      "format": "rgba",
+      "position": {
+        "column": 9,
+        "line": 3,
+      },
+      "value": "rgba(10, 20, 30, 0.4)",
+    },
+    {
+      "context": "background: lighten(#3366ff, 10%);",
       "format": "hex",
       "position": {
-        "column": 13,
+        "column": 22,
         "line": 7,
       },
       "value": "#3366ff",
     },
     {
-      "context": "SCSS property",
+      "context": "box-shadow: 0 0 2px hsl(120, 40%, 30%);",
+      "format": "hsl",
+      "position": {
+        "column": 22,
+        "line": 10,
+      },
+      "value": "hsl(120, 40%, 30%)",
+    },
+    {
+      "context": "text-shadow: 1px 1px #99aabb;",
       "format": "hex",
       "position": {
-        "column": 1,
+        "column": 23,
+        "line": 11,
+      },
+      "value": "#99aabb",
+    },
+    {
+      "context": "background: #445566;",
+      "format": "hex",
+      "position": {
+        "column": 14,
         "line": 12,
       },
       "value": "#445566",
+    },
+    {
+      "context": "color: rebeccapurple;",
+      "format": "named",
+      "position": {
+        "column": 9,
+        "line": 13,
+      },
+      "value": "rebeccapurple",
     },
   ],
   "errors": [],
@@ -376,127 +511,64 @@ exports[`extraction characterization > colors.styl as stylus 1`] = `
 {
   "colors": [
     {
-      "context": "Stylus variable",
+      "context": "primary = #deadbe",
       "format": "hex",
       "position": {
-        "column": 0,
+        "column": 11,
         "line": 1,
       },
       "value": "#deadbe",
     },
     {
-      "context": "Stylus variable",
-      "format": "hex",
-      "position": {
-        "column": 10,
-        "line": 1,
-      },
-      "value": "#deadbe",
-    },
-    {
-      "context": "Stylus variable",
+      "context": "$secondary = tomato",
       "format": "named",
       "position": {
-        "column": 0,
+        "column": 14,
         "line": 2,
       },
       "value": "tomato",
     },
     {
-      "context": "Stylus variable",
+      "context": "accent-color = rgb(9, 8, 7)",
       "format": "rgb",
       "position": {
-        "column": 0,
+        "column": 16,
         "line": 3,
       },
       "value": "rgb(9, 8, 7)",
     },
     {
-      "context": "Stylus variable",
-      "format": "rgb",
-      "position": {
-        "column": 15,
-        "line": 3,
-      },
-      "value": "rgb(9, 8, 7)",
-    },
-    {
-      "context": "Stylus declaration",
+      "context": "background #cafe00",
       "format": "hex",
       "position": {
-        "column": 2,
+        "column": 14,
         "line": 7,
       },
       "value": "#cafe00",
     },
     {
-      "context": "Stylus declaration",
-      "format": "hex",
-      "position": {
-        "column": 13,
-        "line": 7,
-      },
-      "value": "#cafe00",
-    },
-    {
-      "context": "Stylus function",
+      "context": "border-color rgba(1, 2, 3, 0.5)",
       "format": "rgba",
       "position": {
-        "column": 15,
+        "column": 16,
         "line": 8,
       },
       "value": "rgba(1, 2, 3, 0.5)",
     },
     {
-      "context": "Stylus property",
+      "context": "color: #fedcba",
       "format": "hex",
       "position": {
-        "column": 1,
+        "column": 10,
         "line": 11,
       },
       "value": "#fedcba",
     },
     {
-      "context": "Stylus property",
-      "format": "hex",
-      "position": {
-        "column": 2,
-        "line": 11,
-      },
-      "value": "#fedcba",
-    },
-    {
-      "context": "Stylus property",
-      "format": "hex",
-      "position": {
-        "column": 9,
-        "line": 11,
-      },
-      "value": "#fedcba",
-    },
-    {
-      "context": "Stylus function",
+      "context": "background: hsl(45, 80%, 60%)",
       "format": "hsl",
       "position": {
-        "column": 1,
-        "line": 12,
-      },
-      "value": "hsl(45, 80%, 60%)",
-    },
-    {
-      "context": "Stylus function",
-      "format": "hsl",
-      "position": {
-        "column": 2,
-        "line": 12,
-      },
-      "value": "hsl(45, 80%, 60%)",
-    },
-    {
-      "context": "Stylus function",
-      "format": "hsl",
-      "position": {
-        "column": 14,
+        "column": 15,
         "line": 12,
       },
       "value": "hsl(45, 80%, 60%)",
@@ -532,6 +604,15 @@ exports[`extraction characterization > colors.svg as xml 1`] = `
     },
     {
       "context": "<circle fill="goldenrod" style="stroke: #00ffcc; fill-opacity: 0.5" r="4"/>",
+      "format": "named",
+      "position": {
+        "column": 16,
+        "line": 4,
+      },
+      "value": "goldenrod",
+    },
+    {
+      "context": "<circle fill="goldenrod" style="stroke: #00ffcc; fill-opacity: 0.5" r="4"/>",
       "format": "hex",
       "position": {
         "column": 42,
@@ -556,6 +637,15 @@ exports[`extraction characterization > colors.svg as xml 1`] = `
         "line": 7,
       },
       "value": "hsla(200, 50%, 50%, 0.8)",
+    },
+    {
+      "context": "<text color="navy">x</text>",
+      "format": "named",
+      "position": {
+        "column": 15,
+        "line": 9,
+      },
+      "value": "navy",
     },
   ],
   "errors": [],

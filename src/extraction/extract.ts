@@ -155,11 +155,7 @@ function performExtraction(
 	context: ExtractionContext,
 ): void {
 	try {
-		const extractedColors = extractColorsByFileType(
-			content,
-			fileType,
-			languageId,
-		);
+		const extractedColors = extractColorsByFileType(content, fileType);
 		context.colors.push(...extractedColors);
 	} catch (error) {
 		const enhancedError = createExtractionError(
@@ -178,7 +174,6 @@ function performExtraction(
 function extractColorsByFileType(
 	content: string,
 	fileType: FileType,
-	languageId: string,
 ): readonly Color[] {
 	switch (fileType) {
 		case 'css':
@@ -197,10 +192,8 @@ function extractColorsByFileType(
 		case 'svg':
 			return extractFromSvg(content);
 		default:
-			// Fallback to CSS extraction for unknown types
-			console.warn(
-				`Unknown file type "${languageId}", using CSS extraction as fallback`,
-			);
+			// Unknown types fall back to CSS-style extraction: hex/functional
+			// literals are format-agnostic enough to be useful anywhere.
 			return extractFromCss(content);
 	}
 }

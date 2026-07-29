@@ -48,10 +48,14 @@ describe('extractFromJavaScript', () => {
 
 		const result = extractFromJavaScript(js);
 
-		// Note: Multi-line object literals where color properties are on different lines
-		// from style keywords (like 'colors:') are not extracted due to context limitations.
-		// This is a known limitation to ensure zero false positives.
-		expect(result.length).toBe(0);
+		// Every color inside a string literal is extracted — no fragile
+		// style-context guessing (theme objects are the canonical use case).
+		expect(result.length).toBe(3);
+		expect(result.map((r) => r.value)).toEqual([
+			'#ff0000',
+			'rgb(0, 255, 0)',
+			'rgba(0, 0, 255, 0.5)',
+		]);
 	});
 
 	test('extractFromJavaScript: style variable assignments', () => {
@@ -63,14 +67,13 @@ describe('extractFromJavaScript', () => {
 
 		const result = extractFromJavaScript(js);
 
-		// Note: Extraction depends on which variable names match CSS property patterns.
-		// The exact variables extracted may vary based on the context detection logic.
-		expect(result.length).toBe(2);
+		expect(result.length).toBe(3);
 		const values = result.map((r) => r.value);
-		expect(values).toContain('#ff0000');
-		expect(values.some((v) => v.includes('rgb') || v.includes('hsl'))).toBe(
-			true,
-		);
+		expect(values).toEqual([
+			'#ff0000',
+			'rgb(0, 255, 0)',
+			'hsl(240, 100%, 50%)',
+		]);
 	});
 
 	test('extractFromJavaScript: CSS property assignments', () => {
@@ -117,8 +120,15 @@ describe('extractFromJavaScript', () => {
 
 		const result = extractFromJavaScript(js);
 
-		// Should not extract colors from non-style contexts
-		expect(result.length).toBe(0);
+		// String-literal colors are extracted wherever they appear; the
+		// documented tradeoff is that a hex inside a URL fragment matches
+		// too. '#12345' is five digits — not a valid hex — and is rejected.
+		expect(result.length).toBe(3);
+		expect(result.map((r) => r.value)).toEqual([
+			'#ff0000',
+			'rgb(0, 255, 0)',
+			'rgba(255, 0, 0, 0.5)',
+		]);
 	});
 
 	test('extractFromJavaScript: mixed valid and invalid contexts', () => {
@@ -136,11 +146,12 @@ describe('extractFromJavaScript', () => {
 
 		const result = extractFromJavaScript(js);
 
-		// Should only extract from style contexts
-		// Colors are deduplicated (no duplicates from regex + string literal matches)
-		expect(result.length).toBe(2);
+		// '#12345' is rejected (invalid hex length); everything else in a
+		// string literal is extracted.
+		expect(result.length).toBe(3);
 		expect(result[0]?.value).toBe('#ff0000');
 		expect(result[1]?.value).toBe('rgb(0, 255, 0)');
+		expect(result[2]?.value).toBe('rgba(255, 0, 0, 0.5)');
 	});
 
 	test('extractFromJavaScript: styled-components pattern', () => {
