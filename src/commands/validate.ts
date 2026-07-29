@@ -85,7 +85,7 @@ export function registerValidateCommand(
 				// Extract colors first
 				const result = await extractColors(
 					editor.document.getText(),
-					editor.document.fileName,
+					editor.document.languageId,
 				);
 
 				if (!result.success || result.colors.length === 0) {
