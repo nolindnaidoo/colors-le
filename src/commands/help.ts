@@ -61,6 +61,9 @@ Access settings via Command Palette: "Colors-LE: Open Settings"
 ## Support
 - GitHub Issues: https://github.com/nolindnaidoo/colors-le/issues
 - Documentation: https://github.com/nolindnaidoo/colors-le#readme
+- LE Tools: https://letools.dev
+
+Built by nolindnaidoo (https://github.com/nolindnaidoo) — MIT licensed.
 		`.trim();
 
 			const doc = await vscode.workspace.openTextDocument({
