@@ -115,3 +115,4 @@ dist/
 # Release packages
 release/
 out-test/
+benchmark-results.json
