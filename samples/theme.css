@@ -1,0 +1,28 @@
+/* Design tokens — brand palette */
+:root {
+  --brand-primary: #2563eb;
+  --brand-hover: #1d4ed8;
+  --brand-subtle: #dbeafe;
+
+  --text-body: rgb(17, 24, 39);
+  --text-muted: rgba(107, 114, 128, 0.85);
+
+  --surface: hsl(0, 0%, 100%);
+  --surface-alt: hsl(210, 20%, 98%);
+  --border: hsl(214, 32%, 91%);
+
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+.button {
+  background: var(--brand-primary);
+  color: white;
+  border: 1px solid #1e40af;
+}
+
+.button:hover {
+  background: #1d4ed8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}

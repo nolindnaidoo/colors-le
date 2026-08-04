@@ -1,0 +1,11 @@
+$brand: #2563eb;
+$brand-dark: darken($brand, 10%);
+$ink: rgb(17, 24, 39);
+$paper: hsl(0, 0%, 100%);
+$muted: rgba(107, 114, 128, 0.7);
+
+.card {
+  background: $paper;
+  color: $ink;
+  border-top: 3px solid $brand;
+}
