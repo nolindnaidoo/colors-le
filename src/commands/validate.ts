@@ -10,6 +10,7 @@ import type {
 	ColorValidationResult,
 	ValidationIssue,
 	ValidationReport,
+	ValidationRule,
 } from './validateTypes';
 
 // Re-exported so validate.ts stays the public face of the command; the split
@@ -93,6 +94,43 @@ export function registerValidateCommand(
 	);
 
 	context.subscriptions.push(disposable);
+}
+
+/**
+ * A custom rule's verdict on one colour, or null when it passes.
+ *
+ * A rule is user-supplied and may throw; that is not a finding about the
+ * colour, so it is ignored rather than reported against it.
+ */
+function evaluateCustomRule(
+	rule: ValidationRule,
+	value: string,
+): ValidationIssue | null {
+	try {
+		if (rule.test(value)) return null;
+		return {
+			type: 'custom',
+			severity: rule.severity,
+			message: `${rule.name}: ${rule.description}`,
+			suggestion: rule.suggestion,
+		};
+	} catch {
+		// Ignore rule errors
+		return null;
+	}
+}
+
+/** Every custom-rule finding for one colour. */
+function customRuleIssues(
+	value: string,
+	rules: readonly ValidationRule[],
+): readonly ValidationIssue[] {
+	const found: ValidationIssue[] = [];
+	for (const rule of rules) {
+		const issue = evaluateCustomRule(rule, value);
+		if (issue) found.push(issue);
+	}
+	return found;
 }
 
 /**
@@ -200,19 +238,7 @@ export function validateColors(
 
 		// Custom rules
 		if (options.customRules) {
-			for (const rule of options.customRules) {
-				try {
-					if (rule.test(color.value)) continue;
-					issues.push({
-						type: 'custom',
-						severity: rule.severity,
-						message: `${rule.name}: ${rule.description}`,
-						suggestion: rule.suggestion,
-					});
-				} catch {
-					// Ignore rule errors
-				}
-			}
+			issues.push(...customRuleIssues(color.value, options.customRules));
 		}
 
 		// Generate suggestions
