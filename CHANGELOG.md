@@ -5,14 +5,76 @@ All notable changes to Colors-LE will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.2] - 2026-08-04
+## [2.1.0] - 2026-08-04
 
 ### Added
+
+- Runtime strings are localized, and this time they render. All 100 of them —
+  notifications, status bar, quick-picks and prompts — go through
+  `vscode.l10n` and ship as twelve translated bundles in `l10n/`. The v1.x
+  line carried manifest catalogues that worked and runtime catalogues that
+  never reached the screen: `vscode-nls` was configured without
+  `__filename`, so every runtime string fell back to English while the VSIX
+  looked correct.
+- An integration test covering both localization mechanisms — manifest
+  substitution, key parity across all thirteen catalogues, and placeholder
+  integrity in every translation. A translation that silently drops `{0}`
+  now fails the build instead of shipping a message with the value missing.
 
 - Dependency review on pull requests, failing on a high-severity addition
   before Dependabot's auto-merge can act.
 
+### Fixed
+
+- Input-box validation messages ("Enter a number between 0 and 100", "Enter a
+  valid color", "Enter a positive number") were never localized — they are
+  returned from a `validateInput` callback rather than assigned to a property,
+  so the localization pass had not reached them.
+- The "additional filters" and "validation checks" multi-selects matched the
+  user's picks by comparing the item label against an English literal. Once
+  those labels were localized the comparison could never match, so choosing
+  "Exclude duplicates", "Contrast validation" or any of the other five did
+  nothing at all in the twelve non-English locales. Labels are now bound once
+  and compared by reference.
+
 ### Changed
+
+- Test coverage raised from 65.79% to 78.82% of branches (83.02% to 91.03% of
+  statements, 88.47% to 96.28% of functions). Eight files sat below one or
+  another of the repo's own floors; none do now. The gap was in code reachable
+  only by answering a prompt — the filter and validation prompt sequences,
+  where every branch past the first depends on the answer before it — and in
+  `colorConverter`, whose six output formats and five input parsers had three
+  and two covered respectively. `filterColors` is now tested directly rather
+  than through the command, so each predicate is checked on its own.
+- The `vscode` test mock runs `validateInput` against the value a test
+  supplies, as VS Code does. It previously did not, which left every input
+  validator uncovered and meant a validator could reject a test's value
+  without the test noticing.
+
+
+- `validate.ts` and `filter.ts` split their quick-pick prompting and their type
+  declarations into sibling modules (839 -> 549 and 732 -> 437 lines). Both
+  label bugs above lived in the prompting code, buried inside files large
+  enough that the mismatch read as normal. The split also stopped the untested
+  prompt paths from hiding behind well-tested logic: validate's own coverage
+  rose from 79.9% to 87.7% statements once measured separately.
+- The prompt functions no longer hand-maintain a mutable mirror of their
+  options interface and cast back with `as` on return. A `Draft<T>` mapped type
+  derives the mutable shape from the interface, which removed all four type
+  assertions in the codebase — including one that widened a quick-pick string
+  to a union with no check. `getAvailableFormats()` now returns that union
+  rather than `string[]`, so the choice stays typed end to end.
+- Colour primitives are defined once. The codebase carried two `rgbToHsl`,
+  three `parseColorToHSL`, three `hexToHSL` and three copies of the
+  valid-colour predicate, spread across the analyse, filter and validate
+  commands — their comments still recorded the copy chain ("reuse logic from
+  colorAnalysis.ts", then "Reuse HSL parsing logic from filter.ts"). Every copy
+  was verified behaviourally identical first (`rgbToHsl` across all 4,104
+  colours of the sampled 8-bit cube) before being replaced by a single shared
+  implementation. Nothing had diverged yet; a lightness threshold that
+  disagreed between filtering and reporting would have been extremely hard to
+  attribute.
 
 - CI gains fleet-wide checks that no single repo can perform: shared config is
   compared across all ten extensions, and every README link is verified —

@@ -4,8 +4,10 @@ import {
 	type ColorConversionResult,
 	convertColors,
 	getAvailableFormats,
+	type TargetFormat,
 } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
+import type { Draft } from '../types';
 import { formatDuration } from '../utils/format';
 
 /**
@@ -93,7 +95,7 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 /**
  * Prompt user to select target format
  */
-async function promptForTargetFormat(): Promise<string | undefined> {
+async function promptForTargetFormat(): Promise<TargetFormat | undefined> {
 	const formats = getAvailableFormats();
 	const formatItems = formats.map((format) => ({
 		label: format.toUpperCase(),
@@ -102,7 +104,7 @@ async function promptForTargetFormat(): Promise<string | undefined> {
 	}));
 
 	const selected = await vscode.window.showQuickPick(formatItems, {
-		placeHolder: 'Select target color format',
+		placeHolder: vscode.l10n.t('Select target color format'),
 		matchOnDescription: true,
 	});
 
@@ -113,16 +115,10 @@ async function promptForTargetFormat(): Promise<string | undefined> {
  * Prompt user for conversion options
  */
 async function promptForConversionOptions(
-	targetFormat: string,
+	targetFormat: TargetFormat,
 ): Promise<ColorConversionOptions | undefined> {
-	const options: {
-		targetFormat: ColorConversionOptions['targetFormat'];
-		preserveAlpha?: boolean | undefined;
-		roundValues?: boolean | undefined;
-		uppercase?: boolean | undefined;
-		shortHex?: boolean | undefined;
-	} = {
-		targetFormat: targetFormat as ColorConversionOptions['targetFormat'],
+	const options: Draft<ColorConversionOptions> = {
+		targetFormat,
 	};
 
 	// Ask about alpha preservation
@@ -130,14 +126,18 @@ async function promptForConversionOptions(
 		const preserveAlpha = await vscode.window.showQuickPick(
 			[
 				{
-					label: 'Yes',
-					description: 'Keep alpha channel if present',
+					label: vscode.l10n.t('Yes'),
+					description: vscode.l10n.t('Keep alpha channel if present'),
 					value: true,
 				},
-				{ label: 'No', description: 'Remove alpha channel', value: false },
+				{
+					label: vscode.l10n.t('No'),
+					description: vscode.l10n.t('Remove alpha channel'),
+					value: false,
+				},
 			],
 			{
-				placeHolder: 'Preserve alpha channel?',
+				placeHolder: vscode.l10n.t('Preserve alpha channel?'),
 			},
 		);
 
@@ -148,11 +148,19 @@ async function promptForConversionOptions(
 	// Ask about value rounding
 	const roundValues = await vscode.window.showQuickPick(
 		[
-			{ label: 'Yes', description: 'Round values to integers', value: true },
-			{ label: 'No', description: 'Keep decimal precision', value: false },
+			{
+				label: vscode.l10n.t('Yes'),
+				description: vscode.l10n.t('Round values to integers'),
+				value: true,
+			},
+			{
+				label: vscode.l10n.t('No'),
+				description: vscode.l10n.t('Keep decimal precision'),
+				value: false,
+			},
 		],
 		{
-			placeHolder: 'Round values?',
+			placeHolder: vscode.l10n.t('Round values?'),
 		},
 	);
 
@@ -163,11 +171,19 @@ async function promptForConversionOptions(
 	if (targetFormat === 'hex') {
 		const uppercase = await vscode.window.showQuickPick(
 			[
-				{ label: 'Lowercase', description: '#ff0000', value: false },
-				{ label: 'Uppercase', description: '#FF0000', value: true },
+				{
+					label: vscode.l10n.t('Lowercase'),
+					description: vscode.l10n.t('#ff0000'),
+					value: false,
+				},
+				{
+					label: vscode.l10n.t('Uppercase'),
+					description: vscode.l10n.t('#FF0000'),
+					value: true,
+				},
 			],
 			{
-				placeHolder: 'Hex case preference?',
+				placeHolder: vscode.l10n.t('Hex case preference?'),
 			},
 		);
 
@@ -177,18 +193,18 @@ async function promptForConversionOptions(
 		const shortHex = await vscode.window.showQuickPick(
 			[
 				{
-					label: 'Yes',
-					description: 'Use short hex when possible (#f00)',
+					label: vscode.l10n.t('Yes'),
+					description: vscode.l10n.t('Use short hex when possible (#f00)'),
 					value: true,
 				},
 				{
-					label: 'No',
-					description: 'Always use full hex (#ff0000)',
+					label: vscode.l10n.t('No'),
+					description: vscode.l10n.t('Always use full hex (#ff0000)'),
 					value: false,
 				},
 			],
 			{
-				placeHolder: 'Use short hex notation?',
+				placeHolder: vscode.l10n.t('Use short hex notation?'),
 			},
 		);
 
@@ -196,7 +212,7 @@ async function promptForConversionOptions(
 		options.shortHex = shortHex.value;
 	}
 
-	return options as ColorConversionOptions;
+	return options;
 }
 
 /**

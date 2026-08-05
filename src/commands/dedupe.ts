@@ -19,7 +19,7 @@ export function registerDedupeCommand(
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
-				deps.notifier.showWarning('No active editor found');
+				deps.notifier.showWarning(vscode.l10n.t('No active editor found'));
 				return;
 			}
 
@@ -90,7 +90,9 @@ export function registerDedupeCommand(
 			} catch (error) {
 				const message =
 					error instanceof Error ? error.message : 'Unknown error occurred';
-				deps.notifier.showError(`Deduplication failed: ${message}`);
+				deps.notifier.showError(
+					vscode.l10n.t('Deduplication failed: {0}', message),
+				);
 				deps.telemetry.event('dedupe-error', { error: message });
 			} finally {
 				deps.statusBar.hideProgress();

@@ -20,7 +20,7 @@ export function registerSortCommand(
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
-				deps.notifier.showWarning('No active editor found');
+				deps.notifier.showWarning(vscode.l10n.t('No active editor found'));
 				return;
 			}
 
@@ -88,7 +88,7 @@ export function registerSortCommand(
 			} catch (error) {
 				const message =
 					error instanceof Error ? error.message : 'Unknown error occurred';
-				deps.notifier.showError(`Sorting failed: ${message}`);
+				deps.notifier.showError(vscode.l10n.t('Sorting failed: {0}', message));
 				deps.telemetry.event('sort-error', { error: message });
 			} finally {
 				deps.statusBar.hideProgress();

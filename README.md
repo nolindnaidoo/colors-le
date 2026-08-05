@@ -78,7 +78,18 @@ Known limitations (documented, not bugs): modern space-separated syntax (`rgb(25
 | `colors-le.statusBar.enabled` | `true` | Show the status bar item |
 | `colors-le.telemetryEnabled` | `false` | Local-only event log (see Privacy) |
 
-The settings UI is translated into 12 languages besides English.
+## Languages
+
+Twelve languages besides English:
+
+German · Spanish · French · Indonesian · Italian · Japanese · Korean ·
+Portuguese (Brazil) · Russian · Ukrainian · Vietnamese · Chinese (Simplified)
+
+Both halves are covered — the manifest (command titles, setting names and
+descriptions) and everything shown while the extension runs (notifications,
+the status bar, quick-picks and prompts). The extension follows VS Code's
+display language, so it matches whatever the editor is already set to; no
+setting of its own.
 
 ## Privacy & security
 
@@ -121,12 +132,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 82.70% |
-| Branches | 65.72% |
-| Functions | 87.72% |
-| Lines | 84.44% |
+| Statements | 91.03% |
+| Branches | 78.82% |
+| Functions | 96.28% |
+| Lines | 92.30% |
 
-194 test cases across 18 files, plus an integration suite that runs
+281 test cases across 21 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 

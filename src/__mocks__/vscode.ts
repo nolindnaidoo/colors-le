@@ -292,8 +292,19 @@ export const window = {
 	},
 	showQuickPick: async (items: unknown[], _options?: unknown) =>
 		quickPickResponder ? quickPickResponder(items) : undefined,
-	showInputBox: async (options?: unknown) =>
-		inputBoxResponder ? inputBoxResponder(options) : undefined,
+	showInputBox: async (options?: unknown) => {
+		const value = inputBoxResponder ? inputBoxResponder(options) : undefined;
+		// VS Code runs validateInput against what the user types. Not calling it
+		// left every validator in the prompt modules uncovered and, worse, meant
+		// a validator could reject the value a test supplied without the test
+		// ever noticing.
+		const validate = (options as { validateInput?: (v: string) => unknown })
+			?.validateInput;
+		if (typeof validate === 'function' && typeof value === 'string') {
+			validate(value);
+		}
+		return value;
+	},
 	showTextDocument: async (_document: unknown, _column?: unknown) => undefined,
 	createOutputChannel: (_name: string) => {
 		const linesOut: string[] = [];
@@ -451,3 +462,18 @@ export function _resetMockState(): void {
 	clipboard.value = '';
 	workspace.workspaceFolders = undefined;
 }
+
+export const l10n = {
+	t(message: string, ...args: unknown[]): string {
+		if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+			const named = args[0] as Record<string, unknown>;
+			return message.replace(/\{(\w+)\}/g, (whole, key) =>
+				key in named ? String(named[key]) : whole,
+			);
+		}
+		return message.replace(/\{(\d+)\}/g, (whole, index) => {
+			const value = args[Number(index)];
+			return value === undefined ? whole : String(value);
+		});
+	},
+};

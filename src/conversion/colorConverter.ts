@@ -1,4 +1,10 @@
 import type { Color } from '../types';
+// Single source of truth for RGB->HSL. This module used to carry its own
+// byte-identical copy under a parallel type vocabulary (ColorSpace/HSLSpace vs
+// RgbColor/HslColor); the two were verified equivalent across the 8-bit cube
+// before the duplicate was removed. The interfaces differ only by `readonly`,
+// which TypeScript ignores for assignability.
+import { rgbToHsl as sharedRgbToHsl } from '../utils/colorConversion';
 
 export interface ColorConversionOptions {
 	readonly targetFormat: 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'oklch';
@@ -115,8 +121,14 @@ export function convertColors(
 /**
  * Get available color formats for conversion
  */
-export function getAvailableFormats(): readonly string[] {
-	return Object.freeze(['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'oklch']);
+/** The formats convertColor can actually emit. */
+export type TargetFormat = ColorConversionOptions['targetFormat'];
+
+export function getAvailableFormats(): readonly TargetFormat[] {
+	// Declared as the union rather than string[] so the choice stays typed all
+	// the way from the quick-pick to convertColor; returning string[] here is
+	// what forced an unchecked cast back to the union at the call site.
+	return Object.freeze(['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'oklch'] as const);
 }
 
 /**
@@ -318,7 +330,7 @@ function rgbToHslString(
 	rgb: ColorSpace,
 	options: ColorConversionOptions,
 ): string {
-	const hsl = rgbToHsl(rgb);
+	const hsl = sharedRgbToHsl(rgb);
 	const h = options.roundValues ? Math.round(hsl.h) : hsl.h;
 	const s = options.roundValues ? Math.round(hsl.s) : hsl.s;
 	const l = options.roundValues ? Math.round(hsl.l) : hsl.l;
@@ -333,7 +345,7 @@ function rgbToHslaString(
 	rgb: ColorSpace,
 	options: ColorConversionOptions,
 ): string {
-	const hsl = rgbToHsl(rgb);
+	const hsl = sharedRgbToHsl(rgb);
 	const h = options.roundValues ? Math.round(hsl.h) : hsl.h;
 	const s = options.roundValues ? Math.round(hsl.s) : hsl.s;
 	const l = options.roundValues ? Math.round(hsl.l) : hsl.l;
@@ -350,7 +362,7 @@ function rgbToOklchString(
 	options: ColorConversionOptions,
 ): string {
 	// Simplified OKLCH conversion - in a real implementation, you'd use a proper color space library
-	const hsl = rgbToHsl(rgb);
+	const hsl = sharedRgbToHsl(rgb);
 	const l = hsl.l / 100; // Lightness 0-1
 	const c = (hsl.s / 100) * 0.4; // Chroma approximation
 	const h = hsl.h; // Hue
@@ -360,47 +372,6 @@ function rgbToOklchString(
 	const hVal = options.roundValues ? Math.round(h) : h;
 
 	return `oklch(${lVal} ${cVal} ${hVal})`;
-}
-
-/**
- * Convert RGB to HSL
- */
-function rgbToHsl(rgb: ColorSpace): HSLSpace {
-	const r = rgb.r / 255;
-	const g = rgb.g / 255;
-	const b = rgb.b / 255;
-
-	const max = Math.max(r, g, b);
-	const min = Math.min(r, g, b);
-	const diff = max - min;
-
-	let h = 0;
-	let s = 0;
-	const l = (max + min) / 2;
-
-	if (diff !== 0) {
-		s = l > 0.5 ? diff / (2 - max - min) : diff / (max + min);
-
-		switch (max) {
-			case r:
-				h = (g - b) / diff + (g < b ? 6 : 0);
-				break;
-			case g:
-				h = (b - r) / diff + 2;
-				break;
-			case b:
-				h = (r - g) / diff + 4;
-				break;
-		}
-		h /= 6;
-	}
-
-	return {
-		h: Math.round(h * 360),
-		s: Math.round(s * 100),
-		l: Math.round(l * 100),
-		a: rgb.a,
-	};
 }
 
 /**

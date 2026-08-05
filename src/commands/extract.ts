@@ -58,7 +58,7 @@ export function registerExtractCommand(
 						if (token.isCancellationRequested) {
 							throw new Error('Operation cancelled by user');
 						}
-						progress.report({ message: 'Analyzing file...' });
+						progress.report({ message: vscode.l10n.t('Analyzing file...') });
 
 						const extractionResult = await extractColors(
 							document.getText(),
@@ -74,7 +74,7 @@ export function registerExtractCommand(
 							throw new Error('Operation cancelled by user');
 						}
 						progress.report({
-							message: 'Formatting results...',
+							message: vscode.l10n.t('Formatting results...'),
 							increment: 50,
 						});
 
@@ -86,7 +86,9 @@ export function registerExtractCommand(
 					const messages = result.errors
 						.map((error) => sanitizeErrorMessage(error.message))
 						.join('; ');
-					deps.notifier.showError(`Extraction failed: ${messages}`);
+					deps.notifier.showError(
+						vscode.l10n.t('Extraction failed: {0}', messages),
+					);
 					return;
 				}
 
@@ -95,7 +97,9 @@ export function registerExtractCommand(
 				}
 
 				if (result.colors.length === 0) {
-					deps.notifier.showInfo('No colors found in the current document');
+					deps.notifier.showInfo(
+						vscode.l10n.t('No colors found in the current document'),
+					);
 					return;
 				}
 
@@ -147,7 +151,9 @@ export function registerExtractCommand(
 						);
 					}
 				} else {
-					deps.notifier.showInfo(`Extracted ${result.colors.length} colors`);
+					deps.notifier.showInfo(
+						vscode.l10n.t('Extracted {0} colors', result.colors.length),
+					);
 				}
 
 				deps.telemetry.event('extract-success', {

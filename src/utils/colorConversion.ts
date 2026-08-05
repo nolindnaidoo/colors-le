@@ -234,3 +234,66 @@ export function detectColorFormat(colorValue: string): ColorFormat {
 
 	return 'unknown';
 }
+
+/**
+ * Whether a string is a syntactically valid CSS colour in a format this
+ * extension understands. Used by the validate command and by the input-box
+ * validators, which is why it lives here rather than inside either of them.
+ */
+export function isValidColorFormat(color: string): boolean {
+	const patterns = [
+		/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
+		/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i,
+		/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i,
+		/^hsl\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/i,
+		/^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i,
+	];
+
+	return patterns.some((pattern) => pattern.test(color));
+}
+
+/**
+ * Parse a hex colour to HSL. Returns null for anything that is not a 6-digit
+ * hex value.
+ */
+export function hexToHSL(
+	hex: string,
+): { h: number; s: number; l: number } | null {
+	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	if (!result || !result[1] || !result[2] || !result[3]) return null;
+
+	const rgb: RgbColor = {
+		r: Number.parseInt(result[1], 16),
+		g: Number.parseInt(result[2], 16),
+		b: Number.parseInt(result[3], 16),
+	};
+	const { h, s, l } = rgbToHsl(rgb);
+	return { h, s, l };
+}
+
+/**
+ * Parse a hex or hsl() colour to HSL components.
+ *
+ * The analyse, filter and validate commands each carried their own copy of
+ * this; they were behaviourally identical but had already drifted in their
+ * comments, and a lightness threshold that disagreed between filtering and
+ * reporting would have been very hard to spot.
+ */
+export function parseColorToHSL(
+	color: string,
+): { h: number; s: number; l: number } | null {
+	if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) {
+		return hexToHSL(color);
+	}
+
+	const hsl = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/i);
+	if (hsl?.[1] && hsl[2] && hsl[3]) {
+		return {
+			h: Number.parseInt(hsl[1], 10),
+			s: Number.parseInt(hsl[2], 10),
+			l: Number.parseInt(hsl[3], 10),
+		};
+	}
+
+	return null;
+}

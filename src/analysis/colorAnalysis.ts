@@ -1,4 +1,5 @@
 import type { Color } from '../types';
+import { isValidColorFormat, parseColorToHSL } from '../utils/colorConversion';
 
 export interface ColorStatistics {
 	readonly total: number;
@@ -219,7 +220,7 @@ export function detectColorAnomalies(
 
 	// Detect invalid colors
 	for (const color of uniqueColors) {
-		if (!isValidColor(color)) {
+		if (!isValidColorFormat(color)) {
 			anomalies.push(
 				Object.freeze({
 					type: 'invalid',
@@ -498,81 +499,6 @@ export function analyzePalette(colors: readonly Color[]): PaletteAnalysis {
 }
 
 // Helper functions
-
-function parseColorToHSL(
-	color: string,
-): { h: number; s: number; l: number } | null {
-	// Simplified HSL parsing - in real implementation, use proper color parsing library
-	const hex = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-	if (hex) {
-		return hexToHSL(color);
-	}
-
-	const hsl = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/i);
-	if (hsl?.[1] && hsl[2] && hsl[3]) {
-		return {
-			h: Number.parseInt(hsl[1], 10),
-			s: Number.parseInt(hsl[2], 10),
-			l: Number.parseInt(hsl[3], 10),
-		};
-	}
-
-	return null;
-}
-
-function hexToHSL(hex: string): { h: number; s: number; l: number } | null {
-	// Simplified hex to HSL conversion
-	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	if (!result || !result[1] || !result[2] || !result[3]) return null;
-
-	const r = Number.parseInt(result[1], 16) / 255;
-	const g = Number.parseInt(result[2], 16) / 255;
-	const b = Number.parseInt(result[3], 16) / 255;
-
-	const max = Math.max(r, g, b);
-	const min = Math.min(r, g, b);
-	let h = 0;
-	let s = 0;
-	const l = (max + min) / 2;
-
-	if (max === min) {
-		h = s = 0; // achromatic
-	} else {
-		const d = max - min;
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-		switch (max) {
-			case r:
-				h = (g - b) / d + (g < b ? 6 : 0);
-				break;
-			case g:
-				h = (b - r) / d + 2;
-				break;
-			case b:
-				h = (r - g) / d + 4;
-				break;
-		}
-		h /= 6;
-	}
-
-	return {
-		h: Math.round(h * 360),
-		s: Math.round(s * 100),
-		l: Math.round(l * 100),
-	};
-}
-
-function isValidColor(color: string): boolean {
-	// Simplified color validation
-	const patterns = [
-		/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i, // hex
-		/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i, // rgb
-		/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i, // rgba
-		/^hsl\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/i, // hsl
-		/^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i, // hsla
-	];
-
-	return patterns.some((pattern) => pattern.test(color));
-}
 
 function detectGradientPattern(colors: readonly string[]): ColorPattern | null {
 	if (colors.length < 3) return null;

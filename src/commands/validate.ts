@@ -2,56 +2,21 @@ import * as vscode from 'vscode';
 import { getContrastRatio } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
+import { isValidColorFormat, parseColorToHSL } from '../utils/colorConversion';
+import { promptForValidationOptions } from './validatePrompts';
+
+import type {
+	ColorValidationOptions,
+	ColorValidationResult,
+	ValidationIssue,
+	ValidationReport,
+} from './validateTypes';
+
+// Re-exported so validate.ts stays the public face of the command; the split
+// into validateTypes/validatePrompts is an internal arrangement.
+export type * from './validateTypes';
+
 import { formatDuration } from '../utils/format';
-
-export interface ColorValidationOptions {
-	readonly checkContrast?: boolean | undefined;
-	readonly contrastBackground?: string | undefined;
-	readonly minContrastAA?: number | undefined;
-	readonly minContrastAAA?: number | undefined;
-	readonly checkFormat?: boolean | undefined;
-	readonly checkAccessibility?: boolean | undefined;
-	readonly checkColorBlindness?: boolean | undefined;
-	readonly allowedFormats?: readonly string[] | undefined;
-	readonly customRules?: readonly ValidationRule[] | undefined;
-}
-
-export interface ValidationRule {
-	readonly name: string;
-	readonly description: string;
-	readonly test: (color: string) => boolean;
-	readonly severity: 'error' | 'warning' | 'info';
-	readonly suggestion?: string | undefined;
-}
-
-export interface ColorValidationResult {
-	readonly color: Color;
-	readonly valid: boolean;
-	readonly issues: readonly ValidationIssue[];
-	readonly suggestions: readonly string[];
-	readonly contrastRatio?: number | undefined;
-	readonly accessibilityLevel?: 'AA' | 'AAA' | 'fail' | undefined;
-}
-
-export interface ValidationIssue {
-	readonly type: 'format' | 'contrast' | 'accessibility' | 'custom';
-	readonly severity: 'error' | 'warning' | 'info';
-	readonly message: string;
-	readonly suggestion?: string | undefined;
-}
-
-export interface ValidationReport {
-	readonly colors: readonly ColorValidationResult[];
-	readonly summary: {
-		readonly total: number;
-		readonly valid: number;
-		readonly invalid: number;
-		readonly warnings: number;
-		readonly errors: number;
-	};
-	readonly options: ColorValidationOptions;
-	readonly timestamp: number;
-}
 
 /**
  * Register the validate colors command
@@ -124,223 +89,6 @@ export function registerValidateCommand(
 	);
 
 	context.subscriptions.push(disposable);
-}
-
-/**
- * Prompt user for validation options
- */
-async function promptForValidationOptions(): Promise<
-	ColorValidationOptions | undefined
-> {
-	const options: {
-		checkContrast?: boolean | undefined;
-		contrastBackground?: string | undefined;
-		minContrastAA?: number | undefined;
-		minContrastAAA?: number | undefined;
-		checkFormat?: boolean | undefined;
-		checkAccessibility?: boolean | undefined;
-		checkColorBlindness?: boolean | undefined;
-		allowedFormats?: readonly string[] | undefined;
-		customRules?: readonly ValidationRule[] | undefined;
-	} = {};
-
-	// Basic validation checks
-	const basicChecks = await vscode.window.showQuickPick(
-		[
-			{
-				label: 'Format validation',
-				description: 'Check color format validity',
-				picked: true,
-			},
-			{
-				label: 'Accessibility validation',
-				description: 'Check accessibility compliance',
-				picked: true,
-			},
-			{
-				label: 'Contrast validation',
-				description: 'Check contrast ratios',
-				picked: false,
-			},
-			{
-				label: 'Color blindness check',
-				description: 'Check color blindness compatibility',
-				picked: false,
-			},
-		],
-		{
-			placeHolder: 'Select validation checks',
-			canPickMany: true,
-		},
-	);
-
-	if (basicChecks === undefined) return undefined;
-
-	options.checkFormat = basicChecks.some(
-		(c) => c.label === 'Format validation',
-	);
-	options.checkAccessibility = basicChecks.some(
-		(c) => c.label === 'Accessibility validation',
-	);
-	options.checkContrast = basicChecks.some(
-		(c) => c.label === 'Contrast validation',
-	);
-	options.checkColorBlindness = basicChecks.some(
-		(c) => c.label === 'Color blindness check',
-	);
-
-	// Contrast validation options
-	if (options.checkContrast) {
-		const background = await vscode.window.showInputBox({
-			prompt: 'Background color for contrast checking (default: #ffffff)',
-			value: '#ffffff',
-			validateInput: (value) => {
-				return isValidColorFormat(value)
-					? undefined
-					: 'Enter a valid color (hex, rgb, hsl, etc.)';
-			},
-		});
-
-		if (background === undefined) return undefined;
-		options.contrastBackground = background;
-
-		const contrastLevel = await vscode.window.showQuickPick(
-			[
-				{
-					label: 'WCAG AA',
-					description: 'Minimum 4.5:1 for normal text, 3:1 for large text',
-					value: 'AA',
-				},
-				{
-					label: 'WCAG AAA',
-					description: 'Minimum 7:1 for normal text, 4.5:1 for large text',
-					value: 'AAA',
-				},
-				{
-					label: 'Custom',
-					description: 'Specify custom contrast ratios',
-					value: 'custom',
-				},
-			],
-			{
-				placeHolder: 'Select contrast level',
-			},
-		);
-
-		if (contrastLevel === undefined) return undefined;
-
-		if (contrastLevel.value === 'AA') {
-			options.minContrastAA = 4.5;
-		} else if (contrastLevel.value === 'AAA') {
-			options.minContrastAAA = 7.0;
-		} else if (contrastLevel.value === 'custom') {
-			const minAA = await vscode.window.showInputBox({
-				prompt: 'Minimum contrast ratio for AA compliance',
-				value: '4.5',
-				validateInput: (value) => {
-					const num = Number.parseFloat(value);
-					return Number.isNaN(num) || num <= 0
-						? 'Enter a positive number'
-						: undefined;
-				},
-			});
-
-			if (minAA === undefined) return undefined;
-			options.minContrastAA = Number.parseFloat(minAA);
-
-			const minAAA = await vscode.window.showInputBox({
-				prompt: 'Minimum contrast ratio for AAA compliance',
-				value: '7.0',
-				validateInput: (value) => {
-					const num = Number.parseFloat(value);
-					return Number.isNaN(num) || num <= 0
-						? 'Enter a positive number'
-						: undefined;
-				},
-			});
-
-			if (minAAA === undefined) return undefined;
-			options.minContrastAAA = Number.parseFloat(minAAA);
-		}
-	}
-
-	// Format restrictions
-	if (options.checkFormat) {
-		const formatRestriction = await vscode.window.showQuickPick(
-			[
-				{
-					label: 'Allow all formats',
-					description: 'No format restrictions',
-					value: 'all',
-				},
-				{
-					label: 'Hex only',
-					description: 'Only allow hexadecimal colors',
-					value: 'hex',
-				},
-				{
-					label: 'RGB/RGBA only',
-					description: 'Only allow RGB functional notation',
-					value: 'rgb',
-				},
-				{
-					label: 'HSL/HSLA only',
-					description: 'Only allow HSL functional notation',
-					value: 'hsl',
-				},
-				{
-					label: 'Custom selection',
-					description: 'Choose specific formats',
-					value: 'custom',
-				},
-			],
-			{
-				placeHolder: 'Format restrictions',
-			},
-		);
-
-		if (formatRestriction === undefined) return undefined;
-
-		switch (formatRestriction.value) {
-			case 'hex':
-				options.allowedFormats = ['hex'];
-				break;
-			case 'rgb':
-				options.allowedFormats = ['rgb', 'rgba'];
-				break;
-			case 'hsl':
-				options.allowedFormats = ['hsl', 'hsla'];
-				break;
-			case 'custom': {
-				const selectedFormats = await vscode.window.showQuickPick(
-					[
-						{ label: 'HEX', description: '#ff0000', picked: true },
-						{ label: 'RGB', description: 'rgb(255, 0, 0)', picked: true },
-						{ label: 'RGBA', description: 'rgba(255, 0, 0, 1)', picked: true },
-						{ label: 'HSL', description: 'hsl(0, 100%, 50%)', picked: true },
-						{
-							label: 'HSLA',
-							description: 'hsla(0, 100%, 50%, 1)',
-							picked: true,
-						},
-						{ label: 'Named', description: 'red, blue, etc.', picked: true },
-					],
-					{
-						placeHolder: 'Select allowed formats',
-						canPickMany: true,
-					},
-				);
-
-				if (selectedFormats === undefined) return undefined;
-				options.allowedFormats = selectedFormats.map((f) =>
-					f.label.toLowerCase(),
-				);
-				break;
-			}
-		}
-	}
-
-	return options as ColorValidationOptions;
 }
 
 /**
@@ -666,18 +414,6 @@ function generateValidationReport(
 
 // Helper functions
 
-function isValidColorFormat(color: string): boolean {
-	const patterns = [
-		/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
-		/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i,
-		/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i,
-		/^hsl\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/i,
-		/^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i,
-	];
-
-	return patterns.some((pattern) => pattern.test(color));
-}
-
 function checkAccessibilityIssues(color: string): ValidationIssue[] {
 	const issues: ValidationIssue[] = [];
 
@@ -749,65 +485,4 @@ function checkColorBlindnessIssues(color: string): ValidationIssue[] {
 	}
 
 	return issues;
-}
-
-function parseColorToHSL(
-	color: string,
-): { h: number; s: number; l: number } | null {
-	// Reuse HSL parsing logic from filter.ts
-	const hex = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-	if (hex) {
-		return hexToHSL(color);
-	}
-
-	const hsl = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/i);
-	if (hsl?.[1] && hsl[2] && hsl[3]) {
-		return {
-			h: Number.parseInt(hsl[1], 10),
-			s: Number.parseInt(hsl[2], 10),
-			l: Number.parseInt(hsl[3], 10),
-		};
-	}
-
-	return null;
-}
-
-function hexToHSL(hex: string): { h: number; s: number; l: number } | null {
-	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	if (!result || !result[1] || !result[2] || !result[3]) return null;
-
-	const r = Number.parseInt(result[1], 16) / 255;
-	const g = Number.parseInt(result[2], 16) / 255;
-	const b = Number.parseInt(result[3], 16) / 255;
-
-	const max = Math.max(r, g, b);
-	const min = Math.min(r, g, b);
-	let h = 0;
-	let s = 0;
-	const l = (max + min) / 2;
-
-	if (max === min) {
-		h = s = 0; // achromatic
-	} else {
-		const d = max - min;
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-		switch (max) {
-			case r:
-				h = (g - b) / d + (g < b ? 6 : 0);
-				break;
-			case g:
-				h = (b - r) / d + 2;
-				break;
-			case b:
-				h = (r - g) / d + 4;
-				break;
-		}
-		h /= 6;
-	}
-
-	return {
-		h: Math.round(h * 360),
-		s: Math.round(s * 100),
-		l: Math.round(l * 100),
-	};
 }
