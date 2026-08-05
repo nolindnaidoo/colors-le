@@ -2,7 +2,6 @@
 
 #project
 dist/
-gemini.md
 
 # Build artifacts in sample
 sample/*.js.map
