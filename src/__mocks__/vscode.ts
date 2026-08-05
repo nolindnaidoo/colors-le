@@ -259,6 +259,16 @@ export function _respondToQuickPick(
 	quickPickResponder = responder;
 }
 
+/** Values an input-box validator refused, in order. */
+const inputBoxRejections: Array<{ value: string; message: string }> = [];
+
+export function _inputBoxRejections(): readonly {
+	value: string;
+	message: string;
+}[] {
+	return inputBoxRejections;
+}
+
 export function _respondToInputBox(
 	responder: ((options: unknown) => string | undefined) | undefined,
 ): void {
@@ -294,14 +304,25 @@ export const window = {
 		quickPickResponder ? quickPickResponder(items) : undefined,
 	showInputBox: async (options?: unknown) => {
 		const value = inputBoxResponder ? inputBoxResponder(options) : undefined;
-		// VS Code runs validateInput against what the user types. Not calling it
-		// left every validator in the prompt modules uncovered and, worse, meant
-		// a validator could reject the value a test supplied without the test
-		// ever noticing.
+
+		// VS Code runs validateInput against what the user types and refuses to
+		// accept a value the validator rejects — the box stays open until the
+		// input is valid or the user escapes. This mock previously ignored
+		// validateInput entirely, which left every validator uncovered AND let a
+		// test hand a command a value the real UI would never have delivered.
+		//
+		// A rejected value therefore resolves to undefined, which is exactly what
+		// the caller observes when the user gives up. The rejection is recorded
+		// so a test can assert that a validator fired rather than inferring it
+		// from a cancellation.
 		const validate = (options as { validateInput?: (v: string) => unknown })
 			?.validateInput;
 		if (typeof validate === 'function' && typeof value === 'string') {
-			validate(value);
+			const message = validate(value);
+			if (message !== undefined && message !== null && message !== '') {
+				inputBoxRejections.push({ value, message: String(message) });
+				return undefined;
+			}
 		}
 		return value;
 	},
@@ -448,6 +469,7 @@ export const FileType = {
 
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
+	inputBoxRejections.length = 0;
 	configStore.clear();
 	configUpdates.length = 0;
 	configListeners.length = 0;

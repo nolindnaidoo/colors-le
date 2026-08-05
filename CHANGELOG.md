@@ -47,10 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `colorConverter`, whose six output formats and five input parsers had three
   and two covered respectively. `filterColors` is now tested directly rather
   than through the command, so each predicate is checked on its own.
-- The `vscode` test mock runs `validateInput` against the value a test
-  supplies, as VS Code does. It previously did not, which left every input
-  validator uncovered and meant a validator could reject a test's value
-  without the test noticing.
+- The `vscode` test mock honours `validateInput`. VS Code will not hand a
+  command a value its own validator rejected — the input box stays open until
+  the input is valid or the user escapes — but the mock ignored `validateInput`
+  entirely and returned whatever the test supplied. That left every validator
+  uncovered, and more seriously it let tests drive commands with values the
+  real UI could never deliver, so a command could be "proven" to handle input
+  that cannot reach it. A rejected value now resolves to `undefined`, which is
+  what the caller actually observes, and the rejection is recorded so a test
+  can assert the validator fired rather than inferring it from a cancellation.
 
 
 - `validate.ts` and `filter.ts` split their quick-pick prompting and their type

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	_inputBoxRejections,
 	_resetMockState,
 	_respondToInputBox,
 	_respondToQuickPick,
@@ -255,33 +256,28 @@ describe('promptForValidationOptions', () => {
 });
 
 describe('prompt input validation', () => {
-	// The validators are passed to showInputBox and now run against whatever a
-	// test supplies, so a rejected value is visible rather than silently
-	// accepted.
+	// VS Code will not hand a command a value its own validator rejected — the
+	// box stays open until the input is valid or the user escapes. So a rejected
+	// value aborts the prompt, and the command never sees it.
 
-	it('rejects a non-numeric lightness bound', async () => {
-		answerPicks(
-			byValue('none'),
-			byValue('custom'),
-			byValue('none'),
-			firstOf(0),
-		);
-		answerInputs('not-a-number', '80');
-		const options = await promptForFilterOptions(COLORS);
-		// Number.parseInt yields NaN, which the command stores as-is; the point is
-		// the validator ran without throwing.
-		expect(options).toBeDefined();
+	it('refuses a non-numeric lightness bound', async () => {
+		answerPicks(byValue('none'), byValue('custom'));
+		answerInputs('not-a-number');
+		expect(await promptForFilterOptions(COLORS)).toBeUndefined();
+		expect(_inputBoxRejections()[0]?.value).toBe('not-a-number');
 	});
 
-	it('rejects an out-of-range lightness bound', async () => {
-		answerPicks(
-			byValue('none'),
-			byValue('custom'),
-			byValue('none'),
-			firstOf(0),
-		);
-		answerInputs('-5', '150');
-		expect(await promptForFilterOptions(COLORS)).toBeDefined();
+	it('refuses an out-of-range lightness bound', async () => {
+		answerPicks(byValue('none'), byValue('custom'));
+		answerInputs('150');
+		expect(await promptForFilterOptions(COLORS)).toBeUndefined();
+		expect(_inputBoxRejections()).toHaveLength(1);
+	});
+
+	it('refuses a negative lightness bound', async () => {
+		answerPicks(byValue('none'), byValue('custom'));
+		answerInputs('-5');
+		expect(await promptForFilterOptions(COLORS)).toBeUndefined();
 	});
 
 	it('accepts the boundary lightness values', async () => {
@@ -297,22 +293,18 @@ describe('prompt input validation', () => {
 		expect(options?.maxLightness).toBe(100);
 	});
 
-	it('rejects a non-numeric saturation bound', async () => {
-		answerPicks(
-			byValue('none'),
-			byValue('none'),
-			byValue('custom'),
-			firstOf(0),
-		);
-		answerInputs('abc', '70');
-		expect(await promptForFilterOptions(COLORS)).toBeDefined();
+	it('refuses a non-numeric saturation bound', async () => {
+		answerPicks(byValue('none'), byValue('none'), byValue('custom'));
+		answerInputs('abc');
+		expect(await promptForFilterOptions(COLORS)).toBeUndefined();
+		expect(_inputBoxRejections()[0]?.value).toBe('abc');
 	});
 
-	it('rejects an invalid contrast background colour', async () => {
-		answerPicks((items) => items, byValue('AA'), firstOf(1));
+	it('refuses an invalid contrast background colour', async () => {
+		answerPicks((items) => items);
 		answerInputs('not-a-colour');
-		const options = await promptForValidationOptions();
-		expect(options).toBeDefined();
+		expect(await promptForValidationOptions()).toBeUndefined();
+		expect(_inputBoxRejections()[0]?.value).toBe('not-a-colour');
 	});
 
 	it('accepts an rgb() contrast background', async () => {
@@ -321,10 +313,18 @@ describe('prompt input validation', () => {
 		expect(await promptForValidationOptions()).toBeDefined();
 	});
 
-	it('rejects a non-positive custom contrast ratio', async () => {
-		answerPicks((items) => items, byValue('custom'), firstOf(1));
-		answerInputs('#ffffff', '0', '-1');
+	it('refuses a non-positive custom contrast ratio', async () => {
+		answerPicks((items) => items, byValue('custom'));
+		answerInputs('#ffffff', '0');
+		expect(await promptForValidationOptions()).toBeUndefined();
+		expect(_inputBoxRejections()[0]?.value).toBe('0');
+	});
+
+	it('accepts a valid value without recording a rejection', async () => {
+		answerPicks((items) => items, byValue('AA'), firstOf(1));
+		answerInputs('#ffffff');
 		expect(await promptForValidationOptions()).toBeDefined();
+		expect(_inputBoxRejections()).toHaveLength(0);
 	});
 
 	it('returns undefined when the second custom contrast value is dismissed', async () => {
