@@ -111,6 +111,11 @@ export function registerExtractCommand(
 					formattedColors = dedupeColors(formattedColors);
 				}
 
+				// Whether the results actually reached the user. A failed open, or
+				// an edit the workspace rejected, used to be reported as an error
+				// and then followed by "Extracted N colors" anyway — a failure and
+				// a success for the same action.
+				let delivered = true;
 				try {
 					if (config.openResultsSideBySide) {
 						const doc = await vscode.workspace.openTextDocument({
@@ -128,9 +133,20 @@ export function registerExtractCommand(
 							),
 							formattedColors.join('\n'),
 						);
-						await vscode.workspace.applyEdit(edit);
+						// applyEdit resolves false for a read-only document, or one
+						// that changed underneath the command.
+						const applied = await vscode.workspace.applyEdit(edit);
+						if (!applied) {
+							delivered = false;
+							deps.notifier.showError(
+								vscode.l10n.t(
+									'Could not replace the document contents: the edit was rejected.',
+								),
+							);
+						}
 					}
 				} catch (error) {
+					delivered = false;
 					const message =
 						error instanceof Error ? error.message : 'Failed to open results';
 					deps.notifier.showError(
@@ -138,6 +154,7 @@ export function registerExtractCommand(
 					);
 				}
 
+				let copiedToClipboard = false;
 				if (config.copyToClipboardEnabled) {
 					const clipboardText = formattedColors.join('\n');
 					if (clipboardText.length > 1000000) {
@@ -146,14 +163,21 @@ export function registerExtractCommand(
 						);
 					} else {
 						await vscode.env.clipboard.writeText(clipboardText);
+						copiedToClipboard = true;
 						deps.notifier.showInfo(
 							`Extracted ${result.colors.length} colors and copied to clipboard`,
 						);
 					}
-				} else {
+				} else if (delivered) {
 					deps.notifier.showInfo(
 						vscode.l10n.t('Extracted {0} colors', result.colors.length),
 					);
+				}
+
+				// The clipboard is the documented fallback when the editor route
+				// fails, so a successful copy still counts as delivery.
+				if (!delivered && !copiedToClipboard) {
+					return;
 				}
 
 				deps.telemetry.event('extract-success', {

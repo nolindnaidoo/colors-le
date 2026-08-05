@@ -218,18 +218,38 @@ export const workspace = {
 			},
 		};
 	},
-	openTextDocument: async (options?: { content?: string; language?: string }) =>
-		_createDocument({
+	openTextDocument: async (options?: { content?: string; language?: string }) => {
+		// Opening really can fail — no window, a disposed workspace — and that is
+		// the arm where extract reported an error and a success together.
+		if (openDocumentError) throw openDocumentError;
+		return _createDocument({
 			content: options?.content ?? '',
 			languageId: options?.language ?? 'plaintext',
-		}),
+		});
+	},
 	applyEdit: async (edit: WorkspaceEdit) => {
+		// A hardcoded true made every rejected-edit path untestable, and those
+		// are the paths where a command announces a result over a document it
+		// never touched.
 		appliedEdits.push(edit);
-		return true;
+		return applyEditResult;
 	},
 };
 
 export const appliedEdits: WorkspaceEdit[] = [];
+let applyEditResult = true;
+
+let openDocumentError: Error | undefined;
+
+/** Make the next openTextDocument reject, as it does when there is no window. */
+export function _setOpenDocumentError(error: Error | undefined): void {
+	openDocumentError = error;
+}
+
+/** Make applyEdit resolve false, as it does for a read-only document. */
+export function _setApplyEditResult(value: boolean): void {
+	applyEditResult = value;
+}
 
 // ------------------------------------------------------------ window
 
@@ -469,6 +489,8 @@ export const FileType = {
 
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
+	applyEditResult = true;
+	openDocumentError = undefined;
 	inputBoxRejections.length = 0;
 	configStore.clear();
 	configUpdates.length = 0;

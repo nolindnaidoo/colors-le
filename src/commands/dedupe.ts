@@ -74,7 +74,16 @@ export function registerDedupeCommand(
 					),
 					dedupedLines.join('\n'),
 				);
-				await vscode.workspace.applyEdit(edit);
+				// applyEdit resolves false when the edit is rejected — a read-only
+				// document, or one that changed underneath the command. Discarding
+				// it announced a result over a document that was never touched.
+				const applied = await vscode.workspace.applyEdit(edit);
+				if (!applied) {
+					deps.notifier.showError(
+						vscode.l10n.t('Could not deduplicate: the edit was rejected.'),
+					);
+					return;
+				}
 
 				const originalCount = colorsToDedupe.length;
 				const dedupedCount = dedupedLines.length;

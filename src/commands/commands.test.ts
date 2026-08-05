@@ -5,7 +5,9 @@ import {
 	_registeredCommands,
 	_resetMockState,
 	_setActiveEditor,
+	_setApplyEditResult,
 	_setConfig,
+	_setOpenDocumentError,
 	_shownMessages,
 	appliedEdits,
 } from '../__mocks__/vscode';
@@ -194,5 +196,72 @@ describe('colors-le.extractColors edge paths', () => {
 		await runCommand('colors-le.extractColors');
 		expect(appliedEdits).toHaveLength(0);
 		expect(_shownMessages()[0]?.kind).toBe('warning');
+	});
+});
+
+describe('colors-le.extractColors: undelivered results', () => {
+	// A failed open, or an edit the workspace rejected, was reported as an
+	// error and then followed by "Extracted N colors" — a failure and a success
+	// for the same action.
+
+	it('does not announce a count when the in-place edit is rejected', async () => {
+		const events: string[] = [];
+		registerExtractCommand(makeContext(), makeDeps(events));
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.openResultsSideBySide', false);
+		_setConfig('colors-le.copyToClipboardEnabled', false);
+		_setApplyEditResult(false);
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #ff0000; background: #00ff00; }',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
+		expect(
+			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+		).toBe(false);
+		expect(events).not.toContain('extract-success');
+	});
+
+	it('does not announce a count when the results cannot be opened', async () => {
+		const events: string[] = [];
+		registerExtractCommand(makeContext(), makeDeps(events));
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.openResultsSideBySide', true);
+		_setConfig('colors-le.copyToClipboardEnabled', false);
+		_setOpenDocumentError(new Error('no window'));
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #ff0000; background: #00ff00; }',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
+		expect(
+			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+		).toBe(false);
+		expect(events).not.toContain('extract-success');
+	});
+
+	it('still counts the clipboard copy as delivery when the open fails', async () => {
+		// The error text tells the user to copy to the clipboard instead, so a
+		// successful copy does deliver the results.
+		const events: string[] = [];
+		registerExtractCommand(makeContext(), makeDeps(events));
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		_setOpenDocumentError(new Error('no window'));
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #ff0000; background: #00ff00; }',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
+		expect(events).toContain('extract-success');
 	});
 });

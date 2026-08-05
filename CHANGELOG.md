@@ -26,6 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Extract, dedupe and sort all reported success over documents they had not
+  touched. `vscode.workspace.applyEdit` resolves `false` when an edit is
+  rejected — a read-only document, or one that changed underneath the command
+  — and all three discarded that value, then announced "Extracted 12 colors",
+  "Removed 3 duplicate colors" or "Sorted 12 colors by hue". Extract was worse
+  still: when opening the results threw, it showed "Failed to open results"
+  and then announced the count anyway, giving a failure and a success for the
+  same action. Delivery is now checked before anything is announced, with the
+  clipboard copy still counting as delivery since the error text offers it as
+  the fallback.
 - Input-box validation messages ("Enter a number between 0 and 100", "Enter a
   valid color", "Enter a positive number") were never localized — they are
   returned from a `validateInput` callback rather than assigned to a property,

@@ -5,6 +5,7 @@ import {
 	_resetMockState,
 	_respondToQuickPick,
 	_setActiveEditor,
+	_setApplyEditResult,
 	_setConfig,
 	_shownMessages,
 } from '../__mocks__/vscode';
@@ -205,5 +206,50 @@ describe('activation', () => {
 		// Cleanup runs through context.subscriptions; deactivate exists to satisfy
 		// the extension contract and was the last uncovered function in the file.
 		expect(() => deactivate()).not.toThrow();
+	});
+});
+
+describe('rejected edits', () => {
+	// applyEdit resolves false for a read-only document, or one that changed
+	// underneath the command. All three commands discarded that value and
+	// announced a result over a document they had not touched.
+
+	it('dedupe reports a failure instead of a count', async () => {
+		registerDedupeCommand(makeContext(), makeDeps());
+		_setApplyEditResult(false);
+		_setActiveEditor(
+			_createDocument({ content: '#ff0000\n#ff0000\n#00ff00\n' }),
+		);
+		await runCommand('colors-le.postProcess.dedupe');
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
+		expect(
+			_shownMessages().some((m) => String(m.message).startsWith('Removed')),
+		).toBe(false);
+	});
+
+	it('sort reports a failure instead of a count', async () => {
+		registerSortCommand(makeContext(), makeDeps());
+		_setApplyEditResult(false);
+		_respondToQuickPick((items) => items[0]);
+		_setActiveEditor(
+			_createDocument({ content: '#00ff00\n#ff0000\n#0000ff\n' }),
+		);
+		await runCommand('colors-le.postProcess.sort');
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
+		expect(
+			_shownMessages().some((m) => String(m.message).startsWith('Sorted')),
+		).toBe(false);
+	});
+
+	it('dedupe still announces the count when the edit applies', async () => {
+		registerDedupeCommand(makeContext(), makeDeps());
+		_setActiveEditor(
+			_createDocument({ content: '#ff0000\n#ff0000\n#00ff00\n' }),
+		);
+		await runCommand('colors-le.postProcess.dedupe');
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(false);
+		expect(
+			_shownMessages().some((m) => String(m.message).startsWith('Removed')),
+		).toBe(true);
 	});
 });
