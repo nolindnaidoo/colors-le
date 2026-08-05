@@ -190,7 +190,10 @@ describe('extract_colors', () => {
 });
 
 describe('protocol', () => {
-	const respond = createResponder({ name: 'colors-le', version: '1.0.0' }, TOOLS);
+	const respond = createResponder(
+		{ name: 'colors-le', version: '1.0.0' },
+		TOOLS,
+	);
 
 	it('echoes the protocol version the client asked for', async () => {
 		const reply = await respond({
