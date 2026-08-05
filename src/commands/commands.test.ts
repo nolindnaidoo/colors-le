@@ -6,6 +6,7 @@ import {
 	_resetMockState,
 	_setActiveEditor,
 	_setApplyEditResult,
+	_setClipboardError,
 	_setConfig,
 	_setOpenDocumentError,
 	_shownMessages,
@@ -263,5 +264,26 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(events).toContain('extract-success');
+	});
+});
+
+describe('colors-le.extractColors: clipboard failure', () => {
+	it('warns instead of failing the extraction', async () => {
+		// The results are already in an editor by the time the copy runs, so an
+		// unavailable clipboard must not surface as an extraction failure.
+		const events: string[] = [];
+		registerExtractCommand(makeContext(), makeDeps(events));
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		_setClipboardError(new Error('clipboard unavailable'));
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #ff0000; background: #00ff00; }',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(_shownMessages().some((m) => m.kind === 'warning')).toBe(true);
+		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(false);
 	});
 });

@@ -162,11 +162,25 @@ export function registerExtractCommand(
 							`Results too large for clipboard (${clipboardText.length} characters), skipping clipboard copy`,
 						);
 					} else {
-						await vscode.env.clipboard.writeText(clipboardText);
-						copiedToClipboard = true;
-						deps.notifier.showInfo(
-							`Extracted ${result.colors.length} colors and copied to clipboard`,
-						);
+						// The results are already in an editor, so a clipboard that is
+						// unavailable — a remote or headless session — is a warning, not
+						// an "Extraction failed" for work that succeeded.
+						try {
+							await vscode.env.clipboard.writeText(clipboardText);
+							copiedToClipboard = true;
+							deps.notifier.showInfo(
+								`Extracted ${result.colors.length} colors and copied to clipboard`,
+							);
+						} catch (error) {
+							const message =
+								error instanceof Error ? error.message : 'Unknown error';
+							deps.notifier.showWarning(
+								vscode.l10n.t(
+									'Extracted the colors, but could not copy them to the clipboard: {0}',
+									message,
+								),
+							);
+						}
 					}
 				} else if (delivered) {
 					deps.notifier.showInfo(
