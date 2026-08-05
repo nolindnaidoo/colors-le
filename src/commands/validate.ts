@@ -160,17 +160,18 @@ export function validateColors(
 					accessibilityLevel = 'AA';
 				}
 
-				if (options.minContrastAAA && contrastRatio < options.minContrastAAA) {
-					if (accessibilityLevel !== 'fail') {
-						issues.push({
-							type: 'contrast',
-							severity: 'info',
-							message: `Contrast ratio ${contrastRatio.toFixed(2)}:1 fails WCAG AAA (minimum ${
-								options.minContrastAAA
-							}:1)`,
-							suggestion: 'For AAA compliance, increase contrast further',
-						});
-					}
+				const failsAAA = Boolean(
+					options.minContrastAAA && contrastRatio < options.minContrastAAA,
+				);
+				if (failsAAA && accessibilityLevel !== 'fail') {
+					issues.push({
+						type: 'contrast',
+						severity: 'info',
+						message: `Contrast ratio ${contrastRatio.toFixed(2)}:1 fails WCAG AAA (minimum ${
+							options.minContrastAAA
+						}:1)`,
+						suggestion: 'For AAA compliance, increase contrast further',
+					});
 				}
 				if (options.minContrastAAA && contrastRatio >= options.minContrastAAA) {
 					accessibilityLevel = 'AAA';
@@ -201,14 +202,13 @@ export function validateColors(
 		if (options.customRules) {
 			for (const rule of options.customRules) {
 				try {
-					if (!rule.test(color.value)) {
-						issues.push({
-							type: 'custom',
-							severity: rule.severity,
-							message: `${rule.name}: ${rule.description}`,
-							suggestion: rule.suggestion,
-						});
-					}
+					if (rule.test(color.value)) continue;
+					issues.push({
+						type: 'custom',
+						severity: rule.severity,
+						message: `${rule.name}: ${rule.description}`,
+						suggestion: rule.suggestion,
+					});
 				} catch {
 					// Ignore rule errors
 				}

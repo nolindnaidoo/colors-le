@@ -11,6 +11,20 @@ import {
 } from '../heuristics';
 import { toColors } from './stylesheet';
 
+/** The colour an attribute value carries, or null when it carries none. */
+function attributeColor(value: string, valueStart: number): ColorMatch | null {
+	const format = classifyColorFormat(value);
+	if (format === 'unknown') return null;
+	if (format === 'named' && !isNamedColor(value)) return null;
+	if (format === 'named') return { value, start: valueStart, format };
+
+	const literals = findColorLiterals(value);
+	const isSingleLiteral =
+		literals.length === 1 && literals[0]?.value.length === value.length;
+	if (!isSingleLiteral) return null;
+	return { value, start: valueStart, format };
+}
+
 /**
  * Shared extractor for HTML and SVG. Colors are only recognized inside:
  * - style="..." attribute values (CSS declarations)
@@ -58,20 +72,11 @@ export function extractFromMarkup(
 			const value = (m[2] ?? m[3] ?? '').trim();
 			const valueStart =
 				m.index + m[0].length - (m[2] ?? m[3] ?? '').length - 1;
-			if (value) {
-				const format = classifyColorFormat(value);
-				if (
-					format !== 'unknown' &&
-					(format !== 'named' || isNamedColor(value))
-				) {
-					const literals = findColorLiterals(value);
-					const isSingleLiteral =
-						literals.length === 1 && literals[0]?.value.length === value.length;
-					if (format === 'named' || isSingleLiteral) {
-						matches.push({ value, start: valueStart, format });
-					}
-				}
-			}
+			// Guards in sequence rather than nested: the attribute has a value, it
+			// classifies as a colour, and it is either a named colour or the whole
+			// value is one literal.
+			const attrMatch = value ? attributeColor(value, valueStart) : null;
+			if (attrMatch) matches.push(attrMatch);
 			m = attrRe.exec(blanked);
 		}
 	}
