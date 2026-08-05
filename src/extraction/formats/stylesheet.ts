@@ -24,7 +24,7 @@ export interface StylesheetOptions {
 export function extractFromStylesheet(
 	content: string,
 	options: StylesheetOptions,
-): Color[] {
+): readonly Color[] {
 	const syntax: CommentSyntax = options.lineComments ? 'css-line' : 'css';
 	const blanked = blankComments(content, syntax);
 
@@ -46,7 +46,7 @@ export function extractFromStylesheet(
 export function toColors(
 	content: string,
 	matches: readonly ColorMatch[],
-): Color[] {
+): readonly Color[] {
 	const positionAt = createPositionIndex(content);
 	const byStart = new Map<number, ColorMatch>();
 	for (const match of matches) {

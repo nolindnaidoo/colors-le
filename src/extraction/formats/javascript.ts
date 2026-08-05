@@ -13,7 +13,7 @@ import { toColors } from './stylesheet';
  * templates included), named colors only when the whole string is the
  * color. Code outside strings (identifiers, comments) never matches.
  */
-export function extractFromJavaScript(content: string): Color[] {
+export function extractFromJavaScript(content: string): readonly Color[] {
 	const spans = findStringLiteralSpans(content);
 	const matches: ColorMatch[] = [];
 

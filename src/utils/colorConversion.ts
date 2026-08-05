@@ -13,17 +13,17 @@ const HUE_SECTOR_CHANNELS = Object.freeze([
 ] as const);
 
 export interface RgbColor {
-	r: number;
-	g: number;
-	b: number;
-	a?: number | undefined;
+	readonly r: number;
+	readonly g: number;
+	readonly b: number;
+	readonly a?: number | undefined;
 }
 
 export interface HslColor {
-	h: number;
-	s: number;
-	l: number;
-	a?: number | undefined;
+	readonly h: number;
+	readonly s: number;
+	readonly l: number;
+	readonly a?: number | undefined;
 }
 
 export function parseColor(colorValue: string): RgbColor | null {

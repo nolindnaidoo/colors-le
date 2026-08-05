@@ -23,7 +23,7 @@ import { toColors } from './stylesheet';
 export function extractFromMarkup(
 	content: string,
 	colorAttributes: readonly string[],
-): Color[] {
+): readonly Color[] {
 	const blanked = blankComments(content, 'html');
 	const matches: ColorMatch[] = [];
 
@@ -88,7 +88,7 @@ function scanCssSegment(
 	const rebase = (matches: readonly ColorMatch[]): ColorMatch[] =>
 		matches.map((match) => ({ ...match, start: start + match.start }));
 
-	const segments: Segment[] = findDeclarationValueSegments(slice);
+	const segments: readonly Segment[] = findDeclarationValueSegments(slice);
 	return [
 		...rebase(findColorLiterals(slice)),
 		...rebase(findNamedColors(slice, segments)),

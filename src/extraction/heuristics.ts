@@ -220,7 +220,7 @@ function isValidFunctionalColor(value: string): boolean {
  * separators in the reported value; `start` always points at the
  * literal's first character in the original content.
  */
-export function findColorLiterals(content: string): ColorMatch[] {
+export function findColorLiterals(content: string): readonly ColorMatch[] {
 	const matches: ColorMatch[] = [];
 
 	HEX_RE.lastIndex = 0;
@@ -264,7 +264,7 @@ const WORD_RE = /[a-z]+/gi;
 export function findNamedColors(
 	content: string,
 	segments?: readonly Segment[],
-): ColorMatch[] {
+): readonly ColorMatch[] {
 	const spans: readonly Segment[] = segments ?? [
 		{ start: 0, end: content.length },
 	];
@@ -297,7 +297,7 @@ export function findNamedColors(
 export function findDeclarationValueSegments(
 	content: string,
 	equalsDelimiter = false,
-): Segment[] {
+): readonly Segment[] {
 	const segments: Segment[] = [];
 	const delimiters = equalsDelimiter ? [':', '='] : [':'];
 
@@ -398,7 +398,7 @@ export function blankComments(content: string, syntax: CommentSyntax): string {
  * enough to find color values in styled-component templates; nested
  * interpolation expressions are not re-scanned.
  */
-export function findStringLiteralSpans(content: string): Segment[] {
+export function findStringLiteralSpans(content: string): readonly Segment[] {
 	const blanked = blankComments(content, 'js');
 	const spans: Segment[] = [];
 	let i = 0;

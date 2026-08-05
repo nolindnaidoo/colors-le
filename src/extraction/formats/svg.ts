@@ -10,6 +10,6 @@ const SVG_COLOR_ATTRIBUTES = [
 	'color',
 ] as const;
 
-export function extractFromSvg(content: string): Color[] {
+export function extractFromSvg(content: string): readonly Color[] {
 	return extractFromMarkup(content, SVG_COLOR_ATTRIBUTES);
 }

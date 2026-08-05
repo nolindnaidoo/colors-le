@@ -162,7 +162,9 @@ export function generateValidationReport(
 
 // Helper functions
 
-export function checkAccessibilityIssues(color: string): ValidationIssue[] {
+export function checkAccessibilityIssues(
+	color: string,
+): readonly ValidationIssue[] {
 	const issues: ValidationIssue[] = [];
 
 	// Check for very light colors that might be hard to see
@@ -200,7 +202,9 @@ export function checkAccessibilityIssues(color: string): ValidationIssue[] {
 	return issues;
 }
 
-export function checkColorBlindnessIssues(color: string): ValidationIssue[] {
+export function checkColorBlindnessIssues(
+	color: string,
+): readonly ValidationIssue[] {
 	const issues: ValidationIssue[] = [];
 
 	// Simplified color blindness checks
