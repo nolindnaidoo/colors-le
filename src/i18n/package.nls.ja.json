@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "16進数降順",
 	"manifest.settings.statusbar.enabled.desc": "Colors-LEステータスバー項目を表示（クイックアクセス用）",
 	"manifest.settings.telemetry.desc": "ローカル限定テレメトリログを出力パネルに有効化",
-	"manifest.capability.untrusted-workspaces.desc": "信頼されていないワークスペースでは機能が制限されます"
+	"manifest.capability.untrusted-workspaces.desc": "信頼されていないワークスペースでは機能が制限されます",
+	"manifest.mcp.label": "Colors-LE：エージェントモード用色抽出ツール"
 }

@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "16진수 내림차순",
 	"manifest.settings.statusbar.enabled.desc": "빠른 접근을 위한 Colors-LE 상태 표시줄 항목 표시",
 	"manifest.settings.telemetry.desc": "출력 패널에 로컬 전용 텔레메트리 로그 활성화",
-	"manifest.capability.untrusted-workspaces.desc": "신뢰할 수 없는 작업 공간에서 기능 제한"
+	"manifest.capability.untrusted-workspaces.desc": "신뢰할 수 없는 작업 공간에서 기능 제한",
+	"manifest.mcp.label": "에이전트 모드용 Colors-LE 색상 추출 도구"
 }

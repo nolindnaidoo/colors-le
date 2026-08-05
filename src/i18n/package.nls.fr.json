@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "Hexadécimal descendant",
 	"manifest.settings.statusbar.enabled.desc": "Afficher l'entrée de la barre d'état Colors-LE pour un accès rapide",
 	"manifest.settings.telemetry.desc": "Activer les journaux de télémétrie locaux uniquement dans le panneau de sortie",
-	"manifest.capability.untrusted-workspaces.desc": "Fonctionnalité limitée dans les espaces de travail non fiables"
+	"manifest.capability.untrusted-workspaces.desc": "Fonctionnalité limitée dans les espaces de travail non fiables",
+	"manifest.mcp.label": "Colors-LE : outils d'extraction des couleurs pour le mode agent"
 }

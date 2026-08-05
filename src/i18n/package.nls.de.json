@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "Hex absteigend",
 	"manifest.settings.statusbar.enabled.desc": "Farben-LE-Statusleisten-Eintrag für schnellen Zugriff anzeigen",
 	"manifest.settings.telemetry.desc": "Nur lokale Telemetrieprotokolle im Ausgabefenster aktivieren",
-	"manifest.capability.untrusted-workspaces.desc": "Eingeschränkte Funktionalität in nicht vertrauenswürdigen Arbeitsbereichen"
+	"manifest.capability.untrusted-workspaces.desc": "Eingeschränkte Funktionalität in nicht vertrauenswürdigen Arbeitsbereichen",
+	"manifest.mcp.label": "Colors-LE-Werkzeuge zur Farberkennung für den Agentenmodus"
 }

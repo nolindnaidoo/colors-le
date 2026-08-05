@@ -1,0 +1,38 @@
+{
+	"name": "colors-le-mcp",
+	"version": "2.2.1",
+	"mcpName": "io.github.nolindnaidoo/colors-le",
+	"description": "Extract colors from stylesheets and code, with their notation and position.",
+	"keywords": [
+		"mcp",
+		"modelcontextprotocol",
+		"model-context-protocol",
+		"colors-le"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "nolindnaidoo",
+		"url": "https://github.com/nolindnaidoo"
+	},
+	"homepage": "https://letools.dev",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nolindnaidoo/colors-le.git",
+		"directory": "mcp"
+	},
+	"bugs": {
+		"url": "https://github.com/nolindnaidoo/colors-le/issues"
+	},
+	"type": "commonjs",
+	"bin": {
+		"colors-le-mcp": "server.js"
+	},
+	"files": [
+		"server.js",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20"
+	}
+}

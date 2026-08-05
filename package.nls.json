@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "Hex descending",
 	"manifest.settings.statusbar.enabled.desc": "Show Colors-LE status bar entry for quick access",
 	"manifest.settings.telemetry.desc": "Enable local-only telemetry logs to the Output panel",
-	"manifest.capability.untrusted-workspaces.desc": "Limited functionality in untrusted workspaces"
+	"manifest.capability.untrusted-workspaces.desc": "Limited functionality in untrusted workspaces",
+	"manifest.mcp.label": "Colors-LE color extraction tools for agent mode"
 }

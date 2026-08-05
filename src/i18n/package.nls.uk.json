@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "Шістнадцятковий за спаданням",
 	"manifest.settings.statusbar.enabled.desc": "Показати запис статусної панелі Colors-LE для швидкого доступу",
 	"manifest.settings.telemetry.desc": "Увімкнути локальні журнали телеметрії на панелі виводу",
-	"manifest.capability.untrusted-workspaces.desc": "Обмежена функціональність у ненадійних робочих просторах"
+	"manifest.capability.untrusted-workspaces.desc": "Обмежена функціональність у ненадійних робочих просторах",
+	"manifest.mcp.label": "Інструменти вилучення кольорів Colors-LE для режиму агента"
 }

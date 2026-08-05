@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "Mã hex giảm dần",
 	"manifest.settings.statusbar.enabled.desc": "Hiển thị mục trạng thái Colors-LE trên thanh trạng thái để truy cập nhanh",
 	"manifest.settings.telemetry.desc": "Bật nhật ký telemetry chỉ cục bộ vào bảng điều khiển Output",
-	"manifest.capability.untrusted-workspaces.desc": "Chức năng bị giới hạn trong các không gian làm việc không tin cậy"
+	"manifest.capability.untrusted-workspaces.desc": "Chức năng bị giới hạn trong các không gian làm việc không tin cậy",
+	"manifest.mcp.label": "Các công cụ trích xuất màu Colors-LE dành cho chế độ đại lý"
 }

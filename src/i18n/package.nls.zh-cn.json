@@ -32,5 +32,6 @@
 	"manifest.settings.sort.mode.option.hex-desc": "十六进制降序",
 	"manifest.settings.statusbar.enabled.desc": "显示 Colors-LE 状态栏入口以便快速访问",
 	"manifest.settings.telemetry.desc": "启用仅本地遥测日志至输出面板",
-	"manifest.capability.untrusted-workspaces.desc": "在非受信任工作区中功能受限"
+	"manifest.capability.untrusted-workspaces.desc": "在非受信任工作区中功能受限",
+	"manifest.mcp.label": "Colors-LE 代理模式下的颜色提取工具"
 }
