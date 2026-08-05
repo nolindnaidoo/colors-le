@@ -117,6 +117,16 @@ The pre-2.0 README carried hand-written test counts and throughput figures that 
 
 ## Known limitations (documented, not bugs)
 
+- Four files sit above the ~300-line smell and stay there on purpose.
+  `extraction/heuristics.ts` (440) is the single home for the colour patterns —
+  splitting it is what produced v1's seven divergent copies, and the invariant
+  above forbids it. `analysis/colorAnalysis.ts` (664) and
+  `conversion/colorConverter.ts` (462) are each one cohesive pass; dividing
+  them would add indirection without separating concerns.
+  `utils/safety.ts` prompts the user directly, which the standard reserves for
+  `ui/` and `commands/`, because the large-output guard is a question rather
+  than a computation.
+
 - Modern space-separated color syntax (`rgb(255 0 0 / 50%)`) and `lab()`/`lch()`/`oklch()`/`color()` are not extracted.
 - JS/TS extraction is string-literal-scoped: any hex/functional match inside a string extracts, including URL fragments (`'https://x/#ff0000'`). Identifiers and comments never match.
 - Stylus named colors are only recognized after `:` or `=`; omitted-colon property lines yield hex/functional literals only.

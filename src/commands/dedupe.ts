@@ -46,20 +46,16 @@ export function registerDedupeCommand(
 						);
 					});
 
-				let colorsToDedupe: string[];
-				if (isColorFile) {
-					// Use lines directly as colors
-					colorsToDedupe = lines;
-				} else {
-					// Extract colors from source file first
-					// For simplicity, filter lines that look like colors
-					colorsToDedupe = lines.filter(
-						(line) =>
-							/^#[0-9a-f]{6}$/i.test(line) ||
-							/^rgb\(/.test(line) ||
-							/^hsl\(/.test(line),
-					);
-				}
+				// A bare colour list is used as-is; a source file keeps only the
+				// lines that look like colours.
+				const colorsToDedupe = isColorFile
+					? lines
+					: lines.filter(
+							(line) =>
+								/^#[0-9a-f]{6}$/i.test(line) ||
+								/^rgb\(/.test(line) ||
+								/^hsl\(/.test(line),
+						);
 
 				// Extract colors from each line and dedupe
 				const dedupedLines = dedupeColors(colorsToDedupe);

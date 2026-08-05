@@ -166,7 +166,8 @@ export function filterColors(
 			if (seenColors.has(colorKey)) {
 				shouldExclude = true;
 				excludeReasons.push('duplicate');
-			} else {
+			}
+			if (!seenColors.has(colorKey)) {
 				seenColors.add(colorKey);
 			}
 		}
@@ -201,7 +202,8 @@ export function filterColors(
 			for (const reason of excludeReasons) {
 				addExclusionReason(reason);
 			}
-		} else {
+		}
+		if (!shouldExclude) {
 			filtered.push(color);
 		}
 	}

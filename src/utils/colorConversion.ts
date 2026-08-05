@@ -1,5 +1,17 @@
 import type { ColorFormat } from '../types';
 
+/**
+ * Which of (c, x, 0) lands in r, g and b, per 60-degree hue sector.
+ */
+const HUE_SECTOR_CHANNELS = Object.freeze([
+	[0, 1, 2],
+	[1, 0, 2],
+	[2, 0, 1],
+	[2, 1, 0],
+	[1, 2, 0],
+	[0, 2, 1],
+] as const);
+
 export interface RgbColor {
 	r: number;
 	g: number;
@@ -104,35 +116,14 @@ function hslToRgb(hsl: HslColor): RgbColor {
 	const x = c * (1 - Math.abs(((hNorm * 6) % 2) - 1));
 	const m = lNorm - c / 2;
 
-	let r = 0,
-		g = 0,
-		b = 0;
-
-	if (hNorm < 1 / 6) {
-		r = c;
-		g = x;
-		b = 0;
-	} else if (hNorm < 2 / 6) {
-		r = x;
-		g = c;
-		b = 0;
-	} else if (hNorm < 3 / 6) {
-		r = 0;
-		g = c;
-		b = x;
-	} else if (hNorm < 4 / 6) {
-		r = 0;
-		g = x;
-		b = c;
-	} else if (hNorm < 5 / 6) {
-		r = x;
-		g = 0;
-		b = c;
-	} else {
-		r = c;
-		g = 0;
-		b = x;
-	}
+	// Each hue sector is the same three values (c, x, 0) in a different order,
+	// which the six-arm chain this replaced restated one channel at a time.
+	const channels = [c, x, 0] as const;
+	const sector = Math.min(5, Math.floor(hNorm * 6));
+	const [ri, gi, bi] = HUE_SECTOR_CHANNELS[sector] ?? [0, 1, 2];
+	const r = channels[ri];
+	const g = channels[gi];
+	const b = channels[bi];
 
 	return {
 		r: Math.round((r + m) * 255),
@@ -260,7 +251,7 @@ export function hexToHSL(
 	hex: string,
 ): { h: number; s: number; l: number } | null {
 	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	if (!result || !result[1] || !result[2] || !result[3]) return null;
+	if (!result?.[1] || !result[2] || !result[3]) return null;
 
 	const rgb: RgbColor = {
 		r: Number.parseInt(result[1], 16),

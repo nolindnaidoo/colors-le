@@ -4,9 +4,11 @@ import { extractColors } from '../extraction/extract';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
+import { copyResults } from '../utils/clipboard';
 import { dedupeColors } from '../utils/dedupe';
 import { sanitizeErrorMessage } from '../utils/errors';
 import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
+import { deliverResults } from './output';
 
 export function registerExtractCommand(
 	context: vscode.ExtensionContext,
@@ -111,78 +113,19 @@ export function registerExtractCommand(
 					formattedColors = dedupeColors(formattedColors);
 				}
 
-				// Whether the results actually reached the user. A failed open, or
-				// an edit the workspace rejected, used to be reported as an error
-				// and then followed by "Extracted N colors" anyway — a failure and
-				// a success for the same action.
-				let delivered = true;
-				try {
-					if (config.openResultsSideBySide) {
-						const doc = await vscode.workspace.openTextDocument({
-							content: formattedColors.join('\n'),
-							language: 'plaintext',
-						});
-						await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
-					} else {
-						const edit = new vscode.WorkspaceEdit();
-						edit.replace(
-							document.uri,
-							new vscode.Range(
-								document.positionAt(0),
-								document.lineAt(document.lineCount - 1).range.end,
-							),
-							formattedColors.join('\n'),
-						);
-						// applyEdit resolves false for a read-only document, or one
-						// that changed underneath the command.
-						const applied = await vscode.workspace.applyEdit(edit);
-						if (!applied) {
-							delivered = false;
-							deps.notifier.showError(
-								vscode.l10n.t(
-									'Could not replace the document contents: the edit was rejected.',
-								),
-							);
-						}
-					}
-				} catch (error) {
-					delivered = false;
-					const message =
-						error instanceof Error ? error.message : 'Failed to open results';
-					deps.notifier.showError(
-						`Failed to open results: ${sanitizeErrorMessage(message)}. Try copying results to clipboard instead.`,
-					);
-				}
+				const content = formattedColors.join('\n');
+				const delivered = await deliverResults(
+					content,
+					document,
+					config,
+					deps.notifier,
+				);
 
-				let copiedToClipboard = false;
-				if (config.copyToClipboardEnabled) {
-					const clipboardText = formattedColors.join('\n');
-					if (clipboardText.length > 1000000) {
-						deps.notifier.showWarning(
-							`Results too large for clipboard (${clipboardText.length} characters), skipping clipboard copy`,
-						);
-					} else {
-						// The results are already in an editor, so a clipboard that is
-						// unavailable — a remote or headless session — is a warning, not
-						// an "Extraction failed" for work that succeeded.
-						try {
-							await vscode.env.clipboard.writeText(clipboardText);
-							copiedToClipboard = true;
-							deps.notifier.showInfo(
-								`Extracted ${result.colors.length} colors and copied to clipboard`,
-							);
-						} catch (error) {
-							const message =
-								error instanceof Error ? error.message : 'Unknown error';
-							deps.notifier.showWarning(
-								vscode.l10n.t(
-									'Extracted the colors, but could not copy them to the clipboard: {0}',
-									message,
-								),
-							);
-						}
-					}
-				} else if (delivered) {
+				const copiedToClipboard = config.copyToClipboardEnabled
+					? await copyResults(content, result.colors.length, deps.notifier)
+					: false;
+
+				if (!config.copyToClipboardEnabled && delivered) {
 					deps.notifier.showInfo(
 						vscode.l10n.t('Extracted {0} colors', result.colors.length),
 					);

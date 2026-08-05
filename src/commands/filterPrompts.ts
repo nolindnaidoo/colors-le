@@ -54,7 +54,9 @@ export async function promptForFilterOptions(
 
 		if (selectedFormats === undefined) return undefined;
 		options.formats = selectedFormats.map((f) => f.label.toLowerCase());
-	} else if (formatAction.value === 'exclude') {
+	}
+
+	if (formatAction.value === 'exclude') {
 		const selectedFormats = await vscode.window.showQuickPick(
 			availableFormats.map((format) => ({
 				label: format.toUpperCase(),

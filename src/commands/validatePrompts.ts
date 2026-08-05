@@ -107,9 +107,11 @@ export async function promptForValidationOptions(): Promise<
 
 		if (contrastLevel.value === 'AA') {
 			options.minContrastAA = 4.5;
-		} else if (contrastLevel.value === 'AAA') {
+		}
+		if (contrastLevel.value === 'AAA') {
 			options.minContrastAAA = 7.0;
-		} else if (contrastLevel.value === 'custom') {
+		}
+		if (contrastLevel.value === 'custom') {
 			const minAA = await vscode.window.showInputBox({
 				prompt: vscode.l10n.t('Minimum contrast ratio for AA compliance'),
 				value: '4.5',

@@ -53,6 +53,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Every `else` block is gone (19 of them), replaced by guard clauses, ordered
+  guards and value expressions. The HSL-to-RGB conversion's six-arm hue chain
+  is now a lookup table: each sector is the same three values in a different
+  order, which the chain restated one channel at a time.
+- `commands/extract.ts` held orchestration, output routing and clipboard
+  handling together. Routing moved to `commands/output.ts` and the clipboard to
+  `utils/clipboard.ts`, leaving the command at 160 lines.
+- `commands/validate.ts` held registration, the run, the report and the
+  accessibility checks in 485 lines. The report and its checks moved to
+  `commands/validateReport.ts`, leaving 262 and 236.
+
 - Test coverage raised from 65.79% to 78.82% of branches (83.02% to 91.03% of
   statements, 88.47% to 96.28% of functions). Eight files sat below one or
   another of the repo's own floors; none do now. The gap was in code reachable

@@ -48,20 +48,16 @@ export function registerSortCommand(
 						);
 					});
 
-				let colorsToSort: string[];
-				if (isColorFile) {
-					// Use lines directly as colors
-					colorsToSort = lines;
-				} else {
-					// Extract colors from source file first
-					// For simplicity, filter lines that look like colors
-					colorsToSort = lines.filter(
-						(line) =>
-							/^#[0-9a-f]{6}$/i.test(line) ||
-							/^rgb\(/.test(line) ||
-							/^hsl\(/.test(line),
-					);
-				}
+				// A bare colour list is used as-is; a source file keeps only the
+				// lines that look like colours.
+				const colorsToSort = isColorFile
+					? lines
+					: lines.filter(
+							(line) =>
+								/^#[0-9a-f]{6}$/i.test(line) ||
+								/^rgb\(/.test(line) ||
+								/^hsl\(/.test(line),
+						);
 
 				// Sort colors based on configuration
 				const sortedLines = sortColors(colorsToSort, config.sortMode);
