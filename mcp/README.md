@@ -10,14 +10,14 @@
   <a href="https://www.npmjs.com/package/colors-le-mcp">
     <img src="https://img.shields.io/npm/v/colors-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="colors-le-mcp on npm" />
   </a>
-  <a href="https://letools.dev">
+  <a href="https://letools.dev/tools/colors-le">
     <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
   </a>
 </p>
 
 An [MCP](https://modelcontextprotocol.io) server that extracts colors from
 stylesheets and code — the extraction engine behind the
-[Colors-LE](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le)
+[Colors-LE](https://letools.dev/tools/colors-le)
 editor extension, exposed as a tool an agent can call.
 
 No dependencies, no network calls, no filesystem access. Content goes in,

@@ -3,7 +3,7 @@
 	"name": "io.github.nolindnaidoo/colors-le",
 	"title": "Colors-LE",
 	"description": "Extract colors from stylesheets and code, with their notation and position.",
-	"websiteUrl": "https://letools.dev",
+	"websiteUrl": "https://letools.dev/tools/colors-le",
 	"icons": [
 		{
 			"src": "https://raw.githubusercontent.com/nolindnaidoo/colors-le/main/src/assets/images/icon.png",
@@ -17,13 +17,13 @@
 		"url": "https://github.com/nolindnaidoo/colors-le",
 		"source": "github"
 	},
-	"version": "2.2.3",
+	"version": "2.2.4",
 	"packages": [
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
 			"identifier": "colors-le-mcp",
-			"version": "2.2.3",
+			"version": "2.2.4",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"

@@ -1,6 +1,6 @@
 {
 	"name": "colors-le-mcp",
-	"version": "2.2.3",
+	"version": "2.2.4",
 	"mcpName": "io.github.nolindnaidoo/colors-le",
 	"description": "Extract colors from stylesheets and code, with their notation and position.",
 	"keywords": [
@@ -24,7 +24,7 @@
 		"name": "Nolin Naidoo",
 		"url": "https://nolindnaidoo.com"
 	},
-	"homepage": "https://letools.dev",
+	"homepage": "https://letools.dev/tools/colors-le",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/nolindnaidoo/colors-le.git",
