@@ -1,0 +1,352 @@
+[
+	{
+		"name": "a css document",
+		"file": "theme.css",
+		"arguments": {
+			"format": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 2,
+						"column": 12
+					},
+					{
+						"value": "#F0A",
+						"format": "hex",
+						"line": 3,
+						"column": 13
+					},
+					{
+						"value": "rgb(120, 130, 140)",
+						"format": "rgb",
+						"line": 4,
+						"column": 12
+					},
+					{
+						"value": "rgba(0, 0, 0, 0.5)",
+						"format": "rgba",
+						"line": 5,
+						"column": 14
+					},
+					{
+						"value": "hsl(210, 50%, 40%)",
+						"format": "hsl",
+						"line": 6,
+						"column": 11
+					},
+					{
+						"value": "hsla(210, 50%, 40%, 0.8)",
+						"format": "hsla",
+						"line": 7,
+						"column": 12
+					},
+					{
+						"value": "white",
+						"format": "named",
+						"line": 8,
+						"column": 12
+					},
+					{
+						"value": "transparent",
+						"format": "named",
+						"line": 9,
+						"column": 12
+					},
+					{
+						"value": "rgb(17, 34, 51)",
+						"format": "rgb",
+						"line": 14,
+						"column": 15
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 9,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "format inferred from the filename",
+		"file": "theme.scss",
+		"arguments": {
+			"filename": "theme.scss"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 1,
+						"column": 9
+					},
+					{
+						"value": "#ff0000",
+						"format": "hex",
+						"line": 4,
+						"column": 22
+					},
+					{
+						"value": "rgba(255, 255, 255, 0.2)",
+						"format": "rgba",
+						"line": 6,
+						"column": 21
+					}
+				],
+				"fileType": "scss"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 3,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "markup reads attributes",
+		"file": "icon.svg",
+		"arguments": {
+			"format": "svg"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 2,
+						"column": 15
+					},
+					{
+						"value": "rgba(0, 0, 0, 0.5)",
+						"format": "rgba",
+						"line": 2,
+						"column": 32
+					},
+					{
+						"value": "rebeccapurple",
+						"format": "named",
+						"line": 3,
+						"column": 17
+					}
+				],
+				"fileType": "svg"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 3,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "a source file reads string literals",
+		"file": "theme.ts",
+		"arguments": {
+			"format": "typescript"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 1,
+						"column": 23
+					},
+					{
+						"value": "rgb(255, 0, 0)",
+						"format": "rgb",
+						"line": 2,
+						"column": 24
+					},
+					{
+						"value": "white",
+						"format": "named",
+						"line": 4,
+						"column": 23
+					},
+					{
+						"value": "hsl(210, 50%, 40%)",
+						"format": "hsl",
+						"line": 6,
+						"column": 19
+					}
+				],
+				"fileType": "typescript"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 4,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "deduped",
+		"file": "theme.css",
+		"arguments": {
+			"format": "css",
+			"dedupe": true
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 2,
+						"column": 12
+					},
+					{
+						"value": "#F0A",
+						"format": "hex",
+						"line": 3,
+						"column": 13
+					},
+					{
+						"value": "rgb(120, 130, 140)",
+						"format": "rgb",
+						"line": 4,
+						"column": 12
+					},
+					{
+						"value": "rgba(0, 0, 0, 0.5)",
+						"format": "rgba",
+						"line": 5,
+						"column": 14
+					},
+					{
+						"value": "hsl(210, 50%, 40%)",
+						"format": "hsl",
+						"line": 6,
+						"column": 11
+					},
+					{
+						"value": "hsla(210, 50%, 40%, 0.8)",
+						"format": "hsla",
+						"line": 7,
+						"column": 12
+					},
+					{
+						"value": "white",
+						"format": "named",
+						"line": 8,
+						"column": 12
+					},
+					{
+						"value": "transparent",
+						"format": "named",
+						"line": 9,
+						"column": 12
+					},
+					{
+						"value": "rgb(17, 34, 51)",
+						"format": "rgb",
+						"line": 14,
+						"column": 15
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 9,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "capped and flagged",
+		"file": "theme.css",
+		"arguments": {
+			"format": "css",
+			"maxResults": 3
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 2,
+						"column": 12
+					},
+					{
+						"value": "#F0A",
+						"format": "hex",
+						"line": 3,
+						"column": 13
+					},
+					{
+						"value": "rgb(120, 130, 140)",
+						"format": "rgb",
+						"line": 4,
+						"column": 12
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 3,
+				"truncated": true
+			}
+		}
+	},
+	{
+		"name": "nothing to find",
+		"content": "body { display: block }",
+		"arguments": {
+			"format": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 0,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "content must be a string",
+		"arguments": {
+			"format": "css"
+		},
+		"expectedError": "content is required and must be a string"
+	},
+	{
+		"name": "a nonsensical cap is rejected",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": "css",
+			"maxResults": 0
+		},
+		"expectedError": "maxResults must be a positive integer"
+	}
+]

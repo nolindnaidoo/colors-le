@@ -2,6 +2,8 @@
 
 Technical source of truth for this repo. README.md is the user-facing doc; this file is for anyone (human or agent) changing the code.
 
+This repo hosts **two products**: the extension at the root (this document's scope) and the Rust CLI in `crate/` (its own `AGENTS.md` + `SPEC.md`), which ports extraction only. The shared corpus lives at `crate/fixtures/`; `scripts/check-extraction-parity.ts` fails CI when this extension drifts from it.
+
 ## What this is
 
 A VS Code extension that extracts colors from the active document (CSS/SCSS/LESS/Stylus, HTML, JS/TS, SVG) into a results editor, with dedupe/sort/convert/filter/analyze/validate post-processing. No network access, no filesystem writes.

@@ -1,0 +1,184 @@
+{
+	"documents": [
+		{
+			"name": "theme.css as css",
+			"file": "theme.css",
+			"fileType": "css",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 2,
+					"column": 12
+				},
+				{
+					"value": "#F0A",
+					"format": "hex",
+					"line": 3,
+					"column": 13
+				},
+				{
+					"value": "rgb(120, 130, 140)",
+					"format": "rgb",
+					"line": 4,
+					"column": 12
+				},
+				{
+					"value": "rgba(0, 0, 0, 0.5)",
+					"format": "rgba",
+					"line": 5,
+					"column": 14
+				},
+				{
+					"value": "hsl(210, 50%, 40%)",
+					"format": "hsl",
+					"line": 6,
+					"column": 11
+				},
+				{
+					"value": "hsla(210, 50%, 40%, 0.8)",
+					"format": "hsla",
+					"line": 7,
+					"column": 12
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 8,
+					"column": 12
+				},
+				{
+					"value": "transparent",
+					"format": "named",
+					"line": 9,
+					"column": 12
+				},
+				{
+					"value": "rgb(17, 34, 51)",
+					"format": "rgb",
+					"line": 14,
+					"column": 15
+				}
+			]
+		},
+		{
+			"name": "theme.scss as scss",
+			"file": "theme.scss",
+			"fileType": "scss",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 1,
+					"column": 9
+				},
+				{
+					"value": "#ff0000",
+					"format": "hex",
+					"line": 4,
+					"column": 22
+				},
+				{
+					"value": "rgba(255, 255, 255, 0.2)",
+					"format": "rgba",
+					"line": 6,
+					"column": 21
+				}
+			]
+		},
+		{
+			"name": "page.html as html",
+			"file": "page.html",
+			"fileType": "html",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 1,
+					"column": 20
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 1,
+					"column": 41
+				}
+			]
+		},
+		{
+			"name": "theme.ts as typescript",
+			"file": "theme.ts",
+			"fileType": "typescript",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 1,
+					"column": 23
+				},
+				{
+					"value": "rgb(255, 0, 0)",
+					"format": "rgb",
+					"line": 2,
+					"column": 24
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 4,
+					"column": 23
+				},
+				{
+					"value": "hsl(210, 50%, 40%)",
+					"format": "hsl",
+					"line": 6,
+					"column": 19
+				}
+			]
+		},
+		{
+			"name": "icon.svg as svg",
+			"file": "icon.svg",
+			"fileType": "svg",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 2,
+					"column": 15
+				},
+				{
+					"value": "rgba(0, 0, 0, 0.5)",
+					"format": "rgba",
+					"line": 2,
+					"column": 32
+				},
+				{
+					"value": "rebeccapurple",
+					"format": "named",
+					"line": 3,
+					"column": 17
+				}
+			]
+		},
+		{
+			"name": "plain.less as less",
+			"file": "plain.less",
+			"fileType": "less",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 1,
+					"column": 13
+				},
+				{
+					"value": "#f0a",
+					"format": "hex",
+					"line": 2,
+					"column": 13
+				}
+			]
+		}
+	]
+}

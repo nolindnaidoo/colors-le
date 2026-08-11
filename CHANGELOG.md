@@ -5,6 +5,24 @@ All notable changes to Colors-LE will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
+separate product on its own cadence and keeps its own
+[CHANGELOG](crate/CHANGELOG.md).
+
+## [Unreleased]
+
+### Added
+
+- A **Rust CLI and MCP server**, in [`crate/`](crate/README.md), to be
+  published to crates.io as `colors-le`. It runs the same extraction over
+  a whole tree and, given a palette, fails a build on a colour that is not
+  in it — matched by colour rather than by spelling, so a palette in hex
+  catches a violation written in `rgb()`.
+
+  Only extraction is ported; convert, analyze and validate are
+  interactive and stay here. The extension remains the reference
+  implementation and `crate/fixtures/` is the contract.
+
 ## [2.2.4] - 2026-08-07
 
 ### Changed

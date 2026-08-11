@@ -116,6 +116,44 @@ Recognized syntax: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, comma-form `rgb()/rg
 
 Known limitations (documented, not bugs): modern space-separated syntax (`rgb(255 0 0 / 50%)`) and `lab()`/`lch()`/`oklch()`/`color()` are not extracted; a hex inside any JS string matches, including URL fragments; Stylus values without `:` or `=` only yield hex/functional literals, not named colors.
 
+## The CLI
+
+The same extraction runs from a terminal or a CI step: a Rust CLI in
+[`crate/`](crate/README.md), sharing one corpus with the extension —
+[`crate/fixtures/`](crate/fixtures/) — so the two can never read a
+document differently.
+
+```bash
+colors-le .                              # every colour in the tree
+colors-le --palette brand.txt .          # what is not in the palette
+colors-le --values --dedupe . | sort -u  # write the palette in the first place
+colors-le mcp                            # the same extraction over MCP on stdio
+```
+
+**Matched by colour, not by spelling.** A palette written in hex still
+catches a violation written in `rgb()`, because `#FFF`, `#ffffff` and
+`rgb(255, 255, 255)` are one entry. Alpha is part of the identity, and a
+named colour is only equal to itself — `white` and `#ffffff` are the same
+pixel and not the same decision.
+
+**Only extraction is ported.** Convert, analyze and validate are
+interactive and stay in the editor, which is also what this extension's
+own MCP tool says by offering extraction alone.
+
+Exit codes: 0 clean, 1 none found or a colour outside the palette, 2 the
+question was malformed.
+
+Install it with `cargo install colors-le` once it is published; until
+then it builds from `crate/`. The spec
+([`crate/SPEC.md`](crate/SPEC.md)) and the engineering standard
+([`crate/AGENTS.md`](crate/AGENTS.md)) live alongside it, and it keeps
+its own [CHANGELOG](crate/CHANGELOG.md).
+
+**Two MCP servers, one tool.** `colors-le mcp` offers `extract_colors`
+exactly as [`colors-le-mcp`](https://www.npmjs.com/package/colors-le-mcp)
+does — [`crate/fixtures/mcp-extract-colors.json`](crate/fixtures/mcp-extract-colors.json)
+runs against both and CI fails if they diverge.
+
 ## Commands
 
 | Command | Description |
@@ -218,7 +256,7 @@ run. Reproduce with `bun run test:coverage`.
 
 Every tool in the family, one page: **[letools.dev](https://letools.dev)**
 
-All ten also ship as MCP servers — `npx <name>-mcp` gives any agent the same engine. Eight go further and ship a Rust CLI: **Paths-LE**, **Secrets-LE**, **URLs-LE**, **Regex-LE**, **String-LE**, **Numbers-LE**, **EnvSync-LE** and **Scrape-LE**, each installed with `cargo install <that-name>`.
+All ten also ship as MCP servers — `npx <name>-mcp` gives any agent the same engine. Nine go further and ship a Rust CLI: **Paths-LE**, **Secrets-LE**, **URLs-LE**, **Regex-LE**, **String-LE**, **Numbers-LE**, **EnvSync-LE**, **Colors-LE** and **Scrape-LE**, each installed with `cargo install <that-name>`.
 
 - **[String-LE](https://letools.dev/tools/string-le)** - Extract string values for i18n from JSON, YAML, CSV, TOML, INI, and .env
 - **[Paths-LE](https://letools.dev/tools/paths-le)** - Extract file paths from JS/TS imports, JSON, HTML, CSS, TOML, CSV, and .env
@@ -232,12 +270,14 @@ All ten also ship as MCP servers — `npx <name>-mcp` gives any agent the same e
 
 ## Also by nolindnaidoo
 
-**Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers *where*, pixelactions *acts* there. The eight LE crates are the terminal half of the extensions they sit in — the same detection, held to the extension's own corpus, and an exit code instead of a results editor.
+**Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers *where*, pixelactions *acts* there. The nine LE crates are the terminal half of the extensions they sit in — the same detection, held to the extension's own corpus, and an exit code instead of a results editor.
 
 - **[pixelcoords](https://github.com/nolindnaidoo/pixelcoords)** — Freeze your screen, mark regions, get pixel-exact coordinates and crops
   [pixelcoords.dev](https://pixelcoords.dev) · [crates.io](https://crates.io/crates/pixelcoords) · [docs.rs](https://docs.rs/pixelcoords)
 - **[pixelactions](https://github.com/nolindnaidoo/pixelactions)** — Consume human-verified coordinates, perform the interaction, confirm it landed
   [pixelactions.dev](https://pixelactions.dev) · [crates.io](https://crates.io/crates/pixelactions) · [docs.rs](https://docs.rs/pixelactions)
+- **[colors-le](https://github.com/nolindnaidoo/colors-le/tree/main/crate)** — This extension's own CLI: find every colour in a codebase, and say which are not in your palette
+  [crates.io](https://crates.io/crates/colors-le)
 - **[paths-le](https://github.com/nolindnaidoo/paths-le/tree/main/crate)** — Find every path in a codebase and report whether it still points at anything
   [crates.io](https://crates.io/crates/paths-le)
 - **[secrets-le](https://github.com/nolindnaidoo/secrets-le/tree/main/crate)** — Find hardcoded credentials, and never print one

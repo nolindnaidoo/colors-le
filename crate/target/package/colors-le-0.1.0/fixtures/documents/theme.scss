@@ -1,0 +1,7 @@
+$brand: #1a2b3c;
+.button {
+  color: $brand;
+  background: darken(#ff0000, 10%);
+  // line comment with #abcdef in it
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
