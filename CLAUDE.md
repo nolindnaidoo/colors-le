@@ -42,11 +42,16 @@ artifact users actually install.
   byte-identical across the family; a change here needs copying to the other
   nine. See `../CLAUDE.md`. `ci-crate.yml` and `release-crate.yml` are the
   exception — they exist only in the repos that ship a crate.
-- **Extraction is shared with the Rust CLI.** `src/extraction/**` is the
-  reference implementation for `crate/`, and `crate/fixtures/` is the contract
-  between them. Changing extraction behaviour means running
+- **Extraction is shared with the Rust CLI**, and `crate/fixtures/` is the
+  contract. Changing extraction behaviour means running
   `bun scripts/check-extraction-parity.ts` and updating the corpus — on both
   sides, in the same commit. CI fails when either drifts.
+- **What the contract holds equal is the shared `extract_colors` MCP tool**,
+  which both servers offer and must answer identically. **The surfaces are
+  meant to differ**: this is IDE-first — the active buffer, read by a person —
+  and the CLI is terminal-first, with a tree walk, exit codes and JSON Lines
+  that have no editor equivalent. That is not drift, and nothing holds them
+  equal. See `crate/SPEC.md`.
 - **Only extraction is ported.** Convert, analyze and validate are interactive
   and stay here; the crate's SPEC.md says so and contract tests enforce it.
 - **Localization is two mechanisms, and they fail separately.** `src/i18n/package.nls.*.json`

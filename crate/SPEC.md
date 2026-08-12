@@ -4,10 +4,11 @@ A port of the [Colors-LE](https://github.com/nolindnaidoo/colors-le) VS
 Code extension to a Rust CLI and MCP server: find every colour in a
 codebase, and say which of them are not in your palette.
 
-**Parity first.** For extraction, the extension is the reference
-implementation. The colours this finds, their notation, and their order
-must match what the extension finds. A difference is a regression until
-proven otherwise.
+**One answer is held equal; the surfaces are not.** The shared
+`extract_colors` MCP tool must return the same colours, notations, order
+and positions from either server — a difference there is a bug.
+Everything else is IDE-first in the extension and terminal-first here,
+and is meant to differ. See [Deliberate divergences](#deliberate-divergences).
 
 ## The one question
 
