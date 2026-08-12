@@ -10,6 +10,7 @@ use super::heuristics::{
     find_declaration_values, find_literals, find_literals_in_prose, find_named,
     find_string_literals, is_named_color,
 };
+use super::js;
 
 /// HTML's presentational colour attributes.
 const HTML_COLOR_ATTRIBUTES: [&str; 2] = ["bgcolor", "color"];
@@ -112,12 +113,9 @@ fn named_value(content: &str, segment: Segment) -> Option<ColorMatch> {
         return None;
     }
     let slice = &content[segment.start..end];
-    let trimmed = slice
-        .trim()
-        .trim_end_matches([',', ';'])
-        .trim()
-        .trim_matches(['"', '\'', '`'])
-        .trim();
+    let trimmed = js::trim(
+        js::trim(js::trim(slice).trim_end_matches([',', ';'])).trim_matches(['"', '\'', '`']),
+    );
     if !is_named_color(trimmed) {
         return None;
     }
@@ -154,7 +152,7 @@ pub(crate) fn javascript(content: &str) -> Vec<ColorMatch> {
             });
         }
 
-        let trimmed = slice.trim();
+        let trimmed = js::trim(slice);
         if is_named_color(trimmed)
             && let Some(offset) = slice.find(trimmed)
         {
@@ -218,7 +216,15 @@ fn attribute_color(value: &str, start: usize) -> Option<ColorMatch> {
         }),
         _ => {
             let literals = find_literals(value);
-            let single = literals.len() == 1 && literals[0].value.len() == value.len();
+            // Compared in UTF-16 code units, not bytes. The literal is
+            // the *normalised* value — a functional call's whitespace
+            // collapsed to single spaces — so this asks whether the
+            // whole attribute was one colour, and the reference
+            // implementation asks it in the only unit JavaScript has. A
+            // byte comparison answers no for `fill="rgb(1,\u{feff}2, 3)"`,
+            // where every character is one code unit and three bytes.
+            let single = literals.len() == 1
+                && literals[0].value.encode_utf16().count() == value.encode_utf16().count();
             single.then(|| ColorMatch {
                 value: value.to_string(),
                 start,
@@ -250,7 +256,7 @@ fn style_attributes(blanked: &str) -> Vec<(usize, usize)> {
 }
 
 fn style_blocks(blanked: &str) -> Vec<(usize, usize)> {
-    let lower = blanked.to_lowercase();
+    let lower = blanked.to_ascii_lowercase();
     let mut spans = Vec::new();
     let mut cursor = 0;
     while let Some(open) = lower[cursor..].find("<style") {
@@ -274,7 +280,7 @@ fn attribute_values(blanked: &str, attributes: &[&str]) -> Vec<(String, usize)> 
         .into_iter()
         .map(|(start, length)| {
             let end = (start + length).min(blanked.len());
-            (blanked[start..end].trim().to_string(), start)
+            (js::trim(&blanked[start..end]).to_string(), start)
         })
         .filter(|(value, _)| !value.is_empty())
         .collect()
@@ -284,8 +290,16 @@ fn attribute_values(blanked: &str, attributes: &[&str]) -> Vec<(String, usize)> 
 /// by whitespace or `<` — `data-fill="…"` is not `fill="…"`, and a
 /// regex with an alternation of six names and a lookbehind is harder to
 /// read than the scan it replaces.
+///
+/// **The lowercase copy has to be ASCII-only.** Every offset here is an
+/// offset into `blanked`, and `to_lowercase` is not length-preserving:
+/// `İ` lowercases to two characters and `K` (the Kelvin sign) to one
+/// byte from three, so a document containing either slid every span
+/// after it — into the middle of a character, where slicing aborts. Tag
+/// and attribute names are ASCII, so ASCII folding is both sufficient
+/// and safe.
 fn attribute_spans(blanked: &str, attributes: &[&str]) -> Vec<(usize, usize)> {
-    let lower = blanked.to_lowercase();
+    let lower = blanked.to_ascii_lowercase();
     let bytes = lower.as_bytes();
     let mut spans = Vec::new();
 
@@ -473,6 +487,48 @@ mod tests {
         assert_eq!(
             values(svg("<rect data-fill=\"#1a2b3c\"/>")),
             Vec::<String>::new()
+        );
+    }
+
+    /// The offsets in the markup extractor are offsets into the blanked
+    /// document, and they used to be computed on a full `to_lowercase`
+    /// copy of it. `İ` lowercases to two characters and `K` to one byte
+    /// from three, so a document containing either slid every span after
+    /// it — far enough to land inside a character and abort the process.
+    /// Found by the `differential` job on a plain `<rect fill="…"/>`.
+    #[test]
+    fn a_character_whose_lowercase_is_a_different_length_does_not_slide_a_span() {
+        assert_eq!(
+            values(svg("\u{130}<rect fill=\"#1a2b3c\"/>")),
+            ["#1a2b3c"],
+            "İ lowercases to two characters"
+        );
+        assert_eq!(
+            values(svg("\u{1e9e} <rect fill=\"#1a2b3c\"/>")),
+            ["#1a2b3c"],
+            "ẞ lowercases to a shorter one"
+        );
+        // The one that aborted: the slide landed inside the value.
+        assert_eq!(
+            values(svg("\u{1f3af} <rect fill=\"white\u{212a}\"/>")),
+            Vec::<String>::new()
+        );
+        assert_eq!(
+            values(html("<p>\u{130}</p><style>.a{color:#1a2b3c}</style>")),
+            ["#1a2b3c"]
+        );
+    }
+
+    /// The whole-value rule compares the literal against the attribute
+    /// in UTF-16 code units, because that is the only unit the reference
+    /// implementation has. In bytes this value is fourteen and its
+    /// normalised literal is twelve, so it was one colour there and none
+    /// here.
+    #[test]
+    fn an_attribute_holding_a_multibyte_space_is_still_one_colour() {
+        assert_eq!(
+            values(svg("<rect fill=\"rgb(1,\u{feff}2, 3)\"/>")),
+            ["rgb(1,\u{feff}2, 3)"]
         );
     }
 

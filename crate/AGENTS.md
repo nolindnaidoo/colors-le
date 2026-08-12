@@ -33,7 +33,9 @@ reproduces.
 ```
 crate/src/
 ├── extract/     pure: the matchers, the format extractors, palette
-│                comparison, positions. No filesystem, pub(crate).
+│                comparison, positions, and js.rs — JavaScript's string
+│                semantics, where Rust's differ. No filesystem,
+│                pub(crate).
 ├── walk.rs      ignore-aware tree walking
 ├── scan.rs      one file end to end — the only path either surface calls
 ├── cli.rs       the terminal surface
@@ -223,9 +225,35 @@ The bar, enforced by review:
   operation, so they run everywhere on every push. A new refusal adds
   its case there.
 - **Anything needing a document larger than an editor opens is
-  `tests/scenarios.rs`** — gated behind `STRING_LE_SCENARIOS` and run by
+  `tests/scenarios.rs`** — gated behind `COLORS_LE_SCENARIOS` and run by
   CI on all three OSes. A skipped scenario is never reported as a pass; each one says
   plainly that it did not run.
+- **The six jobs that exist because something got through.** Each has
+  its own file, and each fails naming the input that broke it:
+  - `tests/hazards.rs` — a tree built at runtime: a BOM, a lone CR,
+    invalid UTF-8, a NUL byte, a FIFO, a symlink loop, a 260-character
+    path. Every case asserts an answer (0, 1 or 2), never a signal.
+    Cases a platform cannot express are skipped **by name**.
+  - `tests/platform.rs` — what differs by OS: `/` in every report path,
+    `TZ` independence, case-folding filesystems, reserved Windows names,
+    and a child that refuses before the write lands.
+  - `tests/fuzz.rs` — 60 seconds per target over the pure layer, gated
+    behind `COLORS_LE_FUZZ`, seeded from `tests/seeds/` as well as the
+    corpus. **The blankers are the highest-risk code here**; the seeds
+    are multi-byte because the corpus is deliberately ASCII and so could
+    never have caught the offset slide that aborted the process.
+  - `tests/budget.rs` — a wall-clock ceiling on a 500-file generated
+    tree, gated behind `COLORS_LE_BUDGET`, run in release. The ceiling
+    is ten times the local measurement and the measurement is recorded
+    in the file with the machine it came from. Four copies of the tree
+    may not take more than six times as long.
+  - `tests/coverage_matrix.rs` — every name in the alias table gets a
+    file and every file gets a report line; every advertised format has
+    a corpus document.
+  - `../scripts/check-extraction-differential.ts` — generates documents
+    and requires **the shared `extract_colors` tool** to answer
+    identically on both servers. Scoped to that tool on purpose: the
+    surfaces around it differ by design, and SPEC.md lists how.
 - **Every bug fix ships with a regression test** that fails before the
   fix. Three divergences got through a green suite here and were caught
   the first time the corpus and then the binary actually ran: rust-ini
@@ -251,7 +279,17 @@ CI additionally builds on macOS, Windows and Linux, checks the Rust 1.88
 minimum version, runs `cargo audit`, the no-inline-`#[allow]` and
 no-filesystem-in-`extract/` policy jobs, the per-module coverage floor,
 the gated scenarios, and parity — including on extension-side edits to
-`src/extraction/**`, so neither frontend can drift green. A change is
+`src/extraction/**`, so neither frontend can drift green. On top of
+those: `hazards` and `platform` on all three OSes, and `differential`,
+`fuzz`, `budget` and `coverage-matrix` on Linux. The gated ones are run
+locally with the env var that turns them on:
+
+```bash
+COLORS_LE_FUZZ=1 COLORS_LE_FUZZ_SECONDS=60 cargo test --test fuzz -- --nocapture
+COLORS_LE_BUDGET=1 cargo test --release --test budget -- --test-threads=1 --nocapture
+bun ../scripts/check-extraction-differential.ts   # needs cargo build --locked first
+```
+ A change is
 not done because it compiles; it is done when it is tested, linted,
 documented where behavior changed (README / CHANGELOG / SPEC / this
 file), and honest — claims in docs must match the code.

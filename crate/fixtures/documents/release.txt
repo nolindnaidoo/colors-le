@@ -1,0 +1,9 @@
+Release notes
+
+Fixes #250 and #3050, which are issue references and not colours.
+
+The paper is #FFF and the ink is #1a2b3c.
+
+Brand: transparent
+
+An orange sat on the desk.

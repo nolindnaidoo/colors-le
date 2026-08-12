@@ -13,6 +13,8 @@ use std::sync::LazyLock;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use super::js::{JS_SPACE_CLASS, is_js_whitespace};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum Notation {
@@ -187,11 +189,27 @@ pub(crate) struct Segment {
     pub(crate) end: usize,
 }
 
+/// **These patterns are ASCII on purpose.**
+///
+/// The reference implementation's regexes run without JavaScript's `u`
+/// flag, where `\b`, `\d` and `[a-z]` mean ASCII; Rust's mean Unicode,
+/// and the differential generator found all three ways that ends:
+/// `#abcé` was a colour there and not here (`é` is a word character to
+/// Unicode, so the boundary never closed), `rgb(١, 2, 3)` was a colour
+/// here and not there (`\d` matched an Arabic-Indic digit), and
+/// `whiteK` — with the Kelvin sign — was `white` there and one long
+/// word here (`(?i)[a-z]` folds U+212A to `k`). Every one of those is a
+/// shared MCP tool giving two answers. Spelled out rather than left to
+/// a flag, because the flag is the thing that was wrong.
+///
+/// The whitespace class is the mirror image, and lives in `js` with the
+/// trimmer that has to agree with it: JavaScript's `\s` is wider than
+/// Rust's `char::is_whitespace` at U+FEFF and narrower at U+0085.
 /// 3, 4, 6 or 8 digits, and nothing else. The alternation is ordered
 /// longest-first so `#rrggbbaa` is not read as `#rrggbb` with two
 /// characters left over.
 static HEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b")
+    Regex::new(r"#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?-u:\b)")
         .expect("a constant pattern compiles")
 });
 
@@ -199,35 +217,47 @@ static HEX: LazyLock<Regex> = LazyLock::new(|| {
 /// newlines included — is allowed anywhere inside the call, which is
 /// what finds a declaration split across four lines.
 static FUNCTIONAL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:rgba?|hsla?)\(\s*[\d.\s,%]*?\)").expect("a constant pattern compiles")
+    Regex::new(&format!(
+        r"(?-u:\b)(?i-u:rgba?|hsla?)\([{JS_SPACE_CLASS}]*[0-9.,%{JS_SPACE_CLASS}]*?\)"
+    ))
+    .expect("a constant pattern compiles")
 });
 
+// The four validity patterns run on a call with every space already
+// removed, so `\s*` there can only ever match nothing. It is kept
+// because the reference implementation writes it, and a pattern that
+// reads differently from the one it is held equal to is the drift these
+// comments exist to prevent.
 static RGB_VALID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$")
+    Regex::new(r"^rgb\(\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}\s*\)$")
         .expect("a constant pattern compiles")
 });
 static RGBA_VALID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:\d*\.)?\d+\s*\)$")
-        .expect("a constant pattern compiles")
+    Regex::new(
+        r"^rgba\(\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}\s*,\s*(?:[0-9]*\.)?[0-9]+\s*\)$",
+    )
+    .expect("a constant pattern compiles")
 });
 static HSL_VALID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)$")
+    Regex::new(r"^hsl\(\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}%\s*,\s*[0-9]{1,3}%\s*\)$")
         .expect("a constant pattern compiles")
 });
 static HSLA_VALID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^hsla\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*,\s*(?:\d*\.)?\d+\s*\)$")
-        .expect("a constant pattern compiles")
+    Regex::new(
+        r"^hsla\(\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}%\s*,\s*[0-9]{1,3}%\s*,\s*(?:[0-9]*\.)?[0-9]+\s*\)$",
+    )
+    .expect("a constant pattern compiles")
 });
 
 static WORD: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)[a-z]+").expect("a constant pattern compiles"));
+    LazyLock::new(|| Regex::new(r"[a-zA-Z]+").expect("a constant pattern compiles"));
 
 pub(crate) fn is_named_color(word: &str) -> bool {
     NAMED_COLORS.contains(&word.to_lowercase().as_str())
 }
 
 pub(crate) fn classify(value: &str) -> Notation {
-    let value = value.trim().to_lowercase();
+    let value = super::js::trim(value).to_lowercase();
     if value.starts_with('#') {
         Notation::Hex
     } else if value.starts_with("rgba(") {
@@ -279,8 +309,9 @@ pub(crate) fn find_literals(content: &str) -> Vec<ColorMatch> {
         let raw = found.as_str();
         // Validation runs on the call with *all* whitespace removed, so
         // a multiline one is judged by its components rather than its
-        // layout.
-        let bare: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
+        // layout. Whitespace means JavaScript's, or a call holding a
+        // U+FEFF is valid on one server and not the other.
+        let bare: String = raw.chars().filter(|c| !is_js_whitespace(*c)).collect();
         if !is_valid_functional(&bare) {
             continue;
         }
@@ -333,7 +364,7 @@ fn normalise_whitespace(raw: &str) -> String {
     let mut collapsed = String::with_capacity(raw.len());
     let mut in_space = false;
     for character in raw.chars() {
-        if character.is_whitespace() {
+        if is_js_whitespace(character) {
             if !in_space {
                 collapsed.push(' ');
                 in_space = true;
@@ -596,6 +627,63 @@ pub(crate) fn find_string_literals(content: &str) -> Vec<Segment> {
         });
     }
     spans
+}
+
+/// The four ways Rust's regex defaults answered differently from the
+/// reference implementation's, each found by the `differential` job
+/// generating a document nobody had thought to write down.
+#[cfg(test)]
+mod javascript_semantics {
+    use super::*;
+
+    /// `é` is a word character to Unicode and not to JavaScript, so a
+    /// Unicode `\b` never closed and the hex before it was missed here
+    /// and found there.
+    #[test]
+    fn a_word_boundary_is_ascii_like_the_reference() {
+        let found = find_literals("#abc\u{e9}");
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].value, "#abc");
+        assert_eq!(find_literals("\u{e9}#abc")[0].value, "#abc");
+    }
+
+    /// The mirror image: `\d` is every Unicode decimal digit in Rust and
+    /// `[0-9]` in JavaScript, so an Arabic-Indic digit made a call valid
+    /// here and not there.
+    #[test]
+    fn a_digit_is_ascii_like_the_reference() {
+        assert!(
+            find_literals("rgb(\u{661}, 2, 3)").is_empty(),
+            "a non-ASCII digit is not a component"
+        );
+        assert_eq!(find_literals("rgb(1, 2, 3)")[0].value, "rgb(1, 2, 3)");
+    }
+
+    /// `(?i)[a-z]` folds U+212A (the Kelvin sign) to `k` in Unicode
+    /// mode, so `whiteK` was one long word here and `white` followed by
+    /// a symbol there.
+    #[test]
+    fn a_letter_is_ascii_like_the_reference() {
+        let found = find_named("white\u{212a}", None);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].value, "white");
+    }
+
+    /// U+FEFF is whitespace to JavaScript and not to Rust, and the call
+    /// is validated after its whitespace is stripped — so this was a
+    /// colour on one server and nothing on the other.
+    #[test]
+    fn whitespace_is_javascripts_set_in_both_directions() {
+        let found = find_literals("rgb(1,\u{feff}2, 3)");
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].value, "rgb(1, 2, 3)");
+        // U+0085 goes the other way: Unicode calls it whitespace and
+        // JavaScript does not, so it is not a separator here either.
+        assert!(
+            find_literals("rgb(1,\u{85}2, 3)").is_empty(),
+            "U+0085 is not whitespace to the reference implementation"
+        );
+    }
 }
 
 #[cfg(test)]

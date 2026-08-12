@@ -45,6 +45,22 @@ separate product on its own cadence and keeps its own
   against too. The two tables were ported by hand and had already
   drifted: `typescriptreact` was accepted here and refused there.
 
+- **A generated check that both `extract_colors` servers agree.**
+  `scripts/check-extraction-differential.ts` builds documents from a
+  format, a value, a wrapper and a neighbourhood — including characters
+  wider than one byte — and requires this server and the Rust one to
+  return the same envelope for each. The corpus pins the cases somebody
+  thought of; this generates the rest, and it found four ways the two
+  disagreed, all of them fixed on the Rust side. **Only the shared tool
+  is compared**: the surfaces around it differ by design, and
+  `crate/SPEC.md` lists how.
+
+- **Five corpus documents** — `theme.styl`, `app.js`, `compose.yaml`,
+  `config.toml` and `release.txt` — so every one of the fourteen formats
+  the tool advertises has a document pinning what it reads. Five had
+  none, and the check that would have said so was a hand-written list;
+  it is driven off `SUPPORTED_FORMATS` now, on both sides.
+
 - A **Rust CLI and MCP server**, in [`crate/`](crate/README.md), to be
   published to crates.io as `colors-le`. It runs the same extraction over
   a whole tree and, given a palette, fails a build on a colour that is not

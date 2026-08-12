@@ -165,6 +165,47 @@ repositories, matching any keyword inside a value segment produced 35
 false findings against 19 real colours. A stylesheet keeps the looser
 rule, because there the declaration syntax is known.
 
+### Deliberate divergences
+
+Two things are held equal and the rest is not, and confusing the two
+invents bugs in both directions.
+
+**Held equal: the shared `extract_colors` tool.** One tool name, one
+schema, two servers. An agent asking for the colours in a document must
+get the same answer whichever server it happens to reach — same values,
+same notations, same positions, same envelope. `fixtures/` pins the
+cases somebody wrote down and the `differential` job generates the rest.
+A difference there is a bug, and it is exactly the class the `xml`
+divergence belonged to.
+
+**Not held equal: the surfaces.** The extension is IDE-first — one open
+buffer, a person reading results in an editor. This is terminal-first —
+trees, exit codes, pipes, automation. Each works as its use case
+expects, and the following are differences by design rather than drift:
+
+- The **walk**, `--palette`, `--strict`, `--hidden`, `--no-ignore`,
+  `--values` and the exit codes exist only here. The extension has no
+  tree to walk and nothing to enforce against.
+- **JSON Lines on stdout**, one report per file, with a `notation`
+  field. The shared tool calls the same thing `format`; both names are
+  published API on their own surface and neither moves to match the
+  other.
+- **Report paths always use `/`**, on every platform, because stdout is
+  protocol and a path that changes shape with the operating system
+  cannot be diffed between two machines.
+- **Convert, analyze and validate** stay in the editor — see "Half the
+  extension, on purpose".
+
+**One implementation detail is held equal on purpose**: the extraction
+layer uses JavaScript's string semantics, not Rust's. The reference
+implementation's patterns run without the `u` flag, so `\b`, `\d` and
+`[a-z]` are ASCII there; its `\s` and its `trim` include U+FEFF and
+exclude U+0085, where Rust's `char::is_whitespace` does the opposite.
+Rust's defaults differ on every one, and each difference made the shared
+tool answer differently — for `#abcé`, `rgb(١, 2, 3)`, `whiteK`,
+`rgb(1,\u{feff}2, 3)`, and for the format name `"\u{feff}css"`, which
+resolved on one server and fell through to the raw scan on the other.
+
 ### What is deliberately not a colour
 
 Ported limitations, not gaps to fix here:

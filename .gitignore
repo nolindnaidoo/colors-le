@@ -133,3 +133,8 @@ crate/target/
 # fails on a file that is present on every machine that wrote it.
 !crate/fixtures/
 !crate/fixtures/**
+
+# The fuzzer's seeds are the same argument one layer over: they are
+# checked in so a run is reproducible, and one of them is an `.svg`.
+!crate/tests/seeds/
+!crate/tests/seeds/**

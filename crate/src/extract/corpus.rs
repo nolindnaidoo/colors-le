@@ -23,6 +23,11 @@ pub(crate) fn document(name: &str) -> &'static str {
         "chart.xml" => include_str!("../../fixtures/documents/chart.xml"),
         "notes.md" => include_str!("../../fixtures/documents/notes.md"),
         "tokens.json" => include_str!("../../fixtures/documents/tokens.json"),
+        "theme.styl" => include_str!("../../fixtures/documents/theme.styl"),
+        "app.js" => include_str!("../../fixtures/documents/app.js"),
+        "compose.yaml" => include_str!("../../fixtures/documents/compose.yaml"),
+        "config.toml" => include_str!("../../fixtures/documents/config.toml"),
+        "release.txt" => include_str!("../../fixtures/documents/release.txt"),
         other => panic!("the corpus has no document named {other}"),
     }
 }
@@ -83,20 +88,18 @@ mod tests {
         }
     }
 
+    /// Every format the tool schema offers, not a hand-written subset.
+    ///
+    /// The subset was the bug: five of the fourteen advertised formats —
+    /// stylus, javascript, yaml, toml and plaintext — had no document
+    /// pinning what they read, and nothing said so. Driving the list off
+    /// `SUPPORTED_FORMATS` means adding a format to the schema fails
+    /// here until the corpus covers it. The `coverage-matrix` job
+    /// asserts the same thing against the shared table.
     #[test]
     fn the_corpus_covers_every_format() {
         let corpus = corpus();
-        for format in [
-            "css",
-            "scss",
-            "less",
-            "html",
-            "svg",
-            "xml",
-            "typescript",
-            "markdown",
-            "json",
-        ] {
+        for format in crate::extract::SUPPORTED_FORMATS {
             assert!(
                 corpus.documents.iter().any(|case| case.file_type == format),
                 "no corpus case reads {format}"

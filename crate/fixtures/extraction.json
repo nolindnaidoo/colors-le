@@ -284,6 +284,173 @@
 					"column": 13
 				}
 			]
+		},
+		{
+			"name": "theme.styl as stylus",
+			"file": "theme.styl",
+			"fileType": "stylus",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 2,
+					"column": 9
+				},
+				{
+					"value": "#f0a",
+					"format": "hex",
+					"line": 5,
+					"column": 15
+				},
+				{
+					"value": "rgba(255, 255, 255, 0.2)",
+					"format": "rgba",
+					"line": 6,
+					"column": 18
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 9,
+					"column": 16
+				}
+			]
+		},
+		{
+			"name": "app.js as javascript",
+			"file": "app.js",
+			"fileType": "javascript",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 1,
+					"column": 16
+				},
+				{
+					"value": "hsla(210, 50%, 40%, 0.5)",
+					"format": "hsla",
+					"line": 2,
+					"column": 17
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 4,
+					"column": 16
+				},
+				{
+					"value": "rgb(17, 34, 51)",
+					"format": "rgb",
+					"line": 7,
+					"column": 10
+				}
+			]
+		},
+		{
+			"name": "compose.yaml as yaml",
+			"file": "compose.yaml",
+			"fileType": "yaml",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 2,
+					"column": 11
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 3,
+					"column": 10
+				},
+				{
+					"value": "#250",
+					"format": "hex",
+					"line": 4,
+					"column": 10
+				},
+				{
+					"value": "rgba(0, 0, 0, 0.5)",
+					"format": "rgba",
+					"line": 5,
+					"column": 12
+				},
+				{
+					"value": "#250",
+					"format": "hex",
+					"line": 6,
+					"column": 12
+				}
+			]
+		},
+		{
+			"name": "config.toml as toml",
+			"file": "config.toml",
+			"fileType": "toml",
+			"expected": [
+				{
+					"value": "#deadbe",
+					"format": "hex",
+					"line": 1,
+					"column": 21
+				},
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 2,
+					"column": 10
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 3,
+					"column": 10
+				},
+				{
+					"value": "#250",
+					"format": "hex",
+					"line": 4,
+					"column": 9
+				},
+				{
+					"value": "hsl(210, 50%, 40%)",
+					"format": "hsl",
+					"line": 5,
+					"column": 11
+				},
+				{
+					"value": "#abc",
+					"format": "hex",
+					"line": 6,
+					"column": 39
+				}
+			]
+		},
+		{
+			"name": "release.txt as plaintext",
+			"file": "release.txt",
+			"fileType": "plaintext",
+			"expected": [
+				{
+					"value": "#FFF",
+					"format": "hex",
+					"line": 5,
+					"column": 14
+				},
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 5,
+					"column": 34
+				},
+				{
+					"value": "transparent",
+					"format": "named",
+					"line": 7,
+					"column": 8
+				}
+			]
 		}
 	]
 }

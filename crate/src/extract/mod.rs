@@ -2,6 +2,7 @@ pub(crate) mod corpus;
 pub(crate) mod format;
 pub(crate) mod formats;
 pub(crate) mod heuristics;
+pub(crate) mod js;
 pub(crate) mod palette;
 pub(crate) mod position;
 
@@ -153,6 +154,29 @@ mod tests {
         assert_eq!(values(extract(".a{color:#250}", "css")), ["#250"]);
         // So is a structured format, which is where design tokens live.
         assert_eq!(values(extract("{ \"gray\": \"#250\" }", "json")), ["#250"]);
+    }
+
+    /// Which rules apply is decided by which extractor ran, so a format
+    /// name that stops resolving quietly changes the answer rather than
+    /// producing an error. A byte-order mark on the name did exactly
+    /// that: `str::trim` left it on, the name fell through to the raw
+    /// scan, and `#250` stopped being a colour — on this server only.
+    #[test]
+    fn a_format_name_wearing_a_byte_order_mark_still_gets_its_own_rules() {
+        // Through `resolve_format`, which is the path both surfaces
+        // take: the name is resolved once and `extract` is handed the
+        // key. That resolution is where the mark was left on.
+        let of = |name: &str| resolve_format(Some(name), None);
+        assert_eq!(
+            values(extract(".a{color:#250}", of("\u{feff}css"))),
+            ["#250"]
+        );
+        assert_eq!(
+            values(extract("{ \"gray\": \"#250\" }", of("\u{feff}json"))),
+            ["#250"]
+        );
+        // And the prose rule still applies where it should.
+        assert!(extract("closes #250", of("\u{feff}markdown")).is_empty());
     }
 
     /// Every new format reads, and a named colour in one still counts

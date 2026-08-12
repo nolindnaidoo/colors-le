@@ -1,0 +1,6 @@
+colors:
+  brand: "#1a2b3c"
+  paper: white
+  gray: "#250"
+  overlay: rgba(0, 0, 0, 0.5)
+notes: see #250 and the orange one

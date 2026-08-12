@@ -1,0 +1,8 @@
+/* café ☕ — a comment with characters wider than one byte */
+.a {
+  color: #1a2b3c;   /* naïve */
+  content: "🎯";
+  background: rgba(255, 255, 255, 0.2);
+}
+/* İ and ẞ lowercase to a different length than they occupy */
+.b { color: white }

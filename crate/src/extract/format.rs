@@ -132,9 +132,17 @@ pub(crate) fn extractor_of(format: &str) -> &'static str {
     }
 }
 
+/// A name as JavaScript would see it.
+///
+/// `js::trim`, not `str::trim`: U+FEFF is whitespace to JavaScript and
+/// not to Rust, so a format name arriving as `"\u{feff}css"` — three
+/// invisible bytes a Windows editor adds without being asked — resolved
+/// to `css` on the extension and to nothing here. That is not a cosmetic
+/// difference in this crate: the fallback runs the raw scan, where a
+/// short hex must carry an `a`-`f` and a named colour must be the whole
+/// value, so the two servers disagreed about whether `#250` is a colour.
 fn normalise(value: &str) -> String {
-    value
-        .trim()
+    super::js::trim(value)
         .to_lowercase()
         .trim_start_matches('.')
         .to_string()
@@ -273,6 +281,27 @@ mod tests {
     fn a_name_is_normalised_before_it_is_matched() {
         assert_eq!(resolve_format(Some("  CSS "), None), "css");
         assert_eq!(resolve_format(Some(".scss"), None), "scss");
+    }
+
+    /// A byte-order mark is whitespace to JavaScript and not to Rust, so
+    /// `str::trim` left it on and the name stopped resolving — while the
+    /// extension resolved it. Three invisible bytes that a Windows
+    /// editor adds without being asked, and the shared tool answered
+    /// differently for the same arguments.
+    #[test]
+    fn a_byte_order_mark_around_a_format_name_is_whitespace() {
+        assert_eq!(resolve_format(Some("\u{feff}css"), None), "css");
+        assert_eq!(resolve_format(Some("css\u{feff}"), None), "css");
+        assert_eq!(resolve_format(Some("\u{feff}.SCSS\u{feff}"), None), "scss");
+        assert_eq!(resolve_format(None, Some("\u{feff}theme.css")), "css");
+        // U+0085 goes the other way: Rust calls it whitespace and
+        // JavaScript does not, so it stays part of the name and the name
+        // does not resolve.
+        assert_eq!(
+            resolve_format(Some("\u{85}css"), None),
+            FALLBACK_FORMAT,
+            "the reference implementation does not trim U+0085 either"
+        );
     }
 
     #[test]

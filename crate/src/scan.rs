@@ -91,7 +91,7 @@ pub(crate) enum Examined {
 }
 
 pub(crate) fn scan_file(path: &PathBuf, options: &ScanOptions) -> Examined {
-    let file = path.to_string_lossy().into_owned();
+    let file = reported_path(path);
     let format = options.format.unwrap_or_else(|| format_of(path));
 
     match std::fs::read(path) {
@@ -107,6 +107,26 @@ pub(crate) fn scan_file(path: &PathBuf, options: &ScanOptions) -> Examined {
         // read it, so nothing knows whether it was text.
         Err(error) => Examined::Text(skipped(file, format, &error.to_string())),
     }
+}
+
+/// The path as the report carries it: separators are always `/`.
+///
+/// stdout is protocol. A report whose paths change shape with the
+/// operating system cannot be diffed between two machines, and the
+/// consumer downstream of it — a shell, a diff, a dashboard — has to
+/// learn which platform produced it before it can split a path. A
+/// sibling shipped `\` on Windows for a release and nobody noticed until
+/// CI asserted it.
+///
+/// Only where `\` **is** the separator. On Unix a backslash is an
+/// ordinary character in a file name, and rewriting it would report a
+/// path that does not exist.
+fn reported_path(path: &StdPath) -> String {
+    let raw = path.to_string_lossy().into_owned();
+    if std::path::MAIN_SEPARATOR != '\\' {
+        return raw;
+    }
+    raw.replace('\\', "/")
 }
 
 /// ripgrep's heuristic, and deliberately the same one: a NUL byte in the
@@ -463,6 +483,25 @@ pub(crate) fn without_bom(content: &str) -> &str {
 #[cfg(test)]
 mod hazards {
     use super::*;
+
+    /// stdout is protocol, so a path in it has one shape everywhere.
+    #[test]
+    fn a_reported_path_always_uses_forward_slashes() {
+        let path = StdPath::new("src").join("theme.css");
+        assert_eq!(reported_path(&path), "src/theme.css");
+        assert!(!reported_path(&path).contains('\\'));
+    }
+
+    /// On Unix a backslash is a legal character in a file name, and a
+    /// path this rewrote would name a file that does not exist.
+    #[cfg(unix)]
+    #[test]
+    fn a_backslash_in_a_unix_file_name_survives() {
+        assert_eq!(
+            reported_path(StdPath::new("odd\\name.css")),
+            "odd\\name.css"
+        );
+    }
 
     /// Three invisible bytes that Notepad, Excel and a PowerShell
     /// redirect all add, and that VS Code strips before the extension

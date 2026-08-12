@@ -55,6 +55,55 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A document holding `İ` or `ẞ` no longer aborts the process.** The
+  markup extractor took its attribute and `<style>` offsets from a
+  `to_lowercase` copy of the document and applied them to the original.
+  That is only safe while lowercasing preserves length, and it does not:
+  `İ` becomes two characters, `K` (the Kelvin sign) becomes one byte
+  from three. Every span after such a character slid, which lost the
+  colours in an ordinary `<rect fill="…"/>` — and, when the slide landed
+  inside a character, panicked. ASCII folding now, which is all a tag or
+  attribute name ever needs. Found by the new `differential` job and
+  reproduced by `fuzz` in under two thousand documents.
+
+- **A format name wearing a byte-order mark resolves again.** U+FEFF is
+  whitespace to JavaScript's `trim` and not to Rust's, so
+  `format: "\u{feff}css"` — three invisible bytes a Windows editor adds
+  without being asked — resolved to `css` on the extension and fell
+  through to the raw scan here. In this crate that is not cosmetic: the
+  raw scan is where the two prose rules live, so the two servers
+  disagreed about whether `#250` is a colour. `extract/js.rs` now holds
+  JavaScript's whitespace set once, in both the forms this needs, and
+  every trim on the shared path goes through it.
+
+- **The matchers use the reference implementation's regex semantics.**
+  Its patterns run without JavaScript's `u` flag, where `\b`, `\d` and
+  `[a-z]` are ASCII; Rust's are Unicode. Four ways the same shared tool
+  gave two answers, all found by generating documents rather than
+  writing them:
+
+  - `#abcé` — `é` is a word character to Unicode, so the boundary never
+    closed and the hex was missed here and found there.
+  - `rgb(١, 2, 3)` — an Arabic-Indic digit satisfied `\d`, so this
+    reported a colour the extension did not.
+  - `whiteK` — `(?i)[a-z]` folds U+212A to `k`, so this read one long
+    word where the extension read `white`.
+  - `rgb(1,\u{feff}2, 3)` — U+FEFF is whitespace to JavaScript and not
+    to Rust (and U+0085 is the reverse), and a call is validated after
+    its whitespace is stripped.
+
+- **An attribute value is measured in UTF-16 code units.** The
+  whole-value rule compares the attribute against the literal found in
+  it, and comparing bytes to a JavaScript length meant
+  `fill="rgb(1,\u{feff}2, 3)"` was one colour on one server and none on
+  the other.
+
+- **Report paths use `/` on every platform.** stdout is protocol: a
+  report whose paths change shape with the operating system cannot be
+  diffed between two machines, and a sibling shipped `\` on Windows for
+  a release before anything asserted it. Unix file names holding a
+  backslash are untouched.
+
 - **`xml` runs the SVG extractor, and stops under-reporting.** It ran
   the markup-HTML extractor here and the markup-SVG one on the
   extension, so for `<rect fill="#1a2b3c"/>` under `format: "xml"` the
@@ -84,6 +133,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   held to: a unit test here, `scripts/check-extraction-parity.ts` on the
   extension. The table was ported by hand twice, which is how it drifted
   in the first place, and nothing in either build would have noticed.
+- **Six CI jobs, each because something got through.** `hazards` and
+  `platform` on macOS, Windows and Linux; `differential`, `fuzz`,
+  `budget` and `coverage-matrix` on Linux. `differential` generates
+  documents and requires the shared `extract_colors` tool to answer
+  identically on both servers — the contract the `xml` bug broke, which
+  a hand-written corpus cannot police because it only holds cases
+  somebody thought of. `fuzz` runs 60 seconds per target over the pure
+  layer, seeded from multi-byte documents in `tests/seeds/` because the
+  corpus is deliberately ASCII. `budget` puts a wall-clock ceiling and a
+  linearity check on a 500-file tree. Between them they found four
+  divergences and one abort, all listed above.
+- **Five corpus documents** — `theme.styl`, `app.js`, `compose.yaml`,
+  `config.toml` and `release.txt` — so that every one of the fourteen
+  formats the tool schema advertises has a document pinning what it
+  reads. Five did not, and nothing said so; the check is now driven off
+  `SUPPORTED_FORMATS` on both sides, so adding a format to the schema
+  fails the build until the corpus covers it.
 - **Two corpus documents**: `notes.md`, which pins that `#250` is an
   issue reference and `#FFF` is a colour in the same file, and
   `tokens.json`, a design-token file whose `#250` *is* one.

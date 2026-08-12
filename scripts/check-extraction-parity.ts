@@ -195,18 +195,11 @@ function checkTheCorpusStillCoversTheAwkwardCases(): void {
 		fail('no corpus case pins a short all-digit hex that IS a colour');
 	}
 
+	// Every format the schema offers, not a hand-written subset. The
+	// subset was the bug: five of the fourteen advertised formats had no
+	// document pinning what they read, and nothing said so.
 	const formats = new Set(corpus.documents.map((testCase) => testCase.fileType));
-	for (const format of [
-		'css',
-		'scss',
-		'less',
-		'html',
-		'svg',
-		'xml',
-		'typescript',
-		'markdown',
-		'json',
-	]) {
+	for (const format of SUPPORTED_FORMATS) {
 		if (!formats.has(format)) fail(`no corpus case reads ${format}`);
 	}
 }

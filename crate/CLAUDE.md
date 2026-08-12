@@ -25,8 +25,23 @@ with its own `CLAUDE.md`.
   mid-character and abort. `debug_assert`s guard it; do not remove them,
   and pad by `len_utf8()` in anything new that blanks.
 - **The corpus is all ASCII**, so it cannot catch a byte-length bug.
-  That class is caught by running the binary over a real repository, and
-  it has been, once, the hard way.
+  That class is caught by running the binary over a real repository —
+  and it was, once, the hard way — and now by `tests/fuzz.rs`, whose
+  seeds in `tests/seeds/` are multi-byte for exactly this reason, and by
+  `scripts/check-extraction-differential.ts`.
+- **The extraction layer follows JavaScript's string semantics, not
+  Rust's.** The reference implementation runs its patterns without the
+  `u` flag, so `\b`, `\d` and `[a-z]` are ASCII there, and both its `\s`
+  and its `trim` include U+FEFF while excluding U+0085. `extract/js.rs`
+  holds that set once and `heuristics.rs` spells the ASCII classes out.
+  **Never use `str::trim` or `char::is_whitespace` on the shared path —
+  use `js::trim`**, and do not "simplify" the patterns back to `(?i)`
+  and `\d`. Each shortcut is a divergence in the shared MCP tool, and
+  five of them shipped.
+- **Never index one string with offsets taken from another.** A
+  `to_lowercase` copy is a different string: `İ` grows and `K` shrinks,
+  and the markup extractor aborted on both. `to_ascii_lowercase`
+  preserves byte length, and tag and attribute names are ASCII.
 - **An unknown format is read as raw text**, since 0.2.0 — the walk has
   no format filter and every file is opened. Two rules make that safe
   and both apply *only* outside the format-aware extractors: a short hex

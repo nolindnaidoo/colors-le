@@ -1,0 +1,7 @@
+<!-- café ☕ -->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect fill="#1a2b3c" stroke="rgb(1, 2, 3)"/>
+  <text>İ ẞ 🎯</text>
+  <stop stop-color="white"/>
+  <rect fill="url(#grad) #fff"/>
+</svg>

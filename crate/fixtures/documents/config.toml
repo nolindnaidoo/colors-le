@@ -1,0 +1,6 @@
+# a comment holding #deadbe, which this format has no parser to blank
+brand = "#1a2b3c"
+paper = "white"
+gray = "#250"
+accent = "hsl(210, 50%, 40%)"
+notes = "an orange note that mentions #abc"
