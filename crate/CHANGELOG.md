@@ -7,152 +7,119 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-08-12
+
+The release that makes this read what you already expected it to read,
+and fixes the ways it could quietly read it wrong.
 
 ### Changed
 
-- **Every file is read.** The walk had a format filter and opened 20 of
-  the 88 file types found in real repositories — which meant it could
-  not open a `.json`, where a design system keeps its tokens. It opens
-  everything now: `json`, `yaml`, `toml`, `markdown` and `plaintext`
-  join the nine named formats, and anything else is scanned as raw text
-  and reported as format `unknown`. On one real repository this took the
-  findings from 56 to 70, and all fourteen new ones are real colours in
-  documentation and manifests.
+- **Every file is read.** Point this at a repository and it opens the
+  whole tree. It used to keep only the file types it had a parser for —
+  20 of the 88 types a real codebase turns out to hold — so it could not
+  open a `.json`, and a design system keeps its tokens in a `.json`.
+  `json`, `yaml`, `toml`, `markdown` and `plaintext` are read by name
+  now, and anything else is scanned as raw text and reported as format
+  `unknown`, so you can always tell which of the two you got. On one
+  codebase that took the findings from 56 to 70, and all fourteen new
+  ones are real colours in documentation and manifests.
 
-  Two rules make that safe, and both apply **only** where the syntax is
-  unknown — stylesheets and structured formats are untouched:
+- **Two rules keep prose honest.** Both apply *only* where the syntax is
+  unknown — Markdown, plain text, and files this has no parser for.
+  Stylesheets and token files are untouched:
 
-  - **A short hex in prose must contain an `a`-`f`.** Across 1,988 real
-    Markdown files, 50 of the 56 bare 3/4-digit hex were issue or PR
-    references (`#250`, `#3050`) and the six with a letter in them were
-    all real colours. `#250` in a token file or a stylesheet is still a
-    colour.
-  - **A named colour must be the whole value.** Matching any keyword
-    inside a value segment produced 35 false findings against 19 real
-    colours on two real repositories.
+  - **A short hex in prose must contain an `a`-`f`.** `#250` in a README
+    is an issue reference, not a colour. Measured rather than assumed:
+    across 1,988 Markdown files there were 56 bare 3- and 4-digit hex,
+    and 50 of them — every all-digit one — were issue or pull-request
+    references, while all six containing a letter were real colours.
+    `#250` in a token file or a stylesheet is still a colour.
+  - **A named colour must be the whole value.** `"paper": "white"` is a
+    colour. A sentence about a brand-orange focus ring, a badge URL
+    ending `-red)`, and a `class="… text-white …"` are not. Matching a
+    keyword anywhere inside a value produced 35 false findings against
+    19 real colours.
 
-- **A binary file is passed over silently and counted**, rather than
-  reported as a file that could not be read. A NUL byte in the first
-  8 KB is the test — ripgrep's own — and such a file produces no report
-  line and cannot reach the exit code; the stderr summary carries
-  `16 binary files skipped`, and `colors_le_scan` carries
-  `data.binarySkipped`. Reading every file put 14 PNGs, an `.ico` and a
-  `.jpg` in front of one repository's reader, which would have made
-  `--strict` exit 2 on any repository containing an image. **A file that
-  looked like text and could not be read is unchanged**: named,
-  diagnosed, and still a `--strict` failure. That distinction is the
-  point.
+- **Images and other binary files are passed over quietly** and counted
+  in the summary — `3 colors in 40 files, 16 binary files skipped` —
+  rather than reported as files that could not be read. Reading every
+  file means meeting every PNG, and calling each one a failure would
+  have made `--strict` exit 2 on any repository containing an image. **A
+  file that looked like text and could not be read is unchanged**: named
+  on stderr, carried in the report with a `skipped` diagnostic, and
+  still a `--strict` failure.
 
-- **The `unknown-format` diagnostic is gone.** It said "nothing was
-  read", which is no longer true; the `format` field carries the same
-  information without a warning line per file.
+- **No more `unknown-format` warning line per file.** It said "nothing
+  was read", which is no longer true. The `format` field says the same
+  thing without a warning for every Python file in the tree.
 
-- **`colors_le_scan` refuses a format it cannot name**, instead of
-  quietly scanning the whole tree as raw text. Its schema now publishes
-  the format enum, and both tool descriptions were rewritten — they
-  described a different product's formats.
+- **`colors_le_scan` refuses a format name it does not know**, instead
+  of quietly scanning the whole tree as raw text, and its schema
+  publishes the list of names it accepts.
 
 ### Fixed
 
-- **A document holding `İ` or `ẞ` no longer aborts the process.** The
-  markup extractor took its attribute and `<style>` offsets from a
-  `to_lowercase` copy of the document and applied them to the original.
-  That is only safe while lowercasing preserves length, and it does not:
-  `İ` becomes two characters, `K` (the Kelvin sign) becomes one byte
-  from three. Every span after such a character slid, which lost the
-  colours in an ordinary `<rect fill="…"/>` — and, when the slide landed
-  inside a character, panicked. ASCII folding now, which is all a tag or
-  attribute name ever needs. Found by the new `differential` job and
-  reproduced by `fuzz` in under two thousand documents.
+- **A file containing certain non-English characters could crash the
+  scan, or silently lose every colour after that point.** One `İ`, `ẞ`
+  or `K` anywhere in an HTML, SVG or XML document was enough: an
+  ordinary `<rect fill="#1a2b3c"/>` further down went unreported, and in
+  some documents the process aborted outright. Those characters change
+  length when lowercased, and the scan was counting on them not to.
 
-- **A format name wearing a byte-order mark resolves again.** U+FEFF is
-  whitespace to JavaScript's `trim` and not to Rust's, so
-  `format: "\u{feff}css"` — three invisible bytes a Windows editor adds
-  without being asked — resolved to `css` on the extension and fell
-  through to the raw scan here. In this crate that is not cosmetic: the
-  raw scan is where the two prose rules live, so the two servers
-  disagreed about whether `#250` is a colour. `extract/js.rs` now holds
-  JavaScript's whitespace set once, in both the forms this needs, and
-  every trim on the shared path goes through it.
+- **A colour beside non-English text was missed, and non-Latin digits
+  were read as a colour.** `#abcé` is a colour and was not found;
+  `rgb(١, 2, 3)` is not one and was reported as `rgb`. A named colour
+  followed by a symbol, and a functional call holding an invisible
+  space, belong to the same family and are fixed with it. All four now
+  answer the way the editor extension answers.
 
-- **The matchers use the reference implementation's regex semantics.**
-  Its patterns run without JavaScript's `u` flag, where `\b`, `\d` and
-  `[a-z]` are ASCII; Rust's are Unicode. Four ways the same shared tool
-  gave two answers, all found by generating documents rather than
-  writing them:
+- **A format name with a byte-order mark in front of it resolves
+  again.** Three invisible bytes that a Windows editor adds without
+  being asked stopped `css` from being recognised, and the document fell
+  through to the prose rules above — so the same file could be told it
+  had no colours in it.
 
-  - `#abcé` — `é` is a word character to Unicode, so the boundary never
-    closed and the hex was missed here and found there.
-  - `rgb(١, 2, 3)` — an Arabic-Indic digit satisfied `\d`, so this
-    reported a colour the extension did not.
-  - `whiteK` — `(?i)[a-z]` folds U+212A to `k`, so this read one long
-    word where the extension read `white`.
-  - `rgb(1,\u{feff}2, 3)` — U+FEFF is whitespace to JavaScript and not
-    to Rust (and U+0085 is the reverse), and a call is validated after
-    its whitespace is stripped.
+- **`bgcolor` is read in SVG and XML documents**, and an XML document
+  gets the full presentational attribute list: `fill`, `stroke`,
+  `stop-color`, `flood-color`, `lighting-color`, `color`, `bgcolor`. A
+  `<rect fill="#1a2b3c"/>` read as `xml` returned nothing here while the
+  editor extension returned the colour. **If you scan `.svg` or `.xml`
+  files, expect findings this release that the last one missed.**
 
-- **An attribute value is measured in UTF-16 code units.** The
-  whole-value rule compares the attribute against the literal found in
-  it, and comparing bytes to a JavaScript length meant
-  `fill="rgb(1,\u{feff}2, 3)"` was one colour on one server and none on
-  the other.
+- **`typescriptreact` is a format again.** Every `.tsx` document sent
+  under that name came back empty, with no error to say why.
 
-- **Report paths use `/` on every platform.** stdout is protocol: a
-  report whose paths change shape with the operating system cannot be
-  diffed between two machines, and a sibling shipped `\` on Windows for
-  a release before anything asserted it. Unix file names holding a
-  backslash are untouched.
+- **Report paths use `/` on every platform**, so a report written on
+  Windows diffs against one written anywhere else.
 
-- **`xml` runs the SVG extractor, and stops under-reporting.** It ran
-  the markup-HTML extractor here and the markup-SVG one on the
-  extension, so for `<rect fill="#1a2b3c"/>` under `format: "xml"` the
-  extension returned the colour and this returned nothing — the same
-  shared MCP tool, two answers, in the worst direction. Resolved towards
-  the extension, which is the reference implementation and finds
-  strictly more: the SVG attribute list is the HTML one plus five.
-  `bgcolor` joins the SVG list so that routing `xml` there loses nothing
-  it used to find, which also means an `.svg` carrying `bgcolor` now
-  reports it.
-
-  `fixtures/aliases.json` gains an `extractors` table and both sides are
-  now checked against it. The alias check could not have caught this:
-  both frontends resolved `xml` to `xml` and then disagreed a layer
-  below. Corpus case: `chart.xml`, carrying `bgcolor` and `fill`
-  together.
-
-- **`typescriptreact` is a format again.** The extension accepted it;
-  this refused it, and the refusal looked like an answer —
-  `{"colors": [], "fileType": "unknown"}`, no error — for the caller
-  most likely to send a VS Code language id. Every `.tsx` document an
-  agent handed to the CLI came back empty.
+- **An attribute value holding an invisible space is one colour again.**
+  `fill="rgb(1, 2, 3)"` written with a byte-order mark inside it counted
+  as a colour in the editor and as nothing here.
 
 ### Added
 
-- **`fixtures/aliases.json`**, the alias table both frontends are now
-  held to: a unit test here, `scripts/check-extraction-parity.ts` on the
-  extension. The table was ported by hand twice, which is how it drifted
-  in the first place, and nothing in either build would have noticed.
-- **Six CI jobs, each because something got through.** `hazards` and
-  `platform` on macOS, Windows and Linux; `differential`, `fuzz`,
-  `budget` and `coverage-matrix` on Linux. `differential` generates
-  documents and requires the shared `extract_colors` tool to answer
-  identically on both servers — the contract the `xml` bug broke, which
-  a hand-written corpus cannot police because it only holds cases
-  somebody thought of. `fuzz` runs 60 seconds per target over the pure
-  layer, seeded from multi-byte documents in `tests/seeds/` because the
-  corpus is deliberately ASCII. `budget` puts a wall-clock ceiling and a
-  linearity check on a 500-file tree. Between them they found four
-  divergences and one abort, all listed above.
+- **Six CI jobs, each because something above got through a green
+  build.** Two of them are worth naming: `differential` generates
+  documents — formats, values, wrappers, characters wider than one byte
+  — and requires the `extract_colors` tool to answer identically on this
+  server and the editor extension's, which is the check that would have
+  caught the `xml` divergence on day one; `fuzz` runs the matchers and
+  the comment blankers for a minute per target against deliberately
+  awkward input, which is what reproduces the crash above. The other
+  four cover hazardous trees, platform differences, a wall-clock budget,
+  and whether every format this advertises can actually be opened.
 - **Five corpus documents** — `theme.styl`, `app.js`, `compose.yaml`,
-  `config.toml` and `release.txt` — so that every one of the fourteen
-  formats the tool schema advertises has a document pinning what it
-  reads. Five did not, and nothing said so; the check is now driven off
-  `SUPPORTED_FORMATS` on both sides, so adding a format to the schema
-  fails the build until the corpus covers it.
-- **Two corpus documents**: `notes.md`, which pins that `#250` is an
-  issue reference and `#FFF` is a colour in the same file, and
-  `tokens.json`, a design-token file whose `#250` *is* one.
+  `config.toml` and `release.txt` — so all fourteen formats the tool
+  advertises have a document pinning what they read. Five had none, and
+  nothing said so.
+- **`fixtures/aliases.json`**, the table of format names and extractors
+  both frontends are now held to. It was ported by hand twice, which is
+  how `typescriptreact` came to work in one and not the other.
+
+**Still not read**, and deliberately: modern colour syntax —
+`rgb(255 0 0 / 50%)`, `lab()`, `lch()`, `oklch()`, `color()` — along
+with `currentColor` and SCSS/LESS variable references. Those are a
+parity change and belong in both frontends at once.
 
 ## [0.1.0] - 2026-08-11
 
@@ -194,8 +161,6 @@ auditor is designed as its own thing.
 numbers-le. A colour only means something where a colour can appear, and
 a raw scan of a README would report every `#anchor` as a three-digit hex.
 
-[0.1.0]: https://github.com/nolindnaidoo/colors-le/releases/tag/crate-v0.1.0
-
 ### Fixed
 
 - **A leading byte-order mark is no longer part of the document.** Three
@@ -216,3 +181,6 @@ a raw scan of a README would report every `#anchor` as a three-digit hex.
 - **A file that is not text is named rather than dropped.** It used to
   vanish from the report entirely, which reads to whoever ran it as
   "that file was clean".
+
+[0.2.0]: https://github.com/nolindnaidoo/colors-le/releases/tag/crate-v0.2.0
+[0.1.0]: https://github.com/nolindnaidoo/colors-le/releases/tag/crate-v0.1.0

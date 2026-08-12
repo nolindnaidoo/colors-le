@@ -9,20 +9,29 @@ This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
 separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md).
 
-## [Unreleased]
+## [2.3.0] - 2026-08-12
 
 ### Changed
 
 - **Extract works in every document.** JSON, JSONC, YAML, TOML, Markdown
-  and plain text are read by name — design tokens live in JSON — and any
-  other language id is read as raw text rather than quietly extracted as
-  CSS. `metadata.fileType` says which of the two it was.
+  and plain text are read by name — a design system keeps its tokens in a
+  `.json` — and any other language id is read as raw text rather than
+  quietly extracted as CSS. `metadata.fileType` says which of the two you
+  got.
 
-  Two rules apply only where the syntax is unknown, so stylesheets and
-  structured formats are untouched: a 3- or 4-digit hex in prose must
-  contain an `a`-`f` (`#250` in a README is an issue reference — 50 of
-  56 in a 1,988-file sample), and a named color must be the whole value
-  (a paragraph mentioning orange is not a finding).
+- **Two rules keep prose honest.** Both apply *only* where the syntax is
+  unknown — Markdown, plain text, and language ids with no extractor of
+  their own. Stylesheets and token files are untouched:
+
+  - **A short hex in prose must contain an `a`-`f`.** `#250` in a README
+    is an issue reference, not a colour. Measured rather than assumed:
+    across 1,988 Markdown files there were 56 bare 3- and 4-digit hex,
+    and 50 of them — every all-digit one — were issue or pull-request
+    references, while all six containing a letter were real colours.
+    `#250` in a token file or a stylesheet is still a colour.
+  - **A named color must be the whole value.** `"paper": "white"` is a
+    color; a paragraph mentioning orange, and a
+    `className="… text-white …"`, are not.
 
 - **The `extract_colors` MCP tool no longer refuses a call with no
   usable format.** It reads the document as raw text and reports
@@ -33,27 +42,23 @@ separate product on its own cadence and keeps its own
 
 - **`bgcolor` is read in SVG and XML documents.** It was recognised in
   HTML only, so a `<chart bgcolor="#f0a">` read as `xml` lost its one
-  colour. The same change resolves an `xml` divergence with the Rust
-  CLI, which ran the HTML extractor there and missed `fill` attributes;
-  the format-to-extractor mapping is now pinned for both frontends in
-  `crate/fixtures/aliases.json`.
+  color. **If you extract from `.svg` or `.xml` files, expect findings
+  this release that the last one missed.** The same change settles an
+  `xml` disagreement with the Rust CLI, which ran the HTML extractor
+  there and missed `fill` attributes; the format-to-extractor mapping is
+  now pinned for both frontends in `crate/fixtures/aliases.json`.
 
 ### Added
-
-- The MCP server's alias table is now checked against
-  `crate/fixtures/aliases.json`, which the Rust CLI checks itself
-  against too. The two tables were ported by hand and had already
-  drifted: `typescriptreact` was accepted here and refused there.
 
 - **A generated check that both `extract_colors` servers agree.**
   `scripts/check-extraction-differential.ts` builds documents from a
   format, a value, a wrapper and a neighbourhood — including characters
   wider than one byte — and requires this server and the Rust one to
-  return the same envelope for each. The corpus pins the cases somebody
-  thought of; this generates the rest, and it found four ways the two
-  disagreed, all of them fixed on the Rust side. **Only the shared tool
-  is compared**: the surfaces around it differ by design, and
-  `crate/SPEC.md` lists how.
+  return the same answer for each. The shared corpus pins the cases
+  somebody thought of; this generates the rest, and it found four ways
+  the two disagreed, all of them fixed on the Rust side. **Only the
+  shared tool is compared**: the surfaces around it differ by design,
+  and `crate/SPEC.md` lists how.
 
 - **Five corpus documents** — `theme.styl`, `app.js`, `compose.yaml`,
   `config.toml` and `release.txt` — so every one of the fourteen formats
@@ -61,15 +66,24 @@ separate product on its own cadence and keeps its own
   none, and the check that would have said so was a hand-written list;
   it is driven off `SUPPORTED_FORMATS` now, on both sides.
 
-- A **Rust CLI and MCP server**, in [`crate/`](crate/README.md), to be
+- The MCP server's alias table is now checked against
+  `crate/fixtures/aliases.json`, which the Rust CLI checks itself
+  against too. The two tables were ported by hand and had already
+  drifted: `typescriptreact` was accepted here and refused there.
+
+- A **Rust CLI and MCP server**, in [`crate/`](crate/README.md),
   published to crates.io as `colors-le`. It runs the same extraction over
-  a whole tree and, given a palette, fails a build on a colour that is not
-  in it — matched by colour rather than by spelling, so a palette in hex
+  a whole tree and, given a palette, fails a build on a color that is not
+  in it — matched by color rather than by spelling, so a palette in hex
   catches a violation written in `rgb()`.
 
   Only extraction is ported; convert, analyze and validate are
   interactive and stay here. The extension remains the reference
   implementation and `crate/fixtures/` is the contract.
+
+**Still not extracted**, and deliberately: modern color syntax —
+`rgb(255 0 0 / 50%)`, `lab()`, `lch()`, `oklch()`, `color()` — along
+with `currentColor` and SCSS/LESS variable references.
 
 ## [2.2.4] - 2026-08-07
 
