@@ -115,6 +115,16 @@ below instead.
 `--format` still refuses a name it does not know. Strict parsing applies
 to flags; the fallback applies to documents.
 
+**A format name is not an extractor.** `xml` is its own name, because
+the name is user-visible as `fileType`, and it runs the **markup-SVG**
+extractor — `fill`, `stroke`, `stop-color`, `flood-color`,
+`lighting-color`, `color`, `bgcolor` — because an XML document is not
+required to be SVG and that list is the superset. The mapping from name
+to extractor lives in `fixtures/aliases.json` and both frontends are
+checked against it: this is exactly where the two disagreed, with `xml`
+running markup-HTML here and markup-SVG on the extension, so
+`<rect fill="#1a2b3c"/>` was found there and missed here.
+
 ### What counts as a colour
 
 - **Hex** — 3, 4, 6 or 8 digits. Other digit counts are rejected

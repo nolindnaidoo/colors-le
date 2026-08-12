@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chart bgcolor="#f0a">
+	<rect fill="#1a2b3c" stroke="rgb(1, 2, 3)"/>
+	<label style="color: rebeccapurple">Q3</label>
+	<link href="#abc">the appendix</link>
+	<note>fill is orange in the printed edition</note>
+</chart>

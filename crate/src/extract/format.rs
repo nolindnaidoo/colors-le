@@ -16,10 +16,11 @@
 ///
 /// Ported verbatim from the extension's own table. **`typescript` and
 /// `xml` are their own keys**, even though they read exactly like
-/// `javascript` and `html`: the key is user-visible as `fileType` in
+/// `javascript` and `svg`: the key is user-visible as `fileType` in
 /// every MCP answer, so collapsing them would have the two servers
 /// disagree about what they just read. The corpus caught that on its
-/// first run.
+/// first run. Which extractor a key runs is a separate question, and
+/// `extractor_of` answers it.
 ///
 /// The table is also held in `fixtures/aliases.json`, which both
 /// frontends check themselves against. Ported-by-hand twice is how
@@ -100,6 +101,37 @@ pub(crate) const SUPPORTED_FORMATS: [&str; 14] = [
 /// answer came from a scan rather than a parser.
 pub(crate) const FALLBACK_FORMAT: &str = "unknown";
 
+/// Which extractor a resolved format runs, by name.
+///
+/// Named rather than left inline in `extract()`, because the extension
+/// makes this same choice in `determineFileType` and
+/// `extractColorsByFileType`, and two copies of a mapping drift. This
+/// one already did: `xml` ran the markup-HTML extractor here and the
+/// markup-SVG one there, so `<rect fill="#1a2b3c"/>` was found by the
+/// extension and **missed** by this crate — a shared MCP tool giving
+/// two answers, in the under-reporting direction. `fixtures/aliases.json`
+/// holds both sides to this table now; the alias check could not see it,
+/// because the divergence is a layer below the alias.
+///
+/// The names are the extractor families, not the formats: `scss` and
+/// `less` read identically and say so by sharing one.
+pub(crate) fn extractor_of(format: &str) -> &'static str {
+    match canonical(format) {
+        "css" => "css",
+        "scss" => "scss",
+        "less" => "less",
+        "stylus" => "stylus",
+        "html" => "html",
+        // An XML document is not required to be SVG, but the SVG
+        // attribute list is a superset of the HTML one, so reading it as
+        // markup-SVG finds strictly more and loses nothing.
+        "xml" | "svg" => "svg",
+        "javascript" | "typescript" => "javascript",
+        "json" | "yaml" | "toml" => "text-tokens",
+        _ => "text-prose",
+    }
+}
+
 fn normalise(value: &str) -> String {
     value
         .trim()
@@ -167,6 +199,7 @@ mod tests {
     #[derive(Debug, Deserialize)]
     struct Shared {
         aliases: BTreeMap<String, String>,
+        extractors: BTreeMap<String, String>,
         formats: Vec<String>,
     }
 
@@ -191,6 +224,24 @@ mod tests {
             ALIASES.len(),
             "an alias is listed twice, so one of them is dead"
         );
+    }
+
+    /// The layer below the alias, and the one that shipped a divergence
+    /// the alias check could not see: both frontends resolved `xml` to
+    /// `xml`, and then ran different extractors on it — markup-HTML here
+    /// and markup-SVG there — so `fill="#1a2b3c"` was missed by this
+    /// crate alone. Every format the caller can name is pinned, plus the
+    /// fallback, because the fallback is a document nobody named.
+    #[test]
+    fn the_extractor_each_format_runs_matches_the_extension() {
+        let shared: Shared = serde_json::from_str(SHARED).expect("the shared table is valid JSON");
+        let ours: BTreeMap<String, String> = SUPPORTED_FORMATS
+            .iter()
+            .chain(std::iter::once(&FALLBACK_FORMAT))
+            .map(|format| ((*format).to_string(), extractor_of(format).to_string()))
+            .collect();
+
+        assert_eq!(ours, shared.extractors);
     }
 
     #[test]

@@ -70,9 +70,15 @@ crate/src/
   blankers carry a `debug_assert` on the length. **Every corpus document
   is ASCII, so the corpus cannot catch this** — a real repository did.
 - **`typescript` and `xml` are their own format keys**, not aliases of
-  `javascript` and `html`. They read identically, but the key is
-  user-visible as `fileType` in every MCP answer, so collapsing them
-  would have the two servers disagree about what they just read.
+  `javascript` and `svg`. The key is user-visible as `fileType` in every
+  MCP answer, so collapsing them would have the two servers disagree
+  about what they just read. **A key is not an extractor**: `xml` runs
+  the markup-SVG extractor, and the mapping from one to the other is
+  `format::extractor_of`, held equal to the extension by
+  `fixtures/aliases.json`. That mapping is where the second divergence
+  lived — `xml` ran markup-HTML here and markup-SVG there, so a `fill`
+  attribute was found by the extension and missed by this crate. Pin
+  both layers; the alias table alone cannot see this one.
 - **An unknown format is read, not refused** — reversed in 0.2.0. It was
   a refusal, and the refusal meant this could not open a `.json`, which
   is where a design system keeps its tokens. What it protected against

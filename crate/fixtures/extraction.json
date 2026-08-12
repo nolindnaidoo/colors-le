@@ -162,6 +162,37 @@
 			]
 		},
 		{
+			"name": "chart.xml as xml — the SVG attributes, and bgcolor with them",
+			"file": "chart.xml",
+			"fileType": "xml",
+			"expected": [
+				{
+					"value": "#f0a",
+					"format": "hex",
+					"line": 2,
+					"column": 17
+				},
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 3,
+					"column": 14
+				},
+				{
+					"value": "rgb(1, 2, 3)",
+					"format": "rgb",
+					"line": 3,
+					"column": 31
+				},
+				{
+					"value": "rebeccapurple",
+					"format": "named",
+					"line": 4,
+					"column": 23
+				}
+			]
+		},
+		{
 			"name": "notes.md as markdown — #250 is an issue reference, #FFF is a colour",
 			"file": "notes.md",
 			"fileType": "markdown",

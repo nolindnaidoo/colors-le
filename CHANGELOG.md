@@ -29,6 +29,15 @@ separate product on its own cadence and keeps its own
   `fileType: "unknown"`, matching the Rust server, which never refused
   one.
 
+### Fixed
+
+- **`bgcolor` is read in SVG and XML documents.** It was recognised in
+  HTML only, so a `<chart bgcolor="#f0a">` read as `xml` lost its one
+  colour. The same change resolves an `xml` divergence with the Rust
+  CLI, which ran the HTML extractor there and missed `fill` attributes;
+  the format-to-extractor mapping is now pinned for both frontends in
+  `crate/fixtures/aliases.json`.
+
 ### Added
 
 - The MCP server's alias table is now checked against

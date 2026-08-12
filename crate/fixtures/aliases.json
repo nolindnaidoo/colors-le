@@ -35,6 +35,23 @@
 		"plaintext": "plaintext",
 		"txt": "plaintext"
 	},
+	"extractors": {
+		"css": "css",
+		"scss": "scss",
+		"less": "less",
+		"stylus": "stylus",
+		"html": "html",
+		"xml": "svg",
+		"svg": "svg",
+		"javascript": "javascript",
+		"typescript": "javascript",
+		"json": "text-tokens",
+		"yaml": "text-tokens",
+		"toml": "text-tokens",
+		"markdown": "text-prose",
+		"plaintext": "text-prose",
+		"unknown": "text-prose"
+	},
 	"formats": [
 		"css",
 		"scss",

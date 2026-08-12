@@ -87,7 +87,9 @@ function extractColorsByFileType(
 	content: string,
 	fileType: FileType,
 ): readonly Color[] {
-	switch (fileType) {
+	// Dispatched on the extractor name rather than the file type, so the
+	// mapping the Rust CLI is held to is the mapping this actually runs.
+	switch (extractorFor(fileType)) {
 		case 'css':
 			return extractFromCss(content);
 		case 'scss':
@@ -99,15 +101,14 @@ function extractColorsByFileType(
 		case 'html':
 			return extractFromHtml(content);
 		case 'javascript':
-		case 'typescript':
 			return extractFromJavaScript(content);
+		// `xml` runs this too, and keeps its own name: the name is user-visible
+		// in every MCP answer, the extractor is not.
 		case 'svg':
 			return extractFromSvg(content);
 		// Structured formats carry design tokens, so a bare `#250` in one is a
 		// color and is read as written.
-		case 'json':
-		case 'yaml':
-		case 'toml':
+		case 'text-tokens':
 			return extractFromText(content, 'counts');
 		// Markdown, plain text, and every format with no extractor of its own.
 		// Reading them beats refusing them — a color in a Python constant is
@@ -115,6 +116,45 @@ function extractColorsByFileType(
 		// far more often than a color, so it has to carry an a-f.
 		default:
 			return extractFromText(content, 'needs-a-letter');
+	}
+}
+
+/**
+ * Which extractor a resolved format runs, by name.
+ *
+ * Named rather than left inline above, because the Rust CLI makes this same
+ * choice in `format::extractor_of` and two copies of a mapping drift. This one
+ * already did: `xml` ran the markup-SVG extractor here and the markup-HTML one
+ * there, so `<rect fill="#1a2b3c"/>` was found here and **missed** by the CLI —
+ * a shared MCP tool giving two answers, in the under-reporting direction.
+ * `crate/fixtures/aliases.json` holds both sides to this table now; the alias
+ * check could not see it, because the divergence is a layer below the alias.
+ *
+ * The names are the extractor families, not the formats.
+ */
+export function extractorFor(format: string): string {
+	switch (determineFileType(format)) {
+		case 'css':
+			return 'css';
+		case 'scss':
+			return 'scss';
+		case 'less':
+			return 'less';
+		case 'stylus':
+			return 'stylus';
+		case 'html':
+			return 'html';
+		case 'javascript':
+		case 'typescript':
+			return 'javascript';
+		case 'svg':
+			return 'svg';
+		case 'json':
+		case 'yaml':
+		case 'toml':
+			return 'text-tokens';
+		default:
+			return 'text-prose';
 	}
 }
 

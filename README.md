@@ -110,7 +110,7 @@ That prints the tool list and exits — if you see `extract_colors`, the server 
 | SCSS / LESS / Stylus | `scss`, `less`, `stylus` | Same as CSS, plus `//` line comments respected; Stylus `=` assignments count as values |
 | HTML | `html` | `style="…"` attributes, `<style>` blocks, `color`/`bgcolor` attributes |
 | JavaScript / TypeScript | `javascript`, `javascriptreact`, `typescript`, `typescriptreact` | Inside string and template literals (theme objects, styled-components); named colors only when the whole string is the color |
-| SVG | `xml` | `fill`, `stroke`, `stop-color`, `flood-color`, `lighting-color`, `color` attributes, plus style attributes/blocks |
+| SVG / XML | `xml`, `svg` | `fill`, `stroke`, `stop-color`, `flood-color`, `lighting-color`, `color`, `bgcolor` attributes, plus style attributes/blocks |
 | JSON / YAML / TOML | `json`, `jsonc`, `yaml`, `toml` | Design tokens: literals anywhere, named colors where the value **is** the color |
 | Markdown / plain text | `markdown`, `plaintext` | Same, and a 3- or 4-digit hex must contain an `a`-`f` — `#250` in prose is an issue reference |
 | **Everything else** | any language id | Read as raw text under the same rules, and reported as `unknown` |

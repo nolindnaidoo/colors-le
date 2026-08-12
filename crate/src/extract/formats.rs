@@ -14,15 +14,23 @@ use super::heuristics::{
 /// HTML's presentational colour attributes.
 const HTML_COLOR_ATTRIBUTES: [&str; 2] = ["bgcolor", "color"];
 
-/// SVG's. Ported as a list rather than guessed: `stop-color` and
-/// `flood-color` are easy to forget and carry real brand colours.
-const SVG_COLOR_ATTRIBUTES: [&str; 6] = [
+/// SVG's, and every other XML dialect's. Ported as a list rather than
+/// guessed: `stop-color` and `flood-color` are easy to forget and carry
+/// real brand colours.
+///
+/// **`bgcolor` is here because `xml` runs this extractor**, and an XML
+/// document is not required to be SVG. Routing `xml` here without it
+/// would have lost the one colour the markup extractor used to find in
+/// a `<chart bgcolor="#f0a">`. Both attributes are unambiguous colour
+/// carriers, so carrying both costs nothing.
+const SVG_COLOR_ATTRIBUTES: [&str; 7] = [
     "fill",
     "stroke",
     "stop-color",
     "flood-color",
     "lighting-color",
     "color",
+    "bgcolor",
 ];
 
 #[derive(Debug, Clone, Copy)]

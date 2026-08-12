@@ -25,7 +25,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { extractColors } from '../src/extraction/extract';
+import { extractColors, extractorFor } from '../src/extraction/extract';
 import { ALIASES, SUPPORTED_FORMATS } from '../src/mcp/fileType';
 import { TOOLS } from '../src/mcp/tools';
 
@@ -202,6 +202,7 @@ function checkTheCorpusStillCoversTheAwkwardCases(): void {
 		'less',
 		'html',
 		'svg',
+		'xml',
 		'typescript',
 		'markdown',
 		'json',
@@ -220,6 +221,7 @@ function checkTheCorpusStillCoversTheAwkwardCases(): void {
 function checkTheAliasTablesAgree(): void {
 	const shared = readCorpus('aliases.json') as {
 		aliases: Readonly<Record<string, string>>;
+		extractors: Readonly<Record<string, string>>;
 		formats: readonly string[];
 	};
 
@@ -240,6 +242,24 @@ function checkTheAliasTablesAgree(): void {
 		fail(
 			`the advertised formats differ:\n  shared: ${JSON.stringify(shared.formats)}\n  here:   ${JSON.stringify(SUPPORTED_FORMATS)}`,
 		);
+	}
+
+	// The layer below the alias, and the one that shipped a divergence this
+	// check could not previously see: both frontends resolved `xml` to `xml`
+	// and then ran different extractors on it, so a `fill=` attribute was
+	// found here and missed by the CLI.
+	for (const [format, extractor] of Object.entries(shared.extractors)) {
+		const ours = extractorFor(format);
+		if (ours !== extractor) {
+			fail(
+				`format "${format}": the shared table runs the ${extractor} extractor, this side runs ${ours}`,
+			);
+		}
+	}
+	for (const format of [...SUPPORTED_FORMATS, 'unknown']) {
+		if (!(format in shared.extractors)) {
+			fail(`format "${format}" has no extractor in the shared table`);
+		}
 	}
 }
 

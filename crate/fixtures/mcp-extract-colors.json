@@ -198,6 +198,51 @@
 		}
 	},
 	{
+		"name": "xml runs the svg extractor on both servers",
+		"file": "chart.xml",
+		"arguments": {
+			"format": "xml"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#f0a",
+						"format": "hex",
+						"line": 2,
+						"column": 17
+					},
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 3,
+						"column": 14
+					},
+					{
+						"value": "rgb(1, 2, 3)",
+						"format": "rgb",
+						"line": 3,
+						"column": 31
+					},
+					{
+						"value": "rebeccapurple",
+						"format": "named",
+						"line": 4,
+						"column": 23
+					}
+				],
+				"fileType": "xml"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 4,
+				"truncated": false
+			}
+		}
+	},
+	{
 		"name": "markdown drops the issue reference and keeps the colours",
 		"file": "notes.md",
 		"arguments": {

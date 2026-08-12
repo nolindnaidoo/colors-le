@@ -34,7 +34,10 @@ pub(crate) struct Found {
 
 /// Every colour in a document, in document order.
 pub(crate) fn extract(content: &str, format: &str) -> Vec<Found> {
-    let matches = match format::canonical(format) {
+    // Dispatched on the extractor name rather than the format, so the
+    // mapping the extension is held to is the mapping this actually
+    // runs. See `format::extractor_of`.
+    let matches = match format::extractor_of(format) {
         "css" => formats::stylesheet(
             content,
             StylesheetOptions {
@@ -58,21 +61,19 @@ pub(crate) fn extract(content: &str, format: &str) -> Vec<Found> {
                 equals_delimiter: true,
             },
         ),
-        // `xml` reads as markup and keeps its own name, because the
-        // name is user-visible in every MCP answer.
-        "html" | "xml" => formats::html(content),
+        "html" => formats::html(content),
+        // `xml` runs this too, and keeps its own name: the name is
+        // user-visible in every MCP answer, the extractor is not.
         "svg" => formats::svg(content),
-        "javascript" | "typescript" => formats::javascript(content),
+        "javascript" => formats::javascript(content),
         // Structured formats carry design tokens, so a bare `#250` in
         // one is a colour and is read as written.
-        "json" | "yaml" | "toml" => formats::text(content, ShortHex::Counts),
+        "text-tokens" => formats::text(content, ShortHex::Counts),
         // Markdown, plain text, and every format with no extractor of
         // its own. Reading them beats refusing them — a colour in a
         // Python constant is still a colour — but a short all-digit hex
         // here is an issue reference far more often than a colour, so it
-        // has to carry an `a`-`f`. One arm rather than two identical
-        // ones: `markdown` and `plaintext` are named formats so that the
-        // answer says which it read, not so they read differently.
+        // has to carry an `a`-`f`.
         _ => formats::text(content, ShortHex::NeedsALetter),
     };
 
@@ -115,8 +116,17 @@ mod tests {
             ("less", ".a{color:#1a2b3c}", "#1a2b3c"),
             ("stylus", "a\n  color = #1a2b3c", "#1a2b3c"),
             ("html", "<div style=\"color:#1a2b3c\"></div>", "#1a2b3c"),
-            ("xml", "<a style=\"color:#1a2b3c\"/>", "#1a2b3c"),
+            // `xml` reaches the SVG extractor, not the HTML one. It
+            // reached the HTML one until 0.2.0, which is why this line
+            // is a `fill` attribute now: `fill` is in the SVG allow-list
+            // and not the HTML one, so only the right extractor finds
+            // it. The extension always read `xml` this way.
+            ("xml", "<rect fill=\"#1a2b3c\"/>", "#1a2b3c"),
             ("svg", "<rect fill=\"#1a2b3c\"/>", "#1a2b3c"),
+            // `bgcolor` is in the SVG list too, so routing `xml` there
+            // costs nothing it used to find as markup-HTML.
+            ("xml", "<chart bgcolor=\"#1a2b3c\"/>", "#1a2b3c"),
+            ("html", "<table bgcolor=\"#1a2b3c\"></table>", "#1a2b3c"),
             ("javascript", "const a = \"#1a2b3c\";", "#1a2b3c"),
             ("typescript", "const a: string = \"#1a2b3c\";", "#1a2b3c"),
         ] {

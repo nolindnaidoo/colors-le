@@ -55,6 +55,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`xml` runs the SVG extractor, and stops under-reporting.** It ran
+  the markup-HTML extractor here and the markup-SVG one on the
+  extension, so for `<rect fill="#1a2b3c"/>` under `format: "xml"` the
+  extension returned the colour and this returned nothing — the same
+  shared MCP tool, two answers, in the worst direction. Resolved towards
+  the extension, which is the reference implementation and finds
+  strictly more: the SVG attribute list is the HTML one plus five.
+  `bgcolor` joins the SVG list so that routing `xml` there loses nothing
+  it used to find, which also means an `.svg` carrying `bgcolor` now
+  reports it.
+
+  `fixtures/aliases.json` gains an `extractors` table and both sides are
+  now checked against it. The alias check could not have caught this:
+  both frontends resolved `xml` to `xml` and then disagreed a layer
+  below. Corpus case: `chart.xml`, carrying `bgcolor` and `fill`
+  together.
+
 - **`typescriptreact` is a format again.** The extension accepted it;
   this refused it, and the refusal looked like an answer —
   `{"colors": [], "fileType": "unknown"}`, no error — for the caller
