@@ -89,7 +89,7 @@ If that prints the tool name, the server works.
 | argument | type | |
 |---|---|---|
 | `content` | string | **required.** The text to scan. |
-| `format` | string | The language: `css`, `scss`, `less`, `stylus`, `html`, `javascript`, `typescript`, `svg`, `xml`. Required unless `filename` is given. |
+| `format` | string | The language: `css`, `scss`, `less`, `stylus`, `html`, `javascript`, `typescript`, `svg`, `xml`, `json`, `yaml`, `toml`, `markdown`, `plaintext`. Optional — anything else is read as raw text and reported as `unknown`. |
 | `filename` | string | Used to infer `format` when it is absent — `theme.scss` resolves to `scss`. |
 | `dedupe` | boolean | Collapse repeats. Default `false`. |
 | `maxResults` | number | Default `500`, ceiling `5000`. |
