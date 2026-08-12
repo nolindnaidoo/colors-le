@@ -134,6 +134,54 @@ fn every_file_in_the_tree_is_read() {
     );
 }
 
+/// A PNG is not a text file that failed to be read; it was never a text
+/// candidate. It gets no report line and cannot reach the exit code —
+/// which is what makes `--strict` usable at all, since widening the walk
+/// put fourteen images in front of the reader on one real repository.
+#[test]
+fn a_binary_file_is_passed_over_silently_and_never_fails_strict() {
+    let tree = Tree::new("binary");
+    tree.write("theme.css", ".a { color: #1a2b3c }\n");
+    std::fs::write(
+        tree.path().join("logo.png"),
+        [0x89, b'P', b'N', b'G', 0x00, 0x1a, 0x0a],
+    )
+    .expect("a file");
+
+    let run = run(&["--strict", &tree.path().to_string_lossy()]);
+    let parsed = reports(&run);
+    let files: Vec<&str> = parsed
+        .iter()
+        .filter_map(|report| report["file"].as_str())
+        .collect();
+    assert_eq!(files.len(), 1, "{files:?}");
+    assert!(files[0].ends_with("theme.css"), "{files:?}");
+    assert_eq!(run.code, 0, "{}", run.stderr);
+    // Passed over, not hidden: the reader still learns coverage was
+    // narrower than the tree.
+    assert!(
+        run.stderr.contains("1 binary file skipped"),
+        "{}",
+        run.stderr
+    );
+}
+
+/// The other half of the same distinction: a file that *looked* like
+/// text and could not be read is a shortfall, keeps its named
+/// diagnostic, and still fails `--strict`.
+#[test]
+fn a_text_file_that_cannot_be_read_still_fails_strict() {
+    let tree = Tree::new("unreadable");
+    tree.write("theme.css", ".a { color: #1a2b3c }\n");
+    // Invalid UTF-8, no NUL byte: this is not binary by ripgrep's rule.
+    std::fs::write(tree.path().join("broken.css"), [0xff, 0xfe, b'a']).expect("a file");
+
+    let run = run(&["--strict", &tree.path().to_string_lossy()]);
+    assert_eq!(reports(&run).len(), 2);
+    assert_eq!(run.code, 2, "{}", run.stderr);
+    assert!(run.stderr.contains("not UTF-8 text"), "{}", run.stderr);
+}
+
 /// grep's convention, without a palette.
 #[test]
 fn a_tree_with_none_exits_one() {

@@ -80,6 +80,13 @@ crate/src/
   hex in the extractor rather than a filter on the walk. `--format`
   still refuses a name it does not know: strict parsing applies to
   flags, the fallback applies to documents.
+- **A binary file is not a file that failed to be read.** A NUL byte in
+  the first 8KB (ripgrep's rule) means the file was never a text
+  candidate: no report line, no effect on `--strict`, counted in the
+  summary. A file that looked like text and could not be read keeps its
+  `skipped` diagnostic and still fails `--strict`. Collapsing the two
+  made `--strict` exit 2 on any repository containing an image, which
+  made it useless.
 - **Outside a stylesheet, a named colour must be the whole value.** The
   raw scan reads prose, and matching any keyword inside a value segment
   produced 35 false findings against 19 real colours on two real

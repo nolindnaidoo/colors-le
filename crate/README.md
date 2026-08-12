@@ -105,6 +105,13 @@ format `unknown`, so a colour in a Python constant is still found. The
 Reading a `.json` is the point: it is where a design system keeps its
 tokens, and this could not open one before 0.2.0.
 
+**A binary file is passed over silently** — a NUL byte in its first 8KB,
+which is ripgrep's rule — and counted in the summary rather than
+reported. It was never a text candidate, so it is not a file that failed
+to be read, and `--strict` ignores it. A file that *looked* like text and
+could not be read is the opposite: named, and still a `--strict`
+failure.
+
 That last rule matters more than it sounds: a named colour is a colour
 in a declaration value, an attribute value or a whole string literal, and
 **never as a bare word in prose**. Without it, every sentence containing

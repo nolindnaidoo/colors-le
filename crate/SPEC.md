@@ -255,13 +255,31 @@ saying so beats a flag that quietly means something different here.
 - **Perceptual nearest-match** — "this is 2% off brand blue". That needs
   a colour space this does not carry and a tolerance nobody has agreed.
 
-## Files that cannot be read
+## Binary files, and files that cannot be read
+
+These are two different things, and conflating them makes `--strict`
+useless.
+
+**A binary file was never a text candidate.** A NUL byte in the first
+8 KB — ripgrep's rule, so that "what this considers binary" and "what
+ripgrep considers binary" are one answer — and the file is passed over:
+**no report line, no effect on any exit code**, and a count in the
+stderr summary (`3 colors in 40 files, 16 binary files skipped`) so the
+reader can still see coverage was narrower than the tree. Widening the
+walk to every file put 14 PNGs, an `.ico` and a `.jpg` in front of one
+real repository's reader; reporting each as a failure would have meant
+`--strict` exiting 2 on any repository containing an image.
+
+**A file that looked like text and could not be read is a shortfall.**
+Invalid UTF-8 with no NUL byte in it, or no permission to open it: that
+one keeps its named `skipped` diagnostic and still fails `--strict`.
 
 Exit 2 means the *question* was malformed — an unknown flag, an
 unreadable format name, a path that does not exist. It does not mean one
 file in fifty thousand was a PNG.
 
-A file that is not UTF-8 text, or that cannot be opened, is:
+A file that looked like text and is not UTF-8, or that cannot be opened,
+is:
 
 - named on stderr,
 - carried in the JSON report with a `skipped` diagnostic saying why,

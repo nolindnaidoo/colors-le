@@ -38,15 +38,15 @@ pub(crate) struct FileReport {
 }
 
 impl FileReport {
-    /// Whether this file was not read at all — not text, or not
-    /// openable.
+    /// Whether this file looked like text and could not be read anyway —
+    /// invalid UTF-8, or no permission to open it.
     ///
     /// Reported rather than swallowed, because a report that quietly
     /// skipped a file would be claiming coverage it does not have. It
-    /// does **not** fail the run on its own: every repository has a PNG
-    /// and a zip in it, and exiting 2 on those makes the tool unusable
-    /// in CI, which is the one place it is most worth running.
-    /// `--strict` is there for a pipeline that wants zero tolerance.
+    /// does **not** fail the run on its own; `--strict` is there for a
+    /// pipeline that wants zero tolerance. A binary file never reaches
+    /// this: it is not a text candidate, so it is not a shortfall. See
+    /// `Examined`.
     pub(crate) fn was_skipped(&self) -> bool {
         self.diagnostics
             .iter()
@@ -73,19 +73,54 @@ pub(crate) struct ScanOptions {
     pub(crate) palette: Option<Palette>,
 }
 
-pub(crate) fn scan_file(path: &PathBuf, options: &ScanOptions) -> FileReport {
+/// What reading one file produced.
+///
+/// The distinction is the point: a PNG was never a text candidate, while
+/// a `.css` that turns out to hold invalid UTF-8 is a file this was
+/// supposed to read and could not. Only the second is a shortfall, and
+/// only the second is worth failing `--strict` over.
+#[derive(Debug, Clone)]
+pub(crate) enum Examined {
+    /// Text, read and reported — findings, or a `skipped` diagnostic
+    /// naming why the text could not be read.
+    Text(FileReport),
+    /// Binary, and therefore never a text candidate. No report line, no
+    /// effect on the exit code; counted in the summary so the reader can
+    /// still see that coverage was narrower than the tree.
+    Binary,
+}
+
+pub(crate) fn scan_file(path: &PathBuf, options: &ScanOptions) -> Examined {
     let file = path.to_string_lossy().into_owned();
     let format = options.format.unwrap_or_else(|| format_of(path));
 
     match std::fs::read(path) {
-        Ok(bytes) => match String::from_utf8(bytes) {
+        Ok(bytes) if looks_binary(&bytes) => Examined::Binary,
+        Ok(bytes) => Examined::Text(match String::from_utf8(bytes) {
             Ok(content) => scan_content(without_bom(&content), file, format, options),
             // Named rather than dropped. A file that vanishes from the
-            // report is a file the reader believes was covered.
+            // report is a file the reader believes was covered — and
+            // this one had no NUL byte, so it looked like text.
             Err(_) => skipped(file, format, "not UTF-8 text"),
-        },
-        Err(error) => skipped(file, format, &error.to_string()),
+        }),
+        // An unopenable file is a shortfall whatever it holds: nothing
+        // read it, so nothing knows whether it was text.
+        Err(error) => Examined::Text(skipped(file, format, &error.to_string())),
     }
+}
+
+/// ripgrep's heuristic, and deliberately the same one: a NUL byte in the
+/// first 8 KB means binary.
+///
+/// Widening the walk to every file put fourteen PNGs, an `.ico` and a
+/// `.jpg` in front of the reader on one real repository, each as a
+/// `skipped` diagnostic — which made `--strict` exit 2 on any repository
+/// containing an image, and so made `--strict` useless. Answering "what
+/// does ripgrep consider binary" keeps this the same answer a person
+/// auditing a repository already has in their head.
+fn looks_binary(bytes: &[u8]) -> bool {
+    const WINDOW: usize = 8 * 1024;
+    bytes[..bytes.len().min(WINDOW)].contains(&0)
 }
 
 fn format_of(path: &StdPath) -> &'static str {
@@ -205,38 +240,73 @@ mod tests {
         assert_eq!(exit_code(&[], false), 1);
     }
 
+    /// The text half of every `scan_file` test below: a binary file has
+    /// no report to examine, which is the whole point of `Examined`.
+    fn text(examined: Examined) -> FileReport {
+        match examined {
+            Examined::Text(report) => report,
+            Examined::Binary => panic!("this file was expected to be a text candidate"),
+        }
+    }
+
     /// Changed deliberately: a file that could not be read is reported
     /// and does not fail the run, because every repository has one and
     /// exiting 2 on it meant the tool never got run in CI at all.
     #[test]
     fn an_unreadable_file_is_reported_and_does_not_end_the_run() {
         let tree = TempTree::new("scan-unreadable");
-        let report = scan_file(&tree.path().join("gone.css"), &plain());
+        let report = text(scan_file(&tree.path().join("gone.css"), &plain()));
         assert!(report.was_skipped());
         assert_eq!(report.diagnostics[0].severity, "warning");
         assert_eq!(exit_code(std::slice::from_ref(&report), false), 1);
         assert_eq!(exit_code(&[report], true), 2, "--strict is opt-in");
     }
 
+    /// Invalid UTF-8 with no NUL byte in it: this looked like text, so
+    /// failing to read it is a shortfall and `--strict` says so.
     #[test]
-    fn a_binary_file_is_named_rather_than_dropped() {
-        let tree = TempTree::new("scan-binary");
+    fn a_text_file_that_is_not_utf8_is_named_rather_than_dropped() {
+        let tree = TempTree::new("scan-notutf8");
         let file = tree.path().join("logo.css");
         std::fs::write(&file, [0x89, 0x50, 0xff, 0xfe]).expect("a file");
         // It used to vanish from the report entirely, which reads to
         // whoever runs this as "that file was clean".
-        let report = scan_file(&file, &plain());
+        let report = text(scan_file(&file, &plain()));
         assert!(report.was_skipped());
         assert_eq!(report.diagnostics[0].message, "not UTF-8 text");
         assert_eq!(exit_code(std::slice::from_ref(&report), false), 1);
         assert_eq!(exit_code(&[report], true), 2);
     }
 
+    /// A PNG is not a file that failed to be read; it was never a text
+    /// candidate. It produces no report at all, so it cannot reach the
+    /// exit code — which is what makes `--strict` usable on a repository
+    /// that contains images.
+    #[test]
+    fn a_binary_file_is_passed_over_without_a_report() {
+        let tree = TempTree::new("scan-binary");
+        let file = tree.path().join("logo.png");
+        std::fs::write(&file, [0x89, b'P', b'N', b'G', 0x00, 0x1a, 0x0a]).expect("a file");
+        assert!(matches!(scan_file(&file, &plain()), Examined::Binary));
+    }
+
+    /// ripgrep's rule, and the reason it is ripgrep's: a NUL byte past
+    /// the first 8 KB is not worth reading a whole file to find.
+    #[test]
+    fn binary_is_a_nul_byte_in_the_first_8kb() {
+        assert!(looks_binary(b"a\0b"));
+        assert!(!looks_binary(b".a{color:#fff}"));
+        assert!(!looks_binary(&[]));
+        let mut late = vec![b'a'; 9000];
+        late.push(0);
+        assert!(!looks_binary(&late), "past the window, so still text");
+    }
+
     #[test]
     fn the_format_comes_from_the_file_name() {
         let tree = TempTree::new("scan-format");
         let file = tree.write("theme.scss", "// #deadbe\n.a{color:#1a2b3c}\n");
-        let report = scan_file(&file, &plain());
+        let report = text(scan_file(&file, &plain()));
         assert_eq!(report.format, "scss");
         assert_eq!(values(&report), ["#1a2b3c"], "the line comment is skipped");
     }

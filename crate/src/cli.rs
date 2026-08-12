@@ -28,14 +28,17 @@ contain an a-f to count, because #250 in prose is an issue reference.
 
 Without --palette this reports what is there and nothing else.
 
+A binary file — a NUL byte in its first 8KB, ripgrep's rule — is passed
+over silently and counted in the summary. It was never a text candidate,
+so it is not a file that failed to be read.
+
 Options:
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
-                       file name; an unknown name falls back rather than
-                       failing
+                       file name; a name this does not know is refused
   --values             print only the values, one per line, for piping
-  --strict             exit 2 if any file could not be read, rather than
-                       reporting it and carrying on
+  --strict             exit 2 if a file that looked like text could not
+                       be read, rather than reporting it and carrying on
   --stdin              read one document from stdin
   --hidden             walk hidden files and directories too
   --no-ignore          walk files that .gitignore excludes
@@ -101,13 +104,10 @@ pub(crate) fn run() -> ExitCode {
 
 fn execute(args: &[String]) -> Result<u8, String> {
     let options = parse(args)?;
-    let reports = if options.stdin {
-        vec![scan_stdin(&options)?]
+    let (reports, binary) = if options.stdin {
+        (vec![scan_stdin(&options)?], 0)
     } else {
-        walk::collect(&options.inputs, &options.walk)?
-            .iter()
-            .map(|target| scan::scan_file(target, &options.scan))
-            .collect()
+        read_tree(&options)?
     };
 
     if options.values_only {
@@ -116,8 +116,25 @@ fn execute(args: &[String]) -> Result<u8, String> {
         write_reports(&reports)?;
     }
 
-    summarise(&reports, options.values_only);
+    summarise(&reports, binary, options.values_only);
     Ok(scan::exit_code(&reports, options.strict))
+}
+
+/// Every text file in the tree, and how many binary ones were passed
+/// over. A binary file gets no report line — it was never a text
+/// candidate — but the count is not thrown away, because silence about
+/// files that were never looked at is the thing this tool exists to
+/// avoid.
+fn read_tree(options: &Cli) -> Result<(Vec<FileReport>, usize), String> {
+    let mut reports = Vec::new();
+    let mut binary = 0;
+    for target in walk::collect(&options.inputs, &options.walk)? {
+        match scan::scan_file(&target, &options.scan) {
+            scan::Examined::Text(report) => reports.push(report),
+            scan::Examined::Binary => binary += 1,
+        }
+    }
+    Ok((reports, binary))
 }
 
 fn write_reports(reports: &[FileReport]) -> Result<(), String> {
@@ -235,8 +252,9 @@ fn parse(args: &[String]) -> Result<Cli, String> {
     Ok(options)
 }
 
-/// The human half. Every line restates something already on stdout.
-fn summarise(reports: &[FileReport], values_only: bool) {
+/// The human half. Every line restates something already on stdout,
+/// except the binary count — the one fact stdout deliberately omits.
+fn summarise(reports: &[FileReport], binary: usize, values_only: bool) {
     let mut stderr = std::io::stderr().lock();
     let mut colors = 0;
     let mut outside = 0;
@@ -256,9 +274,20 @@ fn summarise(reports: &[FileReport], values_only: bool) {
         outside += report.summary.outside_palette;
     }
 
+    // Said out loud rather than left to inference: the walk read fewer
+    // files than it visited, and a reader comparing the file count to
+    // their tree deserves to know why.
+    let passed_over = if binary == 0 {
+        String::new()
+    } else {
+        format!(
+            ", {} skipped",
+            plural(binary, "binary file", "binary files")
+        )
+    };
     let _ = writeln!(
         stderr,
-        "{} in {}",
+        "{} in {}{passed_over}",
         plural(colors, "color", "colors"),
         plural(reports.len(), "file", "files")
     );

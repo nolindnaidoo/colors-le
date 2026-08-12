@@ -32,6 +32,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     inside a value segment produced 35 false findings against 19 real
     colours on two real repositories.
 
+- **A binary file is passed over silently and counted**, rather than
+  reported as a file that could not be read. A NUL byte in the first
+  8 KB is the test — ripgrep's own — and such a file produces no report
+  line and cannot reach the exit code; the stderr summary carries
+  `16 binary files skipped`, and `colors_le_scan` carries
+  `data.binarySkipped`. Reading every file put 14 PNGs, an `.ico` and a
+  `.jpg` in front of one repository's reader, which would have made
+  `--strict` exit 2 on any repository containing an image. **A file that
+  looked like text and could not be read is unchanged**: named,
+  diagnosed, and still a `--strict` failure. That distinction is the
+  point.
+
 - **The `unknown-format` diagnostic is gone.** It said "nothing was
   read", which is no longer true; the `format` field carries the same
   information without a warning line per file.

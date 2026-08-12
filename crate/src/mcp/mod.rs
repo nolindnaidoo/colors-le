@@ -183,11 +183,19 @@ fn scan_tool(arguments: &Value) -> Result<Value, String> {
     };
 
     let targets = walk::collect(&inputs, &walk_options)?;
-    let reports: Vec<Value> = targets
-        .iter()
-        .map(|target| scan::scan_file(target, &options))
-        .map(|report| serde_json::to_value(report).expect("a report serializes"))
-        .collect();
+    // A binary file gets no report — it was never a text candidate — but
+    // it is counted, because an agent comparing this to a file listing
+    // would otherwise have to guess why the numbers differ.
+    let mut binary: u64 = 0;
+    let mut reports: Vec<Value> = Vec::new();
+    for target in &targets {
+        match scan::scan_file(target, &options) {
+            scan::Examined::Text(report) => {
+                reports.push(serde_json::to_value(report).expect("a report serializes"));
+            }
+            scan::Examined::Binary => binary += 1,
+        }
+    }
 
     let colors: u64 = reports
         .iter()
@@ -215,7 +223,7 @@ fn scan_tool(arguments: &Value) -> Result<Value, String> {
     let count = reports.len();
     Ok(envelope(
         "colors_le_scan",
-        &json!({ "reports": reports, "colors": colors }),
+        &json!({ "reports": reports, "colors": colors, "binarySkipped": binary }),
         count,
         &diagnostics,
         false,
@@ -454,6 +462,23 @@ mod tests {
         let data = &response["result"]["structuredContent"]["data"];
         assert_eq!(data["reports"].as_array().expect("a list").len(), 2);
         assert_eq!(data["colors"], 2);
+    }
+
+    /// A binary file gets no report, and the count is carried instead —
+    /// an agent comparing this to a file listing would otherwise have to
+    /// guess why the numbers differ.
+    #[test]
+    fn the_scan_tool_counts_binary_files_rather_than_reporting_them() {
+        let tree = TempTree::new("mcp-binary");
+        tree.write("theme.css", ".a{color:#1a2b3c}\n");
+        std::fs::write(tree.path().join("logo.png"), [0x89, b'P', 0x00, b'G']).expect("a file");
+        let response = call(
+            "colors_le_scan",
+            &json!({ "path": tree.path().to_string_lossy() }),
+        );
+        let data = &response["result"]["structuredContent"]["data"];
+        assert_eq!(data["reports"].as_array().expect("a list").len(), 1);
+        assert_eq!(data["binarySkipped"], 1);
     }
 
     /// A format the caller named and this cannot resolve is refused,
