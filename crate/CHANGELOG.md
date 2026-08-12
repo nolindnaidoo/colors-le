@@ -182,5 +182,5 @@ a raw scan of a README would report every `#anchor` as a three-digit hex.
   vanish from the report entirely, which reads to whoever ran it as
   "that file was clean".
 
-[0.2.0]: https://github.com/nolindnaidoo/colors-le/releases/tag/crate-v0.2.0
-[0.1.0]: https://github.com/nolindnaidoo/colors-le/releases/tag/crate-v0.1.0
+[0.2.0]: https://crates.io/crates/colors-le/0.2.0
+[0.1.0]: https://crates.io/crates/colors-le/0.1.0
