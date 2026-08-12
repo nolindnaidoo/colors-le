@@ -35,10 +35,28 @@ describe('extraction characterization', () => {
 		});
 	}
 
-	it('unknown language falls back to CSS extraction', async () => {
+	it('unknown language is read as raw text', async () => {
 		const result = await extractColors(
 			'accent = "#ff8800"  # python, but hex still found',
 			'python',
+		);
+		expect(result).toMatchSnapshot();
+	});
+
+	// The rule that makes reading everything safe: `#250` in prose is an issue
+	// reference, `#FFF` is a colour, and a stylesheet is untouched by either.
+	it('markdown keeps the hex with a letter in it', async () => {
+		const result = await extractColors(
+			'Closes #250. The paper is #FFF and the ink is #1a2b3c.\n',
+			'markdown',
+		);
+		expect(result).toMatchSnapshot();
+	});
+
+	it('json reads design tokens, short hex included', async () => {
+		const result = await extractColors(
+			'{\n\t"gray": "#250",\n\t"paper": "white"\n}\n',
+			'json',
 		);
 		expect(result).toMatchSnapshot();
 	});

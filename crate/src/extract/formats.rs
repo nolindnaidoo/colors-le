@@ -1,4 +1,4 @@
-//! The six format extractors, and the one rule each of them applies.
+//! The format extractors, and the one rule each of them applies.
 //!
 //! Every extractor answers the same question — *where in this document
 //! may a colour appear* — and then hands the same matchers the segments
@@ -6,8 +6,9 @@
 //! CSS, SCSS, HTML and TypeScript rather than in four different ways.
 
 use super::heuristics::{
-    ColorMatch, CommentSyntax, Notation, blank_comments, classify, find_declaration_values,
-    find_literals, find_named, find_string_literals, is_named_color,
+    ColorMatch, CommentSyntax, Notation, Segment, blank_comments, classify,
+    find_declaration_values, find_literals, find_literals_in_prose, find_named,
+    find_string_literals, is_named_color,
 };
 
 /// HTML's presentational colour attributes.
@@ -46,6 +47,80 @@ pub(crate) fn stylesheet(content: &str, options: StylesheetOptions) -> Vec<Color
     let mut matches = find_literals(&blanked);
     matches.extend(find_named(&blanked, Some(&segments)));
     matches
+}
+
+/// Whether a bare `#250` in this document is a colour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ShortHex {
+    /// It is. The document has a syntax where a colour belongs — JSON,
+    /// YAML and TOML carry design tokens, and `#250` is a valid one.
+    Counts,
+    /// It is not, unless it contains an `a`-`f`. Prose, and anything
+    /// with no extractor of its own. See `is_issue_reference`.
+    NeedsALetter,
+}
+
+/// Everything else: a raw scan of the whole document.
+///
+/// Reading a file this has no parser for beats refusing it — design
+/// tokens live in JSON, and a colour in a Python constant is still a
+/// colour.
+///
+/// Comments are not blanked, because there is no syntax to blank them
+/// in. A hex in a `#` comment is reported, which is the honest answer
+/// for a document whose language is unknown.
+pub(crate) fn text(content: &str, short_hex: ShortHex) -> Vec<ColorMatch> {
+    let mut matches = match short_hex {
+        ShortHex::Counts => find_literals(content),
+        ShortHex::NeedsALetter => find_literals_in_prose(content),
+    };
+    // `=` as well as `:`, because this one arm covers TOML, INI and
+    // source as well as prose.
+    matches.extend(
+        find_declaration_values(content, true)
+            .into_iter()
+            .filter_map(|segment| named_value(content, segment)),
+    );
+    matches
+}
+
+/// The named colour a declaration value **is**, rather than one it
+/// mentions.
+///
+/// The whole-value rule, the same one markup applies to an attribute and
+/// JavaScript applies to a string literal — and the one that makes this
+/// extractor usable on prose. Measured on two real repositories: taking
+/// every named keyword inside a declaration value turned a paragraph
+/// reading "brand-orange focus ring", a shields.io badge ending
+/// `-red)`, and a Tailwind `className="… text-white …"` into findings,
+/// 35 of them against 19 real colours. Requiring the value to be the
+/// colour drops all 35 and keeps `"paper": "white"`.
+///
+/// Quotes and a trailing comma are stripped first, because a value in
+/// JSON, YAML, TOML or source arrives wearing them.
+fn named_value(content: &str, segment: Segment) -> Option<ColorMatch> {
+    let end = segment.end.min(content.len());
+    if segment.start >= end {
+        return None;
+    }
+    let slice = &content[segment.start..end];
+    let trimmed = slice
+        .trim()
+        .trim_end_matches([',', ';'])
+        .trim()
+        .trim_matches(['"', '\'', '`'])
+        .trim();
+    if !is_named_color(trimmed) {
+        return None;
+    }
+    // The position is the colour's, not the value's: a reader opening
+    // the file has to land on the word.
+    let offset = slice.find(trimmed)?;
+    Some(ColorMatch {
+        value: trimmed.to_string(),
+        start: segment.start + offset,
+        notation: Notation::Named,
+    })
 }
 
 /// JavaScript and TypeScript: colours live in string and template

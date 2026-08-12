@@ -94,6 +94,17 @@ colour. **Functional** — the legacy comma syntax `rgb()`, `rgba()`,
 either. **Named** — the CSS keywords plus `transparent`, and only where
 a value is expected.
 
+## What it reads
+
+**Every file in the tree.** CSS, SCSS, LESS, Stylus, HTML, XML, SVG,
+JavaScript, TypeScript, JSON, YAML, TOML, Markdown and plain text are
+read by name; anything else is scanned as raw text and reported as
+format `unknown`, so a colour in a Python constant is still found. The
+`format` field on every report says which of the two it was.
+
+Reading a `.json` is the point: it is where a design system keeps its
+tokens, and this could not open one before 0.2.0.
+
 That last rule matters more than it sounds: a named colour is a colour
 in a declaration value, an attribute value or a whole string literal, and
 **never as a bare word in prose**. Without it, every sentence containing
@@ -114,10 +125,19 @@ Ported limitations, not gaps:
 - **SCSS and LESS variable references.** `$brand` is a name; the colour
   is wherever it was defined.
 - **Anything in a comment**, in all four comment syntaxes.
-- **A file with no extractor.** A `#anchor` in a README looks exactly
-  like a three-digit hex, so a file this cannot parse is skipped rather
-  than scanned. `--format` is refused for an unknown name rather than
-  falling back, because a silent nothing reads as a clean run.
+- **A short all-digit hex in prose.** In Markdown, plain text and any
+  format with no extractor of its own, a 3- or 4-digit hex must contain
+  an `a`-`f`: across 1,988 real Markdown files, 50 of the 56 bare short
+  hex were issue and PR references — `#250`, `#3050` — and the six with
+  letters in them were all real colours. Structured formats and
+  stylesheets are untouched: `#250` in a token file is a colour.
+- **A named colour a document merely mentions.** Outside a stylesheet
+  the value has to *be* the colour, so `"paper": "white"` counts and a
+  paragraph about a brand-orange focus ring does not.
+
+`--format` is refused for a name this does not know, even though an
+unnamed document is read: `--fromat scss` scanning the tree as raw text
+would be a run whose caller believes it parsed stylesheets.
 
 ## Half the extension, on purpose
 

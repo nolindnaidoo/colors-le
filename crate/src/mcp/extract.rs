@@ -19,11 +19,12 @@ const MAX_MAX_RESULTS: usize = 5000;
 pub(crate) fn definition() -> Value {
     json!({
         "name": "extract_colors",
-        "description": "Extract every string value from a document. Parses JSON, YAML, CSV, \
-                        TOML, INI and dotenv; for any other format it falls back to quoted \
-                        colors — single, double or backtick — so a format is optional but \
-                        unquoted prose yields nothing. Returns the values themselves, in \
-                        document order, not their positions.",
+        "description": "Extract every color from a stylesheet or document, with its notation \
+                        and 1-based line and column. Reads CSS, SCSS, LESS, Stylus, HTML, \
+                        JavaScript, TypeScript, SVG, XML, JSON, YAML, TOML, Markdown and \
+                        plain text by name, and anything else as raw text, so a format is \
+                        optional. Reports hex, rgb/rgba, hsl/hsla and named colors as \
+                        written.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -32,17 +33,17 @@ pub(crate) fn definition() -> Value {
                     "type": "string",
                     "enum": SUPPORTED_FORMATS,
                     "description": "Document format. Optional — an unrecognised or absent \
-                                    format falls back to extracting quoted colors.",
+                                    format is read as raw text and reported as \"unknown\".",
                 },
                 "filename": {
                     "type": "string",
                     "description": "Filename used to infer the format when `format` is absent, \
-                                    e.g. \"config.toml\".",
+                                    e.g. \"theme.scss\".",
                 },
                 "dedupe": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Collapse repeated values to their first occurrence.",
+                    "description": "Collapse repeated colors to their first occurrence.",
                 },
                 "maxResults": {
                     "type": "integer",
@@ -50,7 +51,7 @@ pub(crate) fn definition() -> Value {
                     "maximum": MAX_MAX_RESULTS,
                     "default": DEFAULT_MAX_RESULTS,
                     "description": format!(
-                        "Cap on returned values (default {DEFAULT_MAX_RESULTS}). meta.truncated \
+                        "Cap on returned colors (default {DEFAULT_MAX_RESULTS}). meta.truncated \
                          reports whether any were dropped."
                     ),
                 },
@@ -69,8 +70,8 @@ pub(crate) fn run(arguments: &Value) -> Result<Value, String> {
     let max_results = read_max_results(arguments)?;
 
     // Never a refusal. An agent that knows nothing about a document
-    // still gets its quoted colors, which is the whole reason a format
-    // is optional here where it is required in the sibling tools.
+    // still gets its colours, which is the whole reason a format is
+    // optional here.
     let format = resolve_format(
         arguments.get("format").and_then(Value::as_str),
         arguments.get("filename").and_then(Value::as_str),
@@ -245,15 +246,28 @@ mod tests {
         assert_eq!(found["column"], 10);
     }
 
-    /// A format with no extractor reads nothing rather than guessing —
-    /// the opposite of string-le and numbers-le, and for a reason: a
-    /// `#anchor` in a README looks exactly like a three-digit hex.
+    /// A format with no extractor of its own is read as raw text, and
+    /// the answer says which it was.
     #[test]
-    fn an_unknown_format_reads_nothing() {
+    fn an_unknown_format_is_read_and_says_so() {
         let result =
-            run(&json!({ "content": "see #abc below", "format": "markdown" })).expect("a result");
+            run(&json!({ "content": "see #abc below", "format": "klingon" })).expect("a result");
         assert_eq!(result["data"]["fileType"], FALLBACK_FORMAT);
-        assert_eq!(result["data"]["colors"], json!([]));
+        assert_eq!(result["data"]["colors"][0]["value"], "#abc");
+    }
+
+    /// Markdown resolves by name, so the answer names it — and its
+    /// short-hex rule drops the issue reference while keeping `#FFF`.
+    #[test]
+    fn markdown_is_named_and_keeps_only_the_hex_with_a_letter_in_it() {
+        let result = run(&json!({
+            "content": "closes #250, and the paper is #FFF",
+            "filename": "notes.md",
+        }))
+        .expect("a result");
+        assert_eq!(result["data"]["fileType"], "markdown");
+        assert_eq!(result["data"]["colors"][0]["value"], "#FFF");
+        assert_eq!(result["meta"]["count"], 1);
     }
 
     /// The palette is the CLI's, not this tool's: an agent handing over

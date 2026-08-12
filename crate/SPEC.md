@@ -98,6 +98,23 @@ floor per module**.
 
 ## Extraction — parity scope
 
+### What it reads
+
+**Every file.** Fourteen formats are read by name — `css scss less
+stylus html javascript typescript svg xml json yaml toml markdown
+plaintext` — and anything else is scanned as raw text and reported as
+format `unknown`. That field is the reader's signal that the answer came
+from a scan rather than a parser.
+
+Refusing an unknown format was the 0.1.0 behaviour and it was wrong in
+one specific way: it could not open a `.json`, which is where a design
+system keeps its tokens. What the refusal protected against is one
+collision — `#250` in prose — and that is answered by the short-hex rule
+below instead.
+
+`--format` still refuses a name it does not know. Strict parsing applies
+to flags; the fallback applies to documents.
+
 ### What counts as a colour
 
 - **Hex** — 3, 4, 6 or 8 digits. Other digit counts are rejected
@@ -114,6 +131,29 @@ floor per module**.
 
 Components are validated, so a call with the wrong arity or a missing
 `%` is rejected rather than reported as a colour.
+
+### Two rules that only apply outside a stylesheet
+
+The raw scan reads documents whose syntax is unknown, so it carries two
+restrictions the format-aware extractors do not.
+
+**A short hex in prose must contain an `a`-`f`.** In `markdown`,
+`plaintext` and `unknown`, `#250` is an issue reference. Measured rather
+than assumed: across 1,988 real Markdown files there were 377
+unambiguous colours and 56 bare 3/4-digit hex — 50 all-digit (`#250`,
+`#3050`, `#7077`, `#2378`, every one an issue or PR reference) and 6
+containing a letter (`#FFF`, `#abc`, every one real). Heading anchors are
+not the collision they look like: `#configuration` and `#faq` cannot
+match a hex pattern, because `o` and `q` are not hex digits.
+**Structured formats and stylesheets are unaffected** — `#250` in a
+token file or a stylesheet is a colour.
+
+**A named colour must be the whole value.** `"paper": "white"` is a
+colour; a paragraph reading "brand-orange focus ring" and a Tailwind
+`className="… text-white …"` are not. Measured on two real
+repositories, matching any keyword inside a value segment produced 35
+false findings against 19 real colours. A stylesheet keeps the looser
+rule, because there the declaration syntax is known.
 
 ### What is deliberately not a colour
 

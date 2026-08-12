@@ -43,6 +43,13 @@ export type ColorFormat =
 	| 'named'
 	| 'unknown';
 
+/**
+ * What the engine read a document as.
+ *
+ * `unknown` is a real answer rather than a refusal: the document is read by
+ * the raw text scan, and this field is the reader's only signal that the
+ * answer came from a scan rather than a parser.
+ */
 export type FileType =
 	| 'css'
 	| 'html'
@@ -52,6 +59,11 @@ export type FileType =
 	| 'scss'
 	| 'less'
 	| 'stylus'
+	| 'json'
+	| 'yaml'
+	| 'toml'
+	| 'markdown'
+	| 'plaintext'
 	| 'unknown';
 
 export type SortMode =

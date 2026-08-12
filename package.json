@@ -72,7 +72,13 @@
 		"onLanguage:javascriptreact",
 		"onLanguage:typescript",
 		"onLanguage:typescriptreact",
-		"onLanguage:xml"
+		"onLanguage:xml",
+		"onLanguage:json",
+		"onLanguage:jsonc",
+		"onLanguage:yaml",
+		"onLanguage:toml",
+		"onLanguage:markdown",
+		"onLanguage:plaintext"
 	],
 	"capabilities": {
 		"virtualWorkspaces": {

@@ -92,7 +92,9 @@ fn audit_tree(name: &str) -> Tree {
         "src/theme.ts",
         "export const accent = \"rgb(255, 0, 0)\";\n",
     );
-    tree.write("README.md", "see #abc below for the section\n");
+    // Both short hex, and only one of them is a colour: `#abc` has
+    // letters in it, `#250` is an issue reference.
+    tree.write("README.md", "see #abc below, closes #250\n");
     tree
 }
 
@@ -111,21 +113,23 @@ fn a_tree_with_colours_exits_zero() {
         .iter()
         .filter_map(|report| report["summary"]["colors"].as_u64())
         .sum();
-    assert_eq!(total, 3, "the README's #abc is not a colour");
+    assert_eq!(total, 4, "the README's #250 is not a colour, its #abc is");
 }
 
-/// The walk has a format filter, so a file with no extractor is never
-/// opened. A `#anchor` looks exactly like a three-digit hex.
+/// Changed deliberately in 0.2.0: the walk had a format filter and never
+/// opened the README. It opens everything now — a design system keeps
+/// its tokens in a `.json` — and the short-hex rule is what keeps an
+/// issue reference out of the results.
 #[test]
-fn a_file_with_no_extractor_is_not_read() {
+fn every_file_in_the_tree_is_read() {
     let tree = audit_tree("filter");
     let files: Vec<String> = reports(&run(&[&tree.path().to_string_lossy()]))
         .iter()
         .filter_map(|report| report["file"].as_str().map(str::to_string))
         .collect();
-    assert_eq!(files.len(), 2, "{files:?}");
+    assert_eq!(files.len(), 3, "{files:?}");
     assert!(
-        !files.iter().any(|file| file.ends_with("README.md")),
+        files.iter().any(|file| file.ends_with("README.md")),
         "{files:?}"
     );
 }
@@ -202,7 +206,7 @@ fn values_only_prints_colours_and_no_json() {
     let run = run(&["--values", "--dedupe", &tree.path().to_string_lossy()]);
     assert_eq!(run.code, 0);
     assert!(!run.stdout.contains('{'), "{}", run.stdout);
-    assert_eq!(run.stdout.lines().count(), 3, "{}", run.stdout);
+    assert_eq!(run.stdout.lines().count(), 4, "{}", run.stdout);
 }
 
 #[test]

@@ -17,13 +17,14 @@ const USAGE: &str = "usage: colors-le [options] <file|dir>...
        colors-le mcp
        colors-le --version | --help
 
-Finds every colour in a tree — CSS, SCSS, LESS, Stylus, HTML, SVG,
-JavaScript and TypeScript — and, given a palette, says which of them are
+Finds every colour in a tree and, given a palette, says which of them are
 not in it.
 
-A file with no extractor is skipped rather than scanned: a colour only
-means something where a colour can appear, and a raw scan of a README
-would report every #anchor in it.
+Every file is read. CSS, SCSS, LESS, Stylus, HTML, XML, SVG, JavaScript,
+TypeScript, JSON, YAML, TOML, Markdown and plain text are read by name;
+anything else is scanned as raw text and reported as format \"unknown\".
+In Markdown, plain text and unknown formats a 3- or 4-digit hex must
+contain an a-f to count, because #250 in prose is an issue reference.
 
 Without --palette this reports what is there and nothing else.
 
@@ -185,26 +186,24 @@ fn parse(args: &[String]) -> Result<Cli, String> {
             "--strict" => options.strict = true,
             "--hidden" => options.walk.hidden = true,
             "--no-ignore" => options.walk.respect_ignore = false,
-            // An unknown format falls back rather than failing, which is
-            // the extension's behaviour and the reason this tool can be
-            // pointed at a repository nobody has described to it. The
-            // flag still takes a value, so a missing one is a refusal.
+            // The flag takes a value, so a missing one is a refusal.
             "--format" => {
                 let value = rest
                     .next()
                     .ok_or_else(|| "--format needs a format".to_string())?;
                 let resolved = resolve_format(Some(value), None);
-                // Refused, not fallen back. There is no useful thing to
-                // do with a format this has no extractor for, and a
-                // silent nothing would read as a clean run.
+                // A typo is refused even though an unnamed format would
+                // be read: `--fromat scss` silently scanning the tree as
+                // raw text is a run whose caller believes it parsed
+                // stylesheets. Strict parsing applies to flags; the
+                // fallback applies to documents.
                 if resolved == crate::extract::FALLBACK_FORMAT {
                     return Err(format!(
-                        "{value} is not a format this reads; one of: {}",
+                        "{value} is not a format this names; one of: {}",
                         SUPPORTED_FORMATS.join(", ")
                     ));
                 }
                 options.scan.format = Some(resolved);
-                options.walk.format = Some(resolved);
             }
             "--palette" => {
                 let value = rest

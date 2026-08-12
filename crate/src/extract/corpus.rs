@@ -20,6 +20,8 @@ pub(crate) fn document(name: &str) -> &'static str {
         "theme.ts" => include_str!("../../fixtures/documents/theme.ts"),
         "icon.svg" => include_str!("../../fixtures/documents/icon.svg"),
         "plain.less" => include_str!("../../fixtures/documents/plain.less"),
+        "notes.md" => include_str!("../../fixtures/documents/notes.md"),
+        "tokens.json" => include_str!("../../fixtures/documents/tokens.json"),
         other => panic!("the corpus has no document named {other}"),
     }
 }
@@ -83,7 +85,16 @@ mod tests {
     #[test]
     fn the_corpus_covers_every_format() {
         let corpus = corpus();
-        for format in ["css", "scss", "less", "html", "svg", "typescript"] {
+        for format in [
+            "css",
+            "scss",
+            "less",
+            "html",
+            "svg",
+            "typescript",
+            "markdown",
+            "json",
+        ] {
             assert!(
                 corpus.documents.iter().any(|case| case.file_type == format),
                 "no corpus case reads {format}"
@@ -112,6 +123,29 @@ mod tests {
                 .iter()
                 .any(|value| value.len() == 6 && value.starts_with('#')),
             "a five-digit hex is being reported"
+        );
+
+        // The prose rule, from both directions: an issue reference in
+        // Markdown is not a colour, and the same digits in a token file
+        // are one.
+        let prose: Vec<&str> = corpus
+            .documents
+            .iter()
+            .filter(|case| case.file_type == "markdown")
+            .flat_map(|case| case.expected.iter())
+            .map(|found| found.value.as_str())
+            .collect();
+        assert!(
+            !prose.contains(&"#250"),
+            "an issue reference is being reported as a colour"
+        );
+        assert!(
+            prose.contains(&"#FFF"),
+            "a short hex with letters in it is no longer pinned as a colour"
+        );
+        assert!(
+            values.contains(&"#250"),
+            "no corpus case pins a short all-digit hex that IS a colour"
         );
     }
 }

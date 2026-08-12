@@ -11,6 +11,24 @@ separate product on its own cadence and keeps its own
 
 ## [Unreleased]
 
+### Changed
+
+- **Extract works in every document.** JSON, JSONC, YAML, TOML, Markdown
+  and plain text are read by name — design tokens live in JSON — and any
+  other language id is read as raw text rather than quietly extracted as
+  CSS. `metadata.fileType` says which of the two it was.
+
+  Two rules apply only where the syntax is unknown, so stylesheets and
+  structured formats are untouched: a 3- or 4-digit hex in prose must
+  contain an `a`-`f` (`#250` in a README is an issue reference — 50 of
+  56 in a 1,988-file sample), and a named color must be the whole value
+  (a paragraph mentioning orange is not a finding).
+
+- **The `extract_colors` MCP tool no longer refuses a call with no
+  usable format.** It reads the document as raw text and reports
+  `fileType: "unknown"`, matching the Rust server, which never refused
+  one.
+
 ### Added
 
 - The MCP server's alias table is now checked against

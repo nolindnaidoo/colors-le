@@ -1,11 +1,16 @@
 //! Which extractor reads a document.
 //!
-//! **An unresolved format is not an error.** Every other crate in this
-//! family refuses a name it does not recognise; this one falls through
-//! to quoted-string extraction, because that is what the extension does
-//! and because it is the case that matters most. A `.ts` file is not a
-//! format this parses, and its quoted strings are exactly the
-//! user-facing copy a reviewer came for.
+//! **An unresolved format is read, not refused.** It used to be refused,
+//! on the reasoning that a colour only means something where a colour
+//! can appear. The reasoning was sound and the conclusion was wrong: it
+//! left this unable to open a `.json`, which is where a design system
+//! keeps its tokens, and a reviewer pointing it at a repository got an
+//! audit of the stylesheets and silence about everything else.
+//!
+//! What the refusal was really protecting against is one collision —
+//! `#250` in prose is an issue reference, not a colour — and that is
+//! answered by a rule about short hex rather than by declining to read
+//! the file. See `heuristics::is_issue_reference`.
 
 /// Every name a caller might send, mapped to the extractor key it means.
 ///
@@ -21,7 +26,7 @@
 /// `typescriptreact` came to be accepted by the extension and refused
 /// here: no error, no colours, for the caller most likely to send a VS
 /// Code language id.
-const ALIASES: [(&str, &str); 25] = [
+const ALIASES: [(&str, &str); 34] = [
     ("css", "css"),
     ("scss", "scss"),
     ("sass", "scss"),
@@ -47,12 +52,25 @@ const ALIASES: [(&str, &str); 25] = [
     ("typescriptreact", "typescript"),
     ("svg", "svg"),
     ("xml", "xml"),
+    ("json", "json"),
+    ("jsonc", "json"),
+    ("yaml", "yaml"),
+    ("yml", "yaml"),
+    ("toml", "toml"),
+    ("markdown", "markdown"),
+    ("md", "markdown"),
+    ("plaintext", "plaintext"),
+    ("txt", "plaintext"),
 ];
 
 /// The formats a caller can name, for the tool schema's enum. Held equal
 /// to the alias table by a test, so a format can never be offered and
 /// then not resolve.
-pub(crate) const SUPPORTED_FORMATS: [&str; 9] = [
+///
+/// It is not the list of formats this *reads* — that list is every
+/// format, because anything absent here is read by the raw scan. It is
+/// the list a caller gets a named answer for.
+pub(crate) const SUPPORTED_FORMATS: [&str; 14] = [
     "css",
     "scss",
     "less",
@@ -62,22 +80,24 @@ pub(crate) const SUPPORTED_FORMATS: [&str; 9] = [
     "typescript",
     "svg",
     "xml",
+    "json",
+    "yaml",
+    "toml",
+    "markdown",
+    "plaintext",
 ];
 
-/// What the engine uses when it recognises nothing.
+/// What the engine reports when it recognises nothing.
 ///
 /// **`unknown`, not `fallback`.** The extension names it that and the
 /// name is user-visible: it is the `fileType` every MCP answer carries,
 /// so the two servers would disagree on a field that is right there in
 /// the response. The corpus caught it on the first run.
-/// What the engine uses when it recognises nothing.
 ///
-/// **A refusal, not a fallback.** Unlike string-le and numbers-le, there
-/// is no useful thing to do with an unknown document here: a colour only
-/// means something in a place where a colour can appear, and without a
-/// format there is no such place. Scanning raw text would find every
-/// three-letter word that happens to be hex and every `#anchor` in a
-/// README.
+/// The document is still read — by the raw scan, with the short-hex rule
+/// applied. `unknown` names how much this knew about the file, not
+/// whether it opened it, and it is the one signal a reader has that the
+/// answer came from a scan rather than a parser.
 pub(crate) const FALLBACK_FORMAT: &str = "unknown";
 
 fn normalise(value: &str) -> String {
@@ -98,11 +118,11 @@ pub(crate) fn canonical(format: &str) -> &'static str {
 }
 
 /// Resolve an extractor key from an explicit format, else from a
-/// filename, else `fallback`.
+/// filename, else `unknown`.
 ///
-/// A caller who knows nothing about a document still gets its strings —
-/// which is the difference between a tool a reviewer can point at a
-/// repository and one they have to describe it to first.
+/// `unknown` is an answer, not a failure: the document is read by the
+/// raw scan. That is the difference between a tool a reviewer can point
+/// at a repository and one they have to describe it to first.
 pub(crate) fn resolve_format(format: Option<&str>, filename: Option<&str>) -> &'static str {
     if let Some(name) = format {
         let direct = canonical(&normalise(name));
@@ -209,19 +229,19 @@ mod tests {
         assert_eq!(resolve_format(None, Some("theme.css")), "css");
         assert_eq!(resolve_format(None, Some("icon.SVG")), "svg");
         assert_eq!(resolve_format(None, Some("app.tsx")), "typescript");
-        assert_eq!(resolve_format(None, Some("notes.md")), FALLBACK_FORMAT);
+        assert_eq!(resolve_format(None, Some("notes.md")), "markdown");
+        assert_eq!(resolve_format(None, Some("tokens.json")), "json");
+        assert_eq!(resolve_format(None, Some("compose.yml")), "yaml");
     }
 
-    /// **A refusal, not a fallback.** There is no useful thing to do
-    /// with an unknown document: a colour only means something where a
-    /// colour can appear, and a raw scan would report every `#anchor` in
-    /// a README.
+    /// `unknown` is what this knew about the file, not whether it opened
+    /// it: the raw scan reads the document either way.
     #[test]
     fn anything_unrecognised_is_unknown() {
-        for name in ["python", "markdown", "", "wat"] {
+        for name in ["python", "rust", "", "wat"] {
             assert_eq!(resolve_format(Some(name), None), FALLBACK_FORMAT, "{name}");
         }
-        assert_eq!(resolve_format(None, Some("README.md")), FALLBACK_FORMAT);
+        assert_eq!(resolve_format(None, Some("main.py")), FALLBACK_FORMAT);
         assert_eq!(resolve_format(None, None), FALLBACK_FORMAT);
     }
 

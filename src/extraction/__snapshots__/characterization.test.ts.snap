@@ -655,7 +655,65 @@ exports[`extraction characterization > colors.svg as xml 1`] = `
 }
 `;
 
-exports[`extraction characterization > unknown language falls back to CSS extraction 1`] = `
+exports[`extraction characterization > json reads design tokens, short hex included 1`] = `
+{
+  "colors": [
+    {
+      "context": ""gray": "#250",",
+      "format": "hex",
+      "position": {
+        "column": 11,
+        "line": 2,
+      },
+      "value": "#250",
+    },
+    {
+      "context": ""paper": "white"",
+      "format": "named",
+      "position": {
+        "column": 12,
+        "line": 3,
+      },
+      "value": "white",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > markdown keeps the hex with a letter in it 1`] = `
+{
+  "colors": [
+    {
+      "context": "Closes #250. The paper is #FFF and the ink is #1a2b3c.",
+      "format": "hex",
+      "position": {
+        "column": 27,
+        "line": 1,
+      },
+      "value": "#FFF",
+    },
+    {
+      "context": "Closes #250. The paper is #FFF and the ink is #1a2b3c.",
+      "format": "hex",
+      "position": {
+        "column": 47,
+        "line": 1,
+      },
+      "value": "#1a2b3c",
+    },
+  ],
+  "errors": [],
+  "metadata": undefined,
+  "success": true,
+  "warnings": [],
+}
+`;
+
+exports[`extraction characterization > unknown language is read as raw text 1`] = `
 {
   "colors": [
     {

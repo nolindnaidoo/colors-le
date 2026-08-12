@@ -178,8 +178,34 @@ function checkTheCorpusStillCoversTheAwkwardCases(): void {
 	if (values.some((value) => value.startsWith('#') && value.length === 6)) {
 		fail('a five-digit hex is being reported as a colour');
 	}
+
+	// The prose rule, from both directions: an issue reference in Markdown is
+	// not a colour, and the same digits in a token file are one.
+	const prose = corpus.documents
+		.filter((testCase) => testCase.fileType === 'markdown')
+		.flatMap((testCase) => testCase.expected)
+		.map((color) => color.value);
+	if (prose.includes('#250')) {
+		fail('an issue reference is being reported as a colour');
+	}
+	if (!prose.includes('#FFF')) {
+		fail('the corpus no longer pins a short hex with letters as a colour');
+	}
+	if (!values.includes('#250')) {
+		fail('no corpus case pins a short all-digit hex that IS a colour');
+	}
+
 	const formats = new Set(corpus.documents.map((testCase) => testCase.fileType));
-	for (const format of ['css', 'scss', 'less', 'html', 'svg', 'typescript']) {
+	for (const format of [
+		'css',
+		'scss',
+		'less',
+		'html',
+		'svg',
+		'typescript',
+		'markdown',
+		'json',
+	]) {
 		if (!formats.has(format)) fail(`no corpus case reads ${format}`);
 	}
 }

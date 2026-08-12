@@ -27,9 +27,13 @@ with its own `CLAUDE.md`.
 - **The corpus is all ASCII**, so it cannot catch a byte-length bug.
   That class is caught by running the binary over a real repository, and
   it has been, once, the hard way.
-- **An unknown format is a refusal, not a fallback** — the opposite of
-  string-le and numbers-le. Do not "fix" it into a text scan; a
-  `#anchor` in a README looks exactly like a three-digit hex.
+- **An unknown format is read as raw text**, since 0.2.0 — the walk has
+  no format filter and every file is opened. Two rules make that safe
+  and both apply *only* outside the format-aware extractors: a short hex
+  in prose needs an `a`-`f` (`#250` is an issue reference), and a named
+  colour must be the whole value (a paragraph mentioning orange is not a
+  finding). Do not relax either without the measurement that justified
+  it — see `crate/SPEC.md`.
 - **The palette compares by colour, not by text**, and a named colour is
   only equal to itself. Resolving keywords to hex would launder an
   unapproved keyword into an approved brand colour.

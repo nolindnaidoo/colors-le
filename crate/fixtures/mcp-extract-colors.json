@@ -198,6 +198,135 @@
 		}
 	},
 	{
+		"name": "markdown drops the issue reference and keeps the colours",
+		"file": "notes.md",
+		"arguments": {
+			"filename": "notes.md"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#FFF",
+						"format": "hex",
+						"line": 5,
+						"column": 14
+					},
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 5,
+						"column": 34
+					},
+					{
+						"value": "#abc",
+						"format": "hex",
+						"line": 5,
+						"column": 61
+					},
+					{
+						"value": "rebeccapurple",
+						"format": "named",
+						"line": 7,
+						"column": 8
+					}
+				],
+				"fileType": "markdown"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 4,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "design tokens in json, short hex included",
+		"file": "tokens.json",
+		"arguments": {
+			"format": "json"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 3,
+						"column": 13
+					},
+					{
+						"value": "white",
+						"format": "named",
+						"line": 4,
+						"column": 13
+					},
+					{
+						"value": "#250",
+						"format": "hex",
+						"line": 5,
+						"column": 12
+					},
+					{
+						"value": "rgba(0, 0, 0, 0.5)",
+						"format": "rgba",
+						"line": 6,
+						"column": 15
+					},
+					{
+						"value": "hsl(210, 50%, 40%)",
+						"format": "hsl",
+						"line": 7,
+						"column": 14
+					},
+					{
+						"value": "#250",
+						"format": "hex",
+						"line": 13,
+						"column": 15
+					}
+				],
+				"fileType": "json"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 6,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "a format neither server names is read as raw text",
+		"content": "ACCENT = \"#ff8800\"  # closes #250\n",
+		"arguments": {
+			"filename": "settings.py"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#ff8800",
+						"format": "hex",
+						"line": 1,
+						"column": 11
+					}
+				],
+				"fileType": "unknown"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 1,
+				"truncated": false
+			}
+		}
+	},
+	{
 		"name": "deduped",
 		"file": "theme.css",
 		"arguments": {

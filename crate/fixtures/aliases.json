@@ -24,7 +24,16 @@
 		"cts": "typescript",
 		"typescriptreact": "typescript",
 		"svg": "svg",
-		"xml": "xml"
+		"xml": "xml",
+		"json": "json",
+		"jsonc": "json",
+		"yaml": "yaml",
+		"yml": "yaml",
+		"toml": "toml",
+		"markdown": "markdown",
+		"md": "markdown",
+		"plaintext": "plaintext",
+		"txt": "plaintext"
 	},
 	"formats": [
 		"css",
@@ -35,6 +44,11 @@
 		"javascript",
 		"typescript",
 		"svg",
-		"xml"
+		"xml",
+		"json",
+		"yaml",
+		"toml",
+		"markdown",
+		"plaintext"
 	]
 }

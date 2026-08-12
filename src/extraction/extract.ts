@@ -6,6 +6,7 @@ import { extractFromLESS } from './formats/less';
 import { extractFromSCSS } from './formats/scss';
 import { extractFromStylus } from './formats/stylus';
 import { extractFromSvg } from './formats/svg';
+import { extractFromText } from './formats/text';
 
 export interface ExtractionOptions {
 	readonly filepath?: string;
@@ -102,13 +103,27 @@ function extractColorsByFileType(
 			return extractFromJavaScript(content);
 		case 'svg':
 			return extractFromSvg(content);
+		// Structured formats carry design tokens, so a bare `#250` in one is a
+		// color and is read as written.
+		case 'json':
+		case 'yaml':
+		case 'toml':
+			return extractFromText(content, 'counts');
+		// Markdown, plain text, and every format with no extractor of its own.
+		// Reading them beats refusing them — a color in a Python constant is
+		// still a color — but a short all-digit hex here is an issue reference
+		// far more often than a color, so it has to carry an a-f.
 		default:
-			// Unknown types fall back to CSS-style extraction: hex/functional
-			// literals are format-agnostic enough to be useful anywhere.
-			return extractFromCss(content);
+			return extractFromText(content, 'needs-a-letter');
 	}
 }
 
+/**
+ * The VS Code language id, as a format this reads.
+ *
+ * Anything absent is `unknown`, which is read rather than refused: `unknown`
+ * names how much the engine knew about the document, not whether it opened it.
+ */
 function determineFileType(languageId: string): FileType {
 	switch (languageId) {
 		case 'css':
@@ -130,6 +145,17 @@ function determineFileType(languageId: string): FileType {
 		case 'xml':
 		case 'svg':
 			return 'svg';
+		case 'json':
+		case 'jsonc':
+			return 'json';
+		case 'yaml':
+			return 'yaml';
+		case 'toml':
+			return 'toml';
+		case 'markdown':
+			return 'markdown';
+		case 'plaintext':
+			return 'plaintext';
 		default:
 			return 'unknown';
 	}

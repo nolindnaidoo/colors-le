@@ -9,6 +9,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Every file is read.** The walk had a format filter and opened 20 of
+  the 88 file types found in real repositories — which meant it could
+  not open a `.json`, where a design system keeps its tokens. It opens
+  everything now: `json`, `yaml`, `toml`, `markdown` and `plaintext`
+  join the nine named formats, and anything else is scanned as raw text
+  and reported as format `unknown`. On one real repository this took the
+  findings from 56 to 70, and all fourteen new ones are real colours in
+  documentation and manifests.
+
+  Two rules make that safe, and both apply **only** where the syntax is
+  unknown — stylesheets and structured formats are untouched:
+
+  - **A short hex in prose must contain an `a`-`f`.** Across 1,988 real
+    Markdown files, 50 of the 56 bare 3/4-digit hex were issue or PR
+    references (`#250`, `#3050`) and the six with a letter in them were
+    all real colours. `#250` in a token file or a stylesheet is still a
+    colour.
+  - **A named colour must be the whole value.** Matching any keyword
+    inside a value segment produced 35 false findings against 19 real
+    colours on two real repositories.
+
+- **The `unknown-format` diagnostic is gone.** It said "nothing was
+  read", which is no longer true; the `format` field carries the same
+  information without a warning line per file.
+
+- **`colors_le_scan` refuses a format it cannot name**, instead of
+  quietly scanning the whole tree as raw text. Its schema now publishes
+  the format enum, and both tool descriptions were rewritten — they
+  described a different product's formats.
+
 ### Fixed
 
 - **`typescriptreact` is a format again.** The extension accepted it;
@@ -23,6 +55,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   held to: a unit test here, `scripts/check-extraction-parity.ts` on the
   extension. The table was ported by hand twice, which is how it drifted
   in the first place, and nothing in either build would have noticed.
+- **Two corpus documents**: `notes.md`, which pins that `#250` is an
+  issue reference and `#FFF` is a colour in the same file, and
+  `tokens.json`, a design-token file whose `#250` *is* one.
 
 ## [0.1.0] - 2026-08-11
 

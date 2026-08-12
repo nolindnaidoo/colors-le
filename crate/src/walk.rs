@@ -6,10 +6,19 @@
 //! file named explicitly is always read, ignore rules included: you
 //! asked for it.
 //!
-//! **There is a format filter here**, unlike string-le and numbers-le.
-//! A colour only means something where a colour can appear, so a file
-//! this has no extractor for is skipped rather than scanned: a raw scan
-//! of a README would report every `#anchor` in it as a three-digit hex.
+//! **There is no format filter here.** There was one, and it meant this
+//! could not open a `.json` — which is where a design system keeps its
+//! tokens. It existed to keep a README's `#250` out of the results, and
+//! that is a rule about short hex in prose
+//! (`heuristics::is_issue_reference`); answering it in the extractor is
+//! what lets the walk read everything. A file whose format has no parser
+//! is scanned as raw text and says so, in the `format` field of its own
+//! report.
+//!
+//! The cost is real and accepted: every binary file in the tree now
+//! reaches `scan_file` and comes back carrying a `skipped` diagnostic,
+//! rather than never being looked at. Naming the PNG is the honest
+//! answer — a file that silently vanishes reads as one that was clean.
 //!
 //! What the ignore rules keep out is deliberately not counted. On a
 //! checkout with dependencies installed the number is around thirty
@@ -24,14 +33,12 @@
 
 use std::path::{Path as StdPath, PathBuf};
 
+/// What the walk selects on. **Not the format** — it used to carry one,
+/// purely to lift the filter that no longer exists.
 #[derive(Debug, Clone)]
 pub(crate) struct WalkOptions {
     pub(crate) hidden: bool,
     pub(crate) respect_ignore: bool,
-    /// A format the caller forced. When set, every file is read as that
-    /// format and the filter does not apply — naming a format is asking
-    /// for those files.
-    pub(crate) format: Option<&'static str>,
 }
 
 impl Default for WalkOptions {
@@ -39,7 +46,6 @@ impl Default for WalkOptions {
         Self {
             hidden: false,
             respect_ignore: true,
-            format: None,
         }
     }
 }
@@ -90,18 +96,9 @@ fn walk_directory(root: &StdPath, options: &WalkOptions) -> Result<Vec<PathBuf>,
         if !entry.file_type().is_some_and(|kind| kind.is_file()) {
             continue;
         }
-        let path = entry.into_path();
-        if options.format.is_some() || has_a_format(&path) {
-            files.push(path);
-        }
+        files.push(entry.into_path());
     }
     Ok(files)
-}
-
-/// Whether this crate has an extractor for the file's name.
-fn has_a_format(path: &StdPath) -> bool {
-    let name = path.file_name().and_then(|name| name.to_str());
-    crate::extract::resolve_format(None, name) != crate::extract::FALLBACK_FORMAT
 }
 
 #[cfg(test)]
@@ -143,34 +140,19 @@ mod tests {
         assert_eq!(first, again);
     }
 
-    /// Only the files this has an extractor for. A README's `#anchor`
-    /// looks exactly like a three-digit hex, and scanning one would
-    /// report it.
+    /// Changed deliberately in 0.2.0: the walk used to keep only the
+    /// files it had an extractor for, which meant it could not open a
+    /// `tokens.json`. Everything is read now, and the short-hex rule —
+    /// not the walk — is what keeps a README's `#250` out.
     #[test]
-    fn only_files_with_a_format_are_walked() {
+    fn every_file_is_walked_whatever_its_extension() {
         let tree = TempTree::new("walk-formats");
-        for name in ["a.css", "b.scss", "c.svg", "d.ts", "README.md", "Makefile"] {
+        let names = ["a.css", "b.scss", "c.svg", "d.ts", "README.md", "Makefile"];
+        for name in names {
             tree.write(name, "x");
         }
         let walked = collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
-        assert_eq!(walked.len(), 4, "{walked:?}");
-    }
-
-    /// Naming a format is asking for those files, whatever they are
-    /// called.
-    #[test]
-    fn a_forced_format_lifts_the_filter() {
-        let tree = TempTree::new("walk-forced");
-        tree.write("theme.txt", "x");
-        let walked = collect(
-            &[tree.path().to_path_buf()],
-            &WalkOptions {
-                format: Some("css"),
-                ..WalkOptions::default()
-            },
-        )
-        .expect("walks");
-        assert_eq!(walked.len(), 1);
+        assert_eq!(walked.len(), names.len(), "{walked:?}");
     }
 
     #[test]

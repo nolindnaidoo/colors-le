@@ -49,14 +49,10 @@ async function extract(args: Record<string, unknown>): Promise<unknown> {
 	const filename =
 		typeof args.filename === 'string' ? args.filename : undefined;
 
-	// Requiring one of the two up front gives a message naming the problem,
-	// instead of the engine returning an empty result for an unknown language.
+	// Never a refusal. An agent that knows nothing about a document still gets
+	// the colors in it, which is the whole reason a format is optional — and
+	// `data.fileType` says whether that answer came from a parser or a scan.
 	const languageId = resolveFormat(format, filename);
-	if (!languageId) {
-		throw new Error(
-			`Provide \`format\` (one of: ${SUPPORTED_FORMATS.join(', ')}) or a \`filename\` with a recognised extension.`,
-		);
-	}
 
 	const result = await extractColors(content, languageId);
 	const values = result.colors.map((color) => ({
@@ -89,7 +85,7 @@ export const TOOLS: readonly ToolDefinition[] = Object.freeze([
 	Object.freeze({
 		name: 'extract_colors',
 		description:
-			'Extract every color from a stylesheet or document, with its notation and 1-based line and column. Supports CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, SVG and XML. Reports hex, rgb/rgba, hsl/hsla and named colors as written.',
+			'Extract every color from a stylesheet or document, with its notation and 1-based line and column. Reads CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, SVG, XML, JSON, YAML, TOML, Markdown and plain text by name, and anything else as raw text, so a format is optional. Reports hex, rgb/rgba, hsl/hsla and named colors as written.',
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -101,7 +97,7 @@ export const TOOLS: readonly ToolDefinition[] = Object.freeze([
 					type: 'string',
 					enum: SUPPORTED_FORMATS,
 					description:
-						'Document format. Provide this or `filename`. Common extensions and aliases are accepted.',
+						'Document format. Optional — an unrecognised or absent format is read as raw text and reported as "unknown".',
 				},
 				filename: {
 					type: 'string',

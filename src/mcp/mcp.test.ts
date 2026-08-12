@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import { describe, expect, it } from 'vitest';
 import type { ExtractionResult } from '../types';
 import { capped, isOk, readMaxResults, toDiagnostics } from './envelope';
-import { resolveFormat, SUPPORTED_FORMATS } from './fileType';
+import { FALLBACK_FORMAT, resolveFormat, SUPPORTED_FORMATS } from './fileType';
 import { TOOLS } from './tools';
 import { createResponder, serve } from './transport';
 
@@ -100,14 +100,26 @@ describe('fileType: tolerant resolution', () => {
 		expect(resolveFormat(undefined, 'logo.svg')).toBe('svg');
 	});
 
-	it('returns null when neither input resolves', () => {
-		expect(resolveFormat('klingon', 'a.klingon')).toBeNull();
-		expect(resolveFormat(undefined, undefined)).toBeNull();
+	it('accepts the formats where design tokens actually live', () => {
+		expect(resolveFormat('jsonc', undefined)).toBe('json');
+		expect(resolveFormat(undefined, 'tokens.json')).toBe('json');
+		expect(resolveFormat(undefined, 'compose.yml')).toBe('yaml');
+		expect(resolveFormat(undefined, 'README.md')).toBe('markdown');
 	});
 
-	it('advertises only formats the engine supports', () => {
+	it('falls back rather than refusing when neither input resolves', () => {
+		// Changed deliberately: this returned null and the tool threw. An
+		// unrecognised document is read as raw text now, and `fileType` is what
+		// tells the caller which it was.
+		expect(resolveFormat('klingon', 'a.klingon')).toBe(FALLBACK_FORMAT);
+		expect(resolveFormat(undefined, undefined)).toBe(FALLBACK_FORMAT);
+	});
+
+	it('advertises only formats the engine names', () => {
 		expect(SUPPORTED_FORMATS).toContain('css');
-		expect(SUPPORTED_FORMATS).not.toContain('unknown');
+		expect(SUPPORTED_FORMATS).toContain('json');
+		// The fallback is a real answer but not a format anyone can ask for.
+		expect(SUPPORTED_FORMATS).not.toContain(FALLBACK_FORMAT);
 	});
 });
 
@@ -174,12 +186,21 @@ describe('extract_colors', () => {
 		expect(result.meta.truncated).toBe(true);
 	});
 
-	it('names the fix when no usable format is given', async () => {
-		// Without this the engine returns an empty result for an unknown
-		// language, which tells an agent nothing it can act on.
-		await expect(call({ content: 'a { color: red; }' })).rejects.toThrow(
-			/Provide `format`/,
-		);
+	it('reads a document no format was given for', async () => {
+		// Changed deliberately: this used to throw and name the two arguments.
+		// Refusing protected against one thing — a README's `#250` read as a
+		// colour — and that is now a rule about short hex in prose.
+		const result = await call({ content: 'a { color: #ff0000; }' });
+		expect(result.ok).toBe(true);
+		expect(result.data.colors[0]?.value).toBe('#ff0000');
+	});
+
+	it('drops an issue reference in prose and keeps a real short hex', async () => {
+		const result = await call({
+			content: 'closes #250, and the paper is #FFF',
+			filename: 'notes.md',
+		});
+		expect(result.data.colors.map((color) => color.value)).toEqual(['#FFF']);
 	});
 
 	it('requires content', async () => {
@@ -233,12 +254,14 @@ describe('protocol', () => {
 
 	it('returns a tool failure as a result, not a protocol error', async () => {
 		// A model can read an isError result and correct itself; a JSON-RPC error
-		// reads as "the server is broken".
+		// reads as "the server is broken". Missing content is the failure used
+		// here because an unresolved format is no longer one: it is read as raw
+		// text.
 		const reply = await respond({
 			jsonrpc: '2.0',
 			id: 4,
 			method: 'tools/call',
-			params: { name: 'extract_colors', arguments: { content: 'x' } },
+			params: { name: 'extract_colors', arguments: {} },
 		});
 		expect(reply?.error).toBeUndefined();
 		expect(reply?.result?.isError).toBe(true);

@@ -92,10 +92,11 @@ fn tool_definitions() -> Value {
         extract::definition(),
         {
             "name": "colors_le_scan",
-            "description": "Extract every string value from files or directories, with the \
-                            file it came from and, where it can be located, its line and \
-                            column. Reads the filesystem; never writes to it, and never judges \
-                            a string.",
+            "description": "Extract every color from files or directories, with the file it \
+                            came from and its 1-based line and column. Every file is read: \
+                            stylesheets, markup, source, JSON, YAML, TOML and Markdown by \
+                            name, anything else as raw text. Reads the filesystem; never \
+                            writes to it, and never judges a color.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -107,9 +108,9 @@ fn tool_definitions() -> Value {
                     },
                     "format": {
                         "type": "string",
+                        "enum": crate::extract::SUPPORTED_FORMATS,
                         "description": "Force a format for every file instead of inferring one \
-                                        per file name. An unrecognised name falls back to \
-                                        quoted colors.",
+                                        per file name.",
                     },
                     "dedupe": {
                         "type": "boolean",
@@ -171,24 +172,14 @@ fn scan_tool(arguments: &Value) -> Result<Value, String> {
             .and_then(Value::as_bool)
             .unwrap_or(false)
     };
-    let forced = arguments
-        .get("format")
-        .and_then(Value::as_str)
-        .map(|name| resolve_format(Some(name), None))
-        .filter(|format| *format != crate::extract::FALLBACK_FORMAT);
     let walk_options = WalkOptions {
         hidden: flag("hidden"),
         respect_ignore: !flag("ignored"),
-        format: forced,
     };
     let options = ScanOptions {
         dedupe: flag("dedupe"),
         palette: None,
-
-        format: arguments
-            .get("format")
-            .and_then(Value::as_str)
-            .map(|name| resolve_format(Some(name), None)),
+        format: forced_format(arguments)?,
     };
 
     let targets = walk::collect(&inputs, &walk_options)?;
@@ -229,6 +220,26 @@ fn scan_tool(arguments: &Value) -> Result<Value, String> {
         &diagnostics,
         false,
     ))
+}
+
+/// The format the caller forced, if any.
+///
+/// A name that resolves to nothing is refused rather than fallen back
+/// on: a caller who asked for `scss` and mistyped it would otherwise get
+/// every file in the tree scanned as raw text and no sign that the
+/// format they named was never used.
+fn forced_format(arguments: &Value) -> Result<Option<&'static str>, String> {
+    let Some(name) = arguments.get("format").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    let resolved = resolve_format(Some(name), None);
+    if resolved == crate::extract::FALLBACK_FORMAT {
+        return Err(format!(
+            "{name} is not a format this names; one of: {}",
+            crate::extract::SUPPORTED_FORMATS.join(", ")
+        ));
+    }
+    Ok(Some(resolved))
 }
 
 fn requested_paths(arguments: &Value) -> Result<Vec<PathBuf>, String> {
@@ -388,16 +399,17 @@ mod tests {
         assert!(envelope["data"].get("exists").is_none());
     }
 
-    /// A format with no extractor reads nothing rather than guessing.
+    /// A format with no extractor of its own is read as raw text.
     #[test]
-    fn an_unknown_format_reads_nothing() {
+    fn an_unknown_format_is_read_as_raw_text() {
         let response = call(
             "extract_colors",
-            &json!({ "content": "see #abc below", "format": "markdown" }),
+            &json!({ "content": "see #abc below", "format": "klingon" }),
         );
         assert_eq!(response["result"]["isError"], false);
         let envelope = &response["result"]["structuredContent"];
-        assert_eq!(envelope["data"]["colors"], json!([]));
+        assert_eq!(envelope["data"]["fileType"], "unknown");
+        assert_eq!(envelope["data"]["colors"][0]["value"], "#abc");
     }
 
     /// An empty answer is the scan running and finding nothing.
@@ -426,19 +438,35 @@ mod tests {
         assert_eq!(envelope["data"]["colors"], 1);
     }
 
-    /// The walk has a format filter, so a file with no extractor is not
-    /// read at all.
+    /// Changed deliberately in 0.2.0: the walk had a format filter and
+    /// the README was never opened. Both files are read now, and the
+    /// Markdown one keeps `#abc` — it has letters in it — while an
+    /// issue reference in the same file would not survive.
     #[test]
-    fn the_scan_tool_skips_files_it_has_no_extractor_for() {
+    fn the_scan_tool_reads_every_file_it_walks() {
         let tree = TempTree::new("mcp-filter");
         tree.write("theme.css", ".a{color:#1a2b3c}\n");
-        tree.write("README.md", "see #abc below\n");
+        tree.write("README.md", "see #abc below, closes #250\n");
         let response = call(
             "colors_le_scan",
             &json!({ "path": tree.path().to_string_lossy() }),
         );
-        let reports = &response["result"]["structuredContent"]["data"]["reports"];
-        assert_eq!(reports.as_array().expect("a list").len(), 1);
+        let data = &response["result"]["structuredContent"]["data"];
+        assert_eq!(data["reports"].as_array().expect("a list").len(), 2);
+        assert_eq!(data["colors"], 2);
+    }
+
+    /// A format the caller named and this cannot resolve is refused,
+    /// rather than quietly scanning the whole tree as raw text.
+    #[test]
+    fn the_scan_tool_refuses_a_format_it_does_not_name() {
+        let tree = TempTree::new("mcp-badformat");
+        tree.write("theme.css", ".a{color:#1a2b3c}\n");
+        let response = call(
+            "colors_le_scan",
+            &json!({ "path": tree.path().to_string_lossy(), "format": "klingon" }),
+        );
+        assert_eq!(response["result"]["isError"], true);
     }
 
     #[test]

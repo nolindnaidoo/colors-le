@@ -21,7 +21,7 @@ what is not in it — and discovery, where there is no palette yet and one
 has to be written from what is in use. Every decision below follows from
 those.
 
-**Status: released.** All seven extractors, both surfaces and
+**Status: released.** All eight extractors, both surfaces and
 the test layers below are green. Releases go out through
 `release-crate.yml`, which is dispatch-only and refuses a version that
 crates.io already carries, has no changelog entry, would ship a tarball
@@ -54,7 +54,8 @@ crate/src/
   tree.
 - **`walk.rs` selects, it does not decide.** Its one rule — a file named
   explicitly is read whatever the ignore rules say — is why intent beats
-  configuration.
+  configuration. It has **no format filter**: it had one, and it was the
+  reason a `tokens.json` was never opened.
 - Keep modules flat. No layers, registries, managers, or services. No
   trait with a single implementation.
 
@@ -72,11 +73,20 @@ crate/src/
   `javascript` and `html`. They read identically, but the key is
   user-visible as `fileType` in every MCP answer, so collapsing them
   would have the two servers disagree about what they just read.
-- **An unknown format is a refusal, not a fallback.** Unlike string-le
-  and numbers-le there is no useful thing to do with an unrecognised
-  document: a colour only means something where a colour can appear, and
-  a raw scan of a README would report every `#anchor` as a hex. The walk
-  filters by format and `--format` refuses a name it does not know.
+- **An unknown format is read, not refused** — reversed in 0.2.0. It was
+  a refusal, and the refusal meant this could not open a `.json`, which
+  is where a design system keeps its tokens. What it protected against
+  is one collision, `#250` in prose, and that is now a rule about short
+  hex in the extractor rather than a filter on the walk. `--format`
+  still refuses a name it does not know: strict parsing applies to
+  flags, the fallback applies to documents.
+- **Outside a stylesheet, a named colour must be the whole value.** The
+  raw scan reads prose, and matching any keyword inside a value segment
+  produced 35 false findings against 19 real colours on two real
+  repositories — a paragraph about a brand-orange focus ring, a
+  shields.io badge ending `-red)`, a Tailwind `text-white` class. The
+  format-aware extractors keep the looser rule, because there the
+  declaration syntax is known.
 - **A named colour is only a colour where a value is expected** — a
   declaration value, an attribute value, a whole string literal. Without
   that, every sentence containing "orange" is a finding.

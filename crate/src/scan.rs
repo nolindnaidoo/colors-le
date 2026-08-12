@@ -7,7 +7,7 @@ use std::path::{Path as StdPath, PathBuf};
 
 use serde::Serialize;
 
-use crate::extract::{self, FALLBACK_FORMAT, Found, Palette, resolve_format};
+use crate::extract::{self, Found, Palette, resolve_format};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(crate) struct Diagnostic {
@@ -112,14 +112,11 @@ pub(crate) fn scan_content(
         colors.retain(|found| seen.insert(found.value.clone()));
     }
 
-    let mut diagnostics = Vec::new();
-    if format == FALLBACK_FORMAT {
-        diagnostics.push(Diagnostic {
-            severity: "warning".to_string(),
-            code: "unknown-format".to_string(),
-            message: "no extractor for this format, so nothing was read".to_string(),
-        });
-    }
+    // No `unknown-format` diagnostic any more: it said "nothing was
+    // read", and something is read now. The `format` field already
+    // carries `unknown`, which is the same information without a warning
+    // per Python file — on a real repository that was most of stderr.
+    let diagnostics = Vec::new();
 
     let outside_palette = colors
         .iter()
@@ -178,6 +175,7 @@ pub(crate) fn describe(report: &FileReport, found: &Found) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::extract::FALLBACK_FORMAT;
     use crate::testing::TempTree;
 
     fn plain() -> ScanOptions {
@@ -243,13 +241,27 @@ mod tests {
         assert_eq!(values(&report), ["#1a2b3c"], "the line comment is skipped");
     }
 
-    /// An unknown format finds nothing and says why, rather than
-    /// scanning raw text and reporting every `#anchor`.
+    /// Changed deliberately in 0.2.0: an unknown format is read as raw
+    /// text rather than refused, and the `format` field is what tells
+    /// the reader which it was. The warning that used to say "nothing
+    /// was read" is gone because it is no longer true.
     #[test]
-    fn an_unknown_format_reads_nothing_and_says_so() {
+    fn an_unknown_format_is_read_as_raw_text() {
         let report = scan_content("see #abc below", "a.md".into(), "unknown", &plain());
-        assert_eq!(report.summary.colors, 0);
-        assert_eq!(report.diagnostics[0].code, "unknown-format");
+        assert_eq!(report.format, FALLBACK_FORMAT);
+        assert_eq!(report.summary.colors, 1);
+        assert!(report.diagnostics.is_empty(), "{:?}", report.diagnostics);
+    }
+
+    /// The rule that makes reading everything safe. `#250` is an issue
+    /// reference in prose and a colour in a stylesheet, and both answers
+    /// are correct.
+    #[test]
+    fn a_short_all_digit_hex_is_a_colour_only_where_one_belongs() {
+        let prose = scan_content("fixed in #250", "notes.md".into(), "markdown", &plain());
+        assert_eq!(prose.summary.colors, 0);
+        let sheet = scan_content(".a{color:#250}", "a.css".into(), "css", &plain());
+        assert_eq!(sheet.summary.colors, 1);
     }
 
     #[test]

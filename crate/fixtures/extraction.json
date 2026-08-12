@@ -162,6 +162,80 @@
 			]
 		},
 		{
+			"name": "notes.md as markdown — #250 is an issue reference, #FFF is a colour",
+			"file": "notes.md",
+			"fileType": "markdown",
+			"expected": [
+				{
+					"value": "#FFF",
+					"format": "hex",
+					"line": 5,
+					"column": 14
+				},
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 5,
+					"column": 34
+				},
+				{
+					"value": "#abc",
+					"format": "hex",
+					"line": 5,
+					"column": 61
+				},
+				{
+					"value": "rebeccapurple",
+					"format": "named",
+					"line": 7,
+					"column": 8
+				}
+			]
+		},
+		{
+			"name": "tokens.json as json — short hex counts where tokens live",
+			"file": "tokens.json",
+			"fileType": "json",
+			"expected": [
+				{
+					"value": "#1a2b3c",
+					"format": "hex",
+					"line": 3,
+					"column": 13
+				},
+				{
+					"value": "white",
+					"format": "named",
+					"line": 4,
+					"column": 13
+				},
+				{
+					"value": "#250",
+					"format": "hex",
+					"line": 5,
+					"column": 12
+				},
+				{
+					"value": "rgba(0, 0, 0, 0.5)",
+					"format": "rgba",
+					"line": 6,
+					"column": 15
+				},
+				{
+					"value": "hsl(210, 50%, 40%)",
+					"format": "hsl",
+					"line": 7,
+					"column": 14
+				},
+				{
+					"value": "#250",
+					"format": "hex",
+					"line": 13,
+					"column": 15
+				}
+			]
+		},
+		{
 			"name": "plain.less as less",
 			"file": "plain.less",
 			"fileType": "less",

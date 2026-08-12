@@ -12,7 +12,7 @@ pub(crate) use heuristics::Notation;
 pub(crate) use palette::Palette;
 pub(crate) use position::Position;
 
-use formats::{StylesheetOptions, settle};
+use formats::{ShortHex, StylesheetOptions, settle};
 use position::PositionIndex;
 
 /// One extracted colour, and where it was found.
@@ -63,9 +63,17 @@ pub(crate) fn extract(content: &str, format: &str) -> Vec<Found> {
         "html" | "xml" => formats::html(content),
         "svg" => formats::svg(content),
         "javascript" | "typescript" => formats::javascript(content),
-        // An unknown format finds nothing rather than guessing. See
-        // `format::FALLBACK_FORMAT`.
-        _ => Vec::new(),
+        // Structured formats carry design tokens, so a bare `#250` in
+        // one is a colour and is read as written.
+        "json" | "yaml" | "toml" => formats::text(content, ShortHex::Counts),
+        // Markdown, plain text, and every format with no extractor of
+        // its own. Reading them beats refusing them — a colour in a
+        // Python constant is still a colour — but a short all-digit hex
+        // here is an issue reference far more often than a colour, so it
+        // has to carry an `a`-`f`. One arm rather than two identical
+        // ones: `markdown` and `plaintext` are named formats so that the
+        // answer says which it read, not so they read differently.
+        _ => formats::text(content, ShortHex::NeedsALetter),
     };
 
     let index = PositionIndex::new(content);
@@ -116,10 +124,75 @@ mod tests {
         }
     }
 
-    /// A format with no extractor finds nothing rather than guessing.
+    /// Changed deliberately in 0.2.0: a format with no extractor of its
+    /// own is read as raw text rather than refused. The rule that makes
+    /// that safe is about short hex, not about which files get opened.
     #[test]
-    fn an_unknown_format_finds_nothing() {
-        assert!(extract("see #abc below", FALLBACK_FORMAT).is_empty());
+    fn an_unknown_format_is_read_as_raw_text() {
+        assert_eq!(values(extract("see #abc below", FALLBACK_FORMAT)), ["#abc"]);
+    }
+
+    /// The prose rule, in the three places it has to be right.
+    #[test]
+    fn a_short_all_digit_hex_counts_only_where_a_colour_belongs() {
+        let document = "closes #250 and #FFF is the paper";
+        assert_eq!(values(extract(document, "markdown")), ["#FFF"]);
+        assert_eq!(values(extract(document, "plaintext")), ["#FFF"]);
+        assert_eq!(values(extract(document, FALLBACK_FORMAT)), ["#FFF"]);
+        // A stylesheet is untouched by it: there, `#250` is a colour.
+        assert_eq!(values(extract(".a{color:#250}", "css")), ["#250"]);
+        // So is a structured format, which is where design tokens live.
+        assert_eq!(values(extract("{ \"gray\": \"#250\" }", "json")), ["#250"]);
+    }
+
+    /// Every new format reads, and a named colour in one still counts
+    /// only where a value is expected.
+    #[test]
+    fn the_structured_formats_read_their_tokens() {
+        for (format, document) in [
+            (
+                "json",
+                "{\n  \"brand\": \"#1a2b3c\",\n  \"paper\": \"white\"\n}",
+            ),
+            ("yaml", "brand: \"#1a2b3c\"\npaper: white\n"),
+            ("toml", "brand = \"#1a2b3c\"\npaper = \"white\"\n"),
+        ] {
+            assert_eq!(
+                values(extract(document, format)),
+                ["#1a2b3c", "white"],
+                "{format}"
+            );
+        }
+    }
+
+    /// The documented cost of scanning rather than parsing: a value
+    /// segment runs to the end of the line, so two tokens on one line
+    /// are one segment and neither is wholly a colour. Hex survives —
+    /// it is matched as a literal, not as a value — and a token file
+    /// written by a formatter has one token per line.
+    #[test]
+    fn two_tokens_on_one_line_cost_the_named_one() {
+        let document = "{ \"brand\": \"#1a2b3c\", \"paper\": \"white\" }";
+        assert_eq!(values(extract(document, "json")), ["#1a2b3c"]);
+    }
+
+    /// Without the whole-value rule every sentence mentioning a fruit is
+    /// a finding, and the fallback reads more prose than anything else
+    /// here. Both of these came off real repositories.
+    #[test]
+    fn a_named_colour_prose_merely_mentions_is_not_a_colour() {
+        for document in [
+            "the orange was ripe",
+            "**Vocabulary:** `outline-focus` (brand-orange focus ring)",
+            "className=\"border-t border-white/10 px-6 text-white\"",
+        ] {
+            assert!(extract(document, "markdown").is_empty(), "{document}");
+        }
+        assert_eq!(
+            values(extract("Brand: orange", "markdown")),
+            ["orange"],
+            "a value that IS the colour still counts"
+        );
     }
 
     #[test]
