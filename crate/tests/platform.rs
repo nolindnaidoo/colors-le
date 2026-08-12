@@ -168,22 +168,38 @@ fn a_case_insensitive_filesystem_does_not_report_one_file_twice() {
         .filter_map(|report| report["file"].as_str().map(str::to_string))
         .collect();
 
-    let mut folded: Vec<String> = files.iter().map(|file| file.to_lowercase()).collect();
-    folded.sort();
-    let distinct = {
-        folded.dedup();
-        folded.len()
-    };
+    // Case-folding the paths before deduping asserts the opposite of the
+    // doc comment: on Linux these are two different files, and folding
+    // makes them collide, so a correct walk fails. What "reported twice"
+    // means is the same path appearing twice, so dedupe the paths as the
+    // walk actually emitted them, and take the count from the disk rather
+    // than assuming which filesystem this is.
+    let on_disk = std::fs::read_dir(tree.path())
+        .expect("the tree is readable")
+        .count();
+    assert!(
+        (1..=2).contains(&on_disk),
+        "the filesystem folded case in some third way: {on_disk} entries"
+    );
     assert_eq!(
-        distinct,
+        files.len(),
+        on_disk,
+        "the walk reported {} lines for {on_disk} file(s): {files:?}",
+        files.len()
+    );
+
+    let mut unique = files.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(
+        unique.len(),
         files.len(),
         "the walk reported the same file twice: {files:?}"
     );
 
-    match files.len() {
+    match on_disk {
         1 => println!("platform note: this filesystem folds case, so README.md is one file"),
-        2 => println!("platform note: this filesystem is case-sensitive, so README.md is two"),
-        other => panic!("{other} report lines for two names: {files:?}"),
+        _ => println!("platform note: this filesystem is case-sensitive, so README.md is two"),
     }
 }
 
