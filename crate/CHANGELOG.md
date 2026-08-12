@@ -7,6 +7,23 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`typescriptreact` is a format again.** The extension accepted it;
+  this refused it, and the refusal looked like an answer —
+  `{"colors": [], "fileType": "unknown"}`, no error — for the caller
+  most likely to send a VS Code language id. Every `.tsx` document an
+  agent handed to the CLI came back empty.
+
+### Added
+
+- **`fixtures/aliases.json`**, the alias table both frontends are now
+  held to: a unit test here, `scripts/check-extraction-parity.ts` on the
+  extension. The table was ported by hand twice, which is how it drifted
+  in the first place, and nothing in either build would have noticed.
+
 ## [0.1.0] - 2026-08-11
 
 First release. The extension's extraction engine, ported and pinned

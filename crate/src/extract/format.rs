@@ -8,10 +8,6 @@
 //! user-facing copy a reviewer came for.
 
 /// Every name a caller might send, mapped to the extractor key it means.
-/// Ported from the extension's `ALIASES` rather than re-derived: two
-/// frontends disagreeing about whether `conf` is INI is two frontends
-/// reading the same file differently.
-/// Every name a caller might send, mapped to the extractor key it means.
 ///
 /// Ported verbatim from the extension's own table. **`typescript` and
 /// `xml` are their own keys**, even though they read exactly like
@@ -19,7 +15,13 @@
 /// every MCP answer, so collapsing them would have the two servers
 /// disagree about what they just read. The corpus caught that on its
 /// first run.
-const ALIASES: [(&str, &str); 24] = [
+///
+/// The table is also held in `fixtures/aliases.json`, which both
+/// frontends check themselves against. Ported-by-hand twice is how
+/// `typescriptreact` came to be accepted by the extension and refused
+/// here: no error, no colours, for the caller most likely to send a VS
+/// Code language id.
+const ALIASES: [(&str, &str); 25] = [
     ("css", "css"),
     ("scss", "scss"),
     ("sass", "scss"),
@@ -42,6 +44,7 @@ const ALIASES: [(&str, &str); 24] = [
     ("tsx", "typescript"),
     ("mts", "typescript"),
     ("cts", "typescript"),
+    ("typescriptreact", "typescript"),
     ("svg", "svg"),
     ("xml", "xml"),
 ];
@@ -128,7 +131,47 @@ pub(crate) fn resolve_format(format: Option<&str>, filename: Option<&str>) -> &'
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
+    use serde::Deserialize;
+
     use super::*;
+
+    /// The alias table, as both frontends must hold it.
+    ///
+    /// Embedded rather than read, because `extract/` touches no
+    /// filesystem and because the published tarball has to be able to
+    /// run this check on its own.
+    const SHARED: &str = include_str!("../../fixtures/aliases.json");
+
+    #[derive(Debug, Deserialize)]
+    struct Shared {
+        aliases: BTreeMap<String, String>,
+        formats: Vec<String>,
+    }
+
+    /// Two hand-ported copies of one table drift, and the drift is
+    /// silent: the extension accepted `typescriptreact` while this
+    /// returned `{"colors": [], "fileType": "unknown"}` — no error, no
+    /// colours, for the caller most likely to send a VS Code language
+    /// id. `scripts/check-extraction-parity.ts` holds the extension to
+    /// the same file.
+    #[test]
+    fn the_alias_table_matches_the_one_the_extension_is_held_to() {
+        let shared: Shared = serde_json::from_str(SHARED).expect("the shared table is valid JSON");
+        let ours: BTreeMap<String, String> = ALIASES
+            .iter()
+            .map(|(alias, key)| ((*alias).to_string(), (*key).to_string()))
+            .collect();
+
+        assert_eq!(ours, shared.aliases);
+        assert_eq!(SUPPORTED_FORMATS.to_vec(), shared.formats);
+        assert_eq!(
+            ours.len(),
+            ALIASES.len(),
+            "an alias is listed twice, so one of them is dead"
+        );
+    }
 
     #[test]
     fn every_offered_format_resolves_to_itself() {
@@ -146,6 +189,9 @@ mod tests {
             ("js", "javascript"),
             ("ts", "typescript"),
             ("tsx", "typescript"),
+            // The one that was missing here and present there.
+            ("typescriptreact", "typescript"),
+            ("javascriptreact", "javascript"),
             ("vue", "html"),
         ] {
             assert_eq!(resolve_format(Some(alias), None), expected, "{alias}");

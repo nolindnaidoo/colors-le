@@ -8,8 +8,16 @@
  * than in the engine, whose behaviour is pinned by characterization goldens.
  */
 
-/** Every language id the engine understands, keyed by what a caller might send. */
-const ALIASES: Readonly<Record<string, string>> = Object.freeze({
+/**
+ * Every language id the engine understands, keyed by what a caller might send.
+ *
+ * The same table lives in the Rust CLI, and the two are held equal by
+ * `crate/fixtures/aliases.json` — checked there by a unit test and here by
+ * `scripts/check-extraction-parity.ts`. Two hand-ported copies drift silently:
+ * this side accepted `typescriptreact` while the CLI answered
+ * `{"colors": [], "fileType": "unknown"}` for it.
+ */
+export const ALIASES: Readonly<Record<string, string>> = Object.freeze({
 	css: 'css',
 	scss: 'scss',
 	sass: 'scss',

@@ -13,6 +13,11 @@ separate product on its own cadence and keeps its own
 
 ### Added
 
+- The MCP server's alias table is now checked against
+  `crate/fixtures/aliases.json`, which the Rust CLI checks itself
+  against too. The two tables were ported by hand and had already
+  drifted: `typescriptreact` was accepted here and refused there.
+
 - A **Rust CLI and MCP server**, in [`crate/`](crate/README.md), to be
   published to crates.io as `colors-le`. It runs the same extraction over
   a whole tree and, given a palette, fails a build on a colour that is not

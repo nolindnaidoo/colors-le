@@ -65,6 +65,7 @@ jobs:
             fi
           done
           required=$(printf '%s\n' \
+            fixtures/aliases.json \
             fixtures/extraction.json \
             fixtures/mcp-extract-colors.json)
           # Every document the corpus names must ship too — the list is

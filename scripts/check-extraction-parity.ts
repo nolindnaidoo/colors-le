@@ -10,6 +10,9 @@
  *   not a colour.
  * - mcp-extract-colors.json: the `extract_colors` tool, which BOTH MCP
  *   servers offer and must answer identically.
+ * - aliases.json: the language ids both frontends accept, and the
+ *   formats both advertise. Hand-ported twice, they drifted silently
+ *   once already.
  *
  * This checks only the extension's side. `cargo test` runs the crate's
  * implementation over the same files.
@@ -23,6 +26,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { extractColors } from '../src/extraction/extract';
+import { ALIASES, SUPPORTED_FORMATS } from '../src/mcp/fileType';
 import { TOOLS } from '../src/mcp/tools';
 
 const ROOT = join(import.meta.dir, '..');
@@ -180,8 +184,42 @@ function checkTheCorpusStillCoversTheAwkwardCases(): void {
 	}
 }
 
+/**
+ * The two alias tables are one table, kept in two languages. Nothing
+ * makes them agree except this check and the crate's own unit test
+ * against the same file: `typescriptreact` was accepted here and refused
+ * there for a whole release, and the answer it gave — no colours, no
+ * error — is indistinguishable from a document with no colours in it.
+ */
+function checkTheAliasTablesAgree(): void {
+	const shared = readCorpus('aliases.json') as {
+		aliases: Readonly<Record<string, string>>;
+		formats: readonly string[];
+	};
+
+	for (const [alias, format] of Object.entries(shared.aliases)) {
+		const ours = ALIASES[alias];
+		if (ours !== format) {
+			fail(
+				`alias "${alias}": the shared table says ${format}, this side says ${ours ?? 'nothing'}`,
+			);
+		}
+	}
+	for (const alias of Object.keys(ALIASES)) {
+		if (!(alias in shared.aliases)) {
+			fail(`alias "${alias}" is accepted here but is not in the shared table`);
+		}
+	}
+	if (!deepEqual([...SUPPORTED_FORMATS], [...shared.formats])) {
+		fail(
+			`the advertised formats differ:\n  shared: ${JSON.stringify(shared.formats)}\n  here:   ${JSON.stringify(SUPPORTED_FORMATS)}`,
+		);
+	}
+}
+
 await checkDocuments();
 checkTheCorpusStillCoversTheAwkwardCases();
+checkTheAliasTablesAgree();
 await checkMcpExtractColors();
 
 if (failures.length > 0) {

@@ -1,0 +1,40 @@
+{
+	"aliases": {
+		"css": "css",
+		"scss": "scss",
+		"sass": "scss",
+		"less": "less",
+		"stylus": "stylus",
+		"styl": "stylus",
+		"html": "html",
+		"htm": "html",
+		"xhtml": "html",
+		"vue": "html",
+		"svelte": "html",
+		"javascript": "javascript",
+		"js": "javascript",
+		"jsx": "javascript",
+		"mjs": "javascript",
+		"cjs": "javascript",
+		"javascriptreact": "javascript",
+		"typescript": "typescript",
+		"ts": "typescript",
+		"tsx": "typescript",
+		"mts": "typescript",
+		"cts": "typescript",
+		"typescriptreact": "typescript",
+		"svg": "svg",
+		"xml": "xml"
+	},
+	"formats": [
+		"css",
+		"scss",
+		"less",
+		"stylus",
+		"html",
+		"javascript",
+		"typescript",
+		"svg",
+		"xml"
+	]
+}
