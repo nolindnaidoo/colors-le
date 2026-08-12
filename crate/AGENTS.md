@@ -21,7 +21,7 @@ what is not in it — and discovery, where there is no palette yet and one
 has to be written from what is in use. Every decision below follows from
 those.
 
-**Status: built, unpublished.** All seven extractors, both surfaces and
+**Status: released.** All seven extractors, both surfaces and
 the test layers below are green. Releases go out through
 `release-crate.yml`, which is dispatch-only and refuses a version that
 crates.io already carries, has no changelog entry, would ship a tarball
