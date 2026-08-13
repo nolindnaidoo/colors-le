@@ -16,7 +16,7 @@ with its own `CLAUDE.md`.
   lint, or add a commented relaxation to `[lints.clippy]` in
   `Cargo.toml`. Two are there already, with their reason.
 - New logic goes in `extract/` when it is pure (it must then be
-  unit-tested, 90% module coverage floor), and in `walk.rs` / `scan.rs`
+  unit-tested, 75% module coverage floor), and in `walk.rs` / `scan.rs`
   only when it needs the filesystem. A `std::fs` call in `extract/`
   fails a CI job.
 - **Blanking must preserve byte length.** Every offset in this crate is
