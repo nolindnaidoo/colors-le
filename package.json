@@ -2,7 +2,7 @@
 	"name": "colors-le",
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE",
-	"description": "Zero Hassle Color Extraction from CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, and SVG",
+	"description": "Extract every color in a codebase, and say which ones are not in your palette",
 	"version": "2.3.0",
 	"license": "MIT",
 	"author": {
