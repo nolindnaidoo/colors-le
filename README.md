@@ -17,6 +17,9 @@
   <a href="https://www.npmjs.com/package/colors-le-mcp">
     <img src="https://img.shields.io/npm/v/colors-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="colors-le-mcp on npm" />
   </a>
+  <a href="https://crates.io/crates/colors-le">
+    <img src="https://img.shields.io/crates/v/colors-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="colors-le on crates.io" />
+  </a>
   <a href="https://letools.dev/tools/colors-le">
     <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
   </a>
@@ -40,6 +43,16 @@ Open a file, press `Ctrl+Alt+C` (`Cmd+Alt+C` on Mac), and every color in the doc
 - **Palette auditing** — every hex, rgb()/rgba(), hsl()/hsla(), and named color in stylesheets, markup, and code
 - **Design-system review** — analyze distribution, cluster similar colors, spot near-duplicates
 - **Accessibility checks** — contrast ratios against WCAG AA/AAA via the Validate command
+
+## Install
+
+| Where | What you get | Install |
+|---|---|---|
+| **VS Code** | Extraction, conversion, analysis and validation in your editor | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) |
+| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/OffensiveEdge/colors-le) |
+| **A terminal or a CI step** | The same extraction over a whole tree, with exit codes | `cargo install colors-le` · [crates.io](https://crates.io/crates/colors-le) |
+| **Any MCP agent, via Node** | `extract_colors` over stdio | `npx colors-le-mcp` · [npm](https://www.npmjs.com/package/colors-le-mcp) |
+| **Zed** | The MCP server as a context server | [zed-industries/extensions#7078](https://github.com/zed-industries/extensions/pull/7078) *(pending review)* |
 
 ## Use it from an AI agent
 
@@ -76,7 +89,7 @@ Most hosts read a JSON config. Add one entry:
 }
 ```
 
-`-y` skips the install prompt on first run. Pin a version if you would rather not track releases — `colors-le-mcp@2.2.1`.
+`-y` skips the install prompt on first run. Pin a version if you would rather not track releases — `colors-le-mcp@2.3.0`.
 
 Prefer not to go through `npx` on every launch? Install it once and point at the binary instead:
 
@@ -115,7 +128,7 @@ That prints the tool list and exits — if you see `extract_colors`, the server 
 | Markdown / plain text | `markdown`, `plaintext` | Same, and a 3- or 4-digit hex must contain an `a`-`f` — `#250` in prose is an issue reference |
 | **Everything else** | any language id | Read as raw text under the same rules, and reported as `unknown` |
 
-**No document is refused.** A Python or Go file was silently unsupported before; it is now read as raw text, and `metadata.fileType` says whether the answer came from a parser or a scan.
+**No document is refused.** A language with no reader of its own is read as raw text, and `metadata.fileType` says which of the two answered.
 
 Recognized syntax: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, comma-form `rgb()/rgba()/hsl()/hsla()` (calls may span multiple lines), and the CSS named colors including `rebeccapurple` and `transparent`. Positions are real 1-based line/column of each literal. Comments never produce colors, and comment markers inside strings don't start comments.
 
@@ -123,10 +136,9 @@ Known limitations (documented, not bugs): modern space-separated syntax (`rgb(25
 
 ## The CLI
 
-The same extraction runs from a terminal or a CI step: a Rust CLI in
-[`crate/`](crate/README.md), sharing one corpus with the extension —
-[`crate/fixtures/`](crate/fixtures/) — so the two can never read a
-document differently.
+The same extraction from a terminal or a CI step — a Rust CLI in
+[`crate/`](crate/README.md), installed with `cargo install colors-le`.
+Convert, analyze and validate are interactive and stay in the editor.
 
 ```bash
 colors-le .                              # every colour in the tree
@@ -135,29 +147,14 @@ colors-le --values --dedupe . | sort -u  # write the palette in the first place
 colors-le mcp                            # the same extraction over MCP on stdio
 ```
 
+Exit codes: 0 clean, 1 none found or a colour outside the palette, 2 the
+question was malformed.
+
 **Matched by colour, not by spelling.** A palette written in hex still
 catches a violation written in `rgb()`, because `#FFF`, `#ffffff` and
 `rgb(255, 255, 255)` are one entry. Alpha is part of the identity, and a
 named colour is only equal to itself — `white` and `#ffffff` are the same
 pixel and not the same decision.
-
-**Only extraction is ported.** Convert, analyze and validate are
-interactive and stay in the editor, which is also what this extension's
-own MCP tool says by offering extraction alone.
-
-Exit codes: 0 clean, 1 none found or a colour outside the palette, 2 the
-question was malformed.
-
-Install it with `cargo install colors-le` once it is published; until
-then it builds from `crate/`. The spec
-([`crate/SPEC.md`](crate/SPEC.md)) and the engineering standard
-([`crate/AGENTS.md`](crate/AGENTS.md)) live alongside it, and it keeps
-its own [CHANGELOG](crate/CHANGELOG.md).
-
-**Two MCP servers, one tool.** `colors-le mcp` offers `extract_colors`
-exactly as [`colors-le-mcp`](https://www.npmjs.com/package/colors-le-mcp)
-does — [`crate/fixtures/mcp-extract-colors.json`](crate/fixtures/mcp-extract-colors.json)
-runs against both and CI fails if they diverge.
 
 ## Commands
 
@@ -207,19 +204,15 @@ setting of its own.
 - **The MCP server holds the same line.** It takes content as an argument and returns data: no filesystem access, no network calls, no telemetry. Your agent already has file-read tools, so duplicating them inside the server would add a path-traversal surface for no capability. `check:mcp-bundle` fails the build if the server ever imports something that could reach either.
 - Error notifications redact home directories and credential-shaped fragments.
 
-## Development
+## Documentation
 
-```bash
-bun install
-bun run build            # esbuild bundle -> dist/extension.js
-bun run typecheck        # tsc --noEmit (includes tests)
-bun run test             # vitest unit suite
-bun run test:integration # real VS Code extension host
-bun run lint             # biome
-bun run package          # VSIX into release/
-```
-
-Architecture and conventions live in [AGENTS.md](AGENTS.md). Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+| What | Where |
+|---|---|
+| What the tool is allowed to say — extraction scope, output contract, refusals, non-goals | [`crate/SPEC.md`](crate/SPEC.md) |
+| How the extension is built and held together — architecture, invariants, toolchain, release | [AGENTS.md](AGENTS.md) |
+| How the CLI is built and held together | [`crate/AGENTS.md`](crate/AGENTS.md) |
+| What changed | [CHANGELOG.md](CHANGELOG.md) · [`crate/CHANGELOG.md`](crate/CHANGELOG.md) |
+| The tool's page, and the other fifteen | [letools.dev/tools/colors-le](https://letools.dev/tools/colors-le) |
 
 ## Performance
 
@@ -292,6 +285,7 @@ Each stands on its own: no shared crate, no published core. Where two of them
 agree, it is because the same answer was right twice.
 
 **Contact** — [nolindnaidoo.com](https://nolindnaidoo.com) · [GitHub](https://github.com/nolindnaidoo) · [LinkedIn](https://www.linkedin.com/in/nolindnaidoo/)
+
 ## Also by nolindnaidoo
 
 **Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers
