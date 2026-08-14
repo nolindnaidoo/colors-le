@@ -38,6 +38,12 @@ separate product on its own cadence and keeps its own
   `fileType: "unknown"`, matching the Rust server, which never refused
   one.
 
+- **New icon artwork.** All sixteen tools were redrawn in one style, so
+  the family reads as one set wherever the listings sit side by side —
+  the Marketplace, Open VSX and letools.dev. The framing is unchanged:
+  the drawing fills 65.8% of an 800×800 canvas, and every smaller size
+  is derived from that one file rather than drawn again.
+
 ### Fixed
 
 - **`bgcolor` is read in SVG and XML documents.** It was recognised in
