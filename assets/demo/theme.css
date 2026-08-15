@@ -1,0 +1,18 @@
+:root {
+  --brand-primary: #2563eb;
+  --brand-accent: #f59e0b;
+  --text-strong: #0f172a;
+  --text-muted: #64748b;
+  --success: #16a34a;
+  --surface: rgb(248, 250, 252);
+  --surface-raised: hsl(210, 40%, 98%);
+  --border: rgba(15, 23, 42, 0.08);
+  --warning: #F59E0B;
+  --danger: #dc2626;
+}
+
+.button {
+  background: var(--brand-primary);
+  color: white;
+  border: 1px solid #1d4ed8;
+}

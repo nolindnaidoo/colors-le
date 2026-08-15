@@ -28,6 +28,10 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nolindnaidoo/colors-le/main/assets/demo.gif" alt="colors-le demo — the real binary, recorded by assets/demo.tape" width="100%"/>
+</p>
+
 > **Useful?** A star is how other developers find it —
 > [★ GitHub](https://github.com/nolindnaidoo/colors-le) ·
 > [letools.dev/tools/colors-le](https://letools.dev/tools/colors-le)
