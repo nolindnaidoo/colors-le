@@ -116,15 +116,25 @@ below instead.
 `--format` still refuses a name it does not know. Strict parsing applies
 to flags; the fallback applies to documents.
 
-**A format name is not an extractor.** `xml` is its own name, because
-the name is user-visible as `fileType`, and it runs the **markup-SVG**
-extractor — `fill`, `stroke`, `stop-color`, `flood-color`,
-`lighting-color`, `color`, `bgcolor` — because an XML document is not
-required to be SVG and that list is the superset. The mapping from name
-to extractor lives in `fixtures/aliases.json` and both frontends are
-checked against it: this is exactly where the two disagreed, with `xml`
-running markup-HTML here and markup-SVG on the extension, so
-`<rect fill="#1a2b3c"/>` was found there and missed here.
+**A format name is not an extractor.** `xml`, `svg` and `html` are their
+own names, because a name is user-visible as `fileType`, and all three
+run one markup extractor over one attribute list — `fill`, `stroke`,
+`stop-color`, `flood-color`, `lighting-color`, `color`, `bgcolor`. HTML
+used to carry only the last two, which lost every `fill` and `stroke` in
+an inline `<svg>` icon; that pair is a subset of this list, so widening
+it takes nothing away. The mapping from name to extractor lives in
+`fixtures/aliases.json` and both frontends are checked against it: this
+is exactly where the two disagreed, with `xml` running markup-HTML here
+and markup-SVG on the extension, so `<rect fill="#1a2b3c"/>` was found
+there and missed here.
+
+**The markup extractor reads element text as well as attributes.** An
+Android `res/values/colors.xml` is `<color name="brand">#1a2b3c</color>`
+— the colour is the element's content — so reading attributes alone made
+a document whose entire purpose is colours report none, and gave a clean
+bill under `--palette` to the file holding the palette. The guard is the
+attribute rule unchanged: the trimmed text must be the colour *entirely*,
+so `<p>the brand is #1a2b3c</p>` is not a finding.
 
 ### What counts as a colour
 

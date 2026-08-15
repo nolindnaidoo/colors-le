@@ -7,6 +7,35 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-15
+
+Two silent misses, both on the file types the tool exists for. Fixed on
+**both frontends** in this commit, because both had them.
+
+### Fixed
+
+- **Markup reads element text, not only attributes.** An Android
+  `res/values/colors.xml` is `<color name="brand">#1a2b3c</color>` — the
+  colour is the element's content — so a document whose entire purpose is
+  colours reported none, with an empty `diagnostics`, and an enforcement
+  run under `--palette` gave a clean bill to the file holding the
+  palette. The guard is the attribute rule unchanged: the trimmed text
+  must be the colour entirely, so `<p>the brand is #1a2b3c</p>` is still
+  not a finding.
+
+- **HTML carries the SVG attributes.** It had only `bgcolor` and
+  `color`, so every `fill` and `stroke` in an inline `<svg>` icon —
+  ordinary in a modern page — was dropped without a diagnostic. The old
+  pair was a subset of the shared list, so nothing HTML used to find is
+  lost. The two attribute lists are now one, in `markup`, where both
+  callers already lived.
+
+### Changed
+
+- `fixtures/documents/page.html` pinned the old answer, and its line 3
+  is an inline `<svg>`. Its expectation now carries all four colours.
+  The corpus was recording the bug.
+
 ## [0.2.2] - 2026-08-15
 
 ### Added
@@ -210,6 +239,7 @@ a raw scan of a README would report every `#anchor` as a three-digit hex.
   vanish from the report entirely, which reads to whoever ran it as
   "that file was clean".
 
+[0.3.0]: https://crates.io/crates/colors-le/0.3.0
 [0.2.2]: https://crates.io/crates/colors-le/0.2.2
 [0.2.1]: https://crates.io/crates/colors-le/0.2.1
 [0.2.0]: https://crates.io/crates/colors-le/0.2.0

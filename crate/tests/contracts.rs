@@ -422,3 +422,63 @@ fn the_cli_and_the_mcp_server_report_the_same_thing() {
         .clone();
     assert_eq!(from_mcp, from_cli, "the two surfaces disagree");
 }
+
+/// **A named format may never find less than the generic text scan.**
+///
+/// Two shipped. An Android `res/values/colors.xml` is
+/// `<color name="brand">#1a2b3c</color>` — the colour is the element's
+/// content, and the markup reader only ever looked at attributes, so a
+/// document whose entire purpose is colours reported none and an
+/// enforcement run gave a clean bill to the file holding the palette.
+/// And HTML carried only `bgcolor`/`color`, so every `fill` and `stroke`
+/// in an inline `<svg>` icon — ordinary in a modern page — was dropped.
+/// Both were silent: no diagnostic either time.
+#[test]
+fn a_named_format_never_finds_less_than_the_text_scan() {
+    let tree = Tree::new("named-vs-scan");
+    for (name, body) in [
+        (
+            "colors.xml",
+            "<resources>\n  <color name=\"brand\">#1a2b3c</color>\n</resources>\n",
+        ),
+        (
+            "page.html",
+            "<body bgcolor=\"#222222\">\n  <svg><path fill=\"#333333\"/></svg>\n</body>\n",
+        ),
+    ] {
+        let named = tree.write(name, body);
+        let bare = tree.write(&format!("{name}.unknown-to-this-tool"), body);
+        let values = |path: &std::path::Path| -> Vec<String> {
+            let run = run(&[&path.to_string_lossy()]);
+            reports(&run)[0]["colors"]
+                .as_array()
+                .expect("colors")
+                .iter()
+                .map(|c| c["value"].as_str().expect("a value").to_string())
+                .collect()
+        };
+        assert_eq!(values(&named), values(&bare), "{name}");
+        assert!(!values(&named).is_empty(), "{name} found nothing at all");
+    }
+}
+
+/// The guard that makes reading element text safe: the whole of the
+/// text must be the colour. Prose that merely mentions one is not a
+/// finding, which is the same rule an attribute value already had.
+#[test]
+fn prose_naming_a_colour_is_not_a_colour() {
+    let tree = Tree::new("prose");
+    let file = tree.write(
+        "prose.html",
+        "<p>The orange sunset was a lovely red.</p>\n<div>#1a2b3c is the brand</div>\n",
+    );
+    let run = run(&[&file.to_string_lossy()]);
+    assert!(
+        reports(&run)[0]["colors"]
+            .as_array()
+            .expect("colors")
+            .is_empty(),
+        "{}",
+        run.stdout
+    );
+}

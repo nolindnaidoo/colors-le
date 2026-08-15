@@ -12,18 +12,19 @@ use super::heuristics::{
 };
 use super::js;
 
-/// HTML's presentational colour attributes.
-const HTML_COLOR_ATTRIBUTES: [&str; 2] = ["bgcolor", "color"];
-
-/// SVG's, and every other XML dialect's. Ported as a list rather than
-/// guessed: `stop-color` and `flood-color` are easy to forget and carry
-/// real brand colours.
+/// Every markup dialect's colour attributes — SVG's, XML's and HTML's.
 ///
-/// **`bgcolor` is here because `xml` runs this extractor**, and an XML
-/// document is not required to be SVG. Routing `xml` here without it
-/// would have lost the one colour the markup extractor used to find in
-/// a `<chart bgcolor="#f0a">`. Both attributes are unambiguous colour
-/// carriers, so carrying both costs nothing.
+/// Ported as a list rather than guessed: `stop-color` and `flood-color`
+/// are easy to forget and carry real brand colours.
+///
+/// **One list for all three, because a page carries an inline `<svg>`.**
+/// HTML used to have its own pair, `bgcolor` and `color`, and reading a
+/// page with only those lost every `fill` and `stroke` in an inline icon
+/// — silently, with an empty `diagnostics`. That pair was a subset of
+/// this list, so there is nothing HTML used to find that it no longer
+/// does. `bgcolor` earns its place twice over: an XML document is not
+/// required to be SVG, and `<chart bgcolor="#f0a">` is the shape that
+/// put it here.
 const SVG_COLOR_ATTRIBUTES: [&str; 7] = [
     "fill",
     "stroke",
@@ -188,12 +189,59 @@ pub(crate) fn markup(content: &str, attributes: &[&str]) -> Vec<ColorMatch> {
             matches.push(found);
         }
     }
+    for (value, start) in text_nodes(&blanked) {
+        if let Some(found) = attribute_color(&value, start) {
+            matches.push(found);
+        }
+    }
 
+    matches.sort_by_key(|found| found.start);
     matches
 }
 
+/// The text between two tags, when the whole of it is a colour.
+///
+/// **An Android `res/values/colors.xml` is `<color
+/// name="brand">#1a2b3c</color>`** — the colour is the element's
+/// content, not an attribute — so a document whose entire purpose is
+/// colours reported none, with an empty `diagnostics`, and an
+/// enforcement run gave a clean bill to the file holding the palette.
+///
+/// The guard is `attribute_color`'s, unchanged: the trimmed text must be
+/// the colour *entirely*. Prose that merely mentions one is not a
+/// finding, which is what keeps `<p>the brand is #1a2b3c</p>` out.
+fn text_nodes(content: &str) -> Vec<(String, usize)> {
+    let bytes = content.as_bytes();
+    let mut out = Vec::new();
+    let mut at = 0;
+    while let Some(close) = content[at..].find('>') {
+        let start = at + close + 1;
+        let Some(open) = content[start..].find('<') else {
+            break;
+        };
+        let end = start + open;
+        let raw = &content[start..end];
+        let trimmed = raw.trim();
+        if !trimmed.is_empty() {
+            let offset = start + raw.find(trimmed).unwrap_or(0);
+            out.push((trimmed.to_string(), offset));
+        }
+        at = end;
+        if at >= bytes.len() {
+            break;
+        }
+    }
+    out
+}
+
+/// **HTML carries the SVG attributes too, because HTML carries SVG.**
+/// An inline `<svg>` icon is ordinary in a modern page, and reading HTML
+/// with only `bgcolor` and `color` lost every `fill` and `stroke` in one
+/// — silently, with an empty `diagnostics`. The capability already
+/// existed and was simply not wired here. `HTML_COLOR_ATTRIBUTES` is a
+/// subset of the list below, so this is a widening and not a swap.
 pub(crate) fn html(content: &str) -> Vec<ColorMatch> {
-    markup(content, &HTML_COLOR_ATTRIBUTES)
+    markup(content, &SVG_COLOR_ATTRIBUTES)
 }
 
 pub(crate) fn svg(content: &str) -> Vec<ColorMatch> {

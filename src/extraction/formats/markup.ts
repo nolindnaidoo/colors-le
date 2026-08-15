@@ -34,6 +34,26 @@ function attributeColor(value: string, valueStart: number): ColorMatch | null {
  * Bare hex-looking tokens elsewhere (href="#section" fragments, ids)
  * are intentionally not extracted.
  */
+/**
+ * Every markup dialect's color attributes — SVG's, XML's and HTML's.
+ *
+ * Listed rather than guessed: `stop-color` and `flood-color` are easy to
+ * forget and carry real brand colors. One list for all three, because a
+ * page carries an inline `<svg>`; HTML's old pair, `bgcolor` and
+ * `color`, was a subset of this, so nothing it used to find is lost.
+ * `bgcolor` earns its place twice over — an XML document is not required
+ * to be SVG, and `<chart bgcolor="#f0a">` is the shape that put it here.
+ */
+export const MARKUP_COLOR_ATTRIBUTES = [
+	'fill',
+	'stroke',
+	'stop-color',
+	'flood-color',
+	'lighting-color',
+	'color',
+	'bgcolor',
+] as const;
+
 export function extractFromMarkup(
 	content: string,
 	colorAttributes: readonly string[],
@@ -81,6 +101,26 @@ export function extractFromMarkup(
 		}
 	}
 
+	// Text between two tags, when the whole of it is a color. An Android
+	// `res/values/colors.xml` is `<color name="brand">#1a2b3c</color>` —
+	// the color is the element's content, not an attribute — so a
+	// document whose entire purpose is colors reported none. The guard is
+	// `attributeColor`'s, unchanged: the trimmed text must be the color
+	// entirely, so prose that merely mentions one is not a finding.
+	const textRe = />([^<]+)</g;
+	m = textRe.exec(blanked);
+	while (m !== null) {
+		const raw = m[1] ?? '';
+		const trimmed = raw.trim();
+		if (trimmed.length > 0) {
+			const start = m.index + 1 + raw.indexOf(trimmed);
+			const found = attributeColor(trimmed, start);
+			if (found) matches.push(found);
+		}
+		m = textRe.exec(blanked);
+	}
+
+	matches.sort((a, b) => a.start - b.start);
 	return toColors(content, matches);
 }
 

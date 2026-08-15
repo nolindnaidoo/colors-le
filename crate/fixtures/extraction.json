@@ -102,6 +102,18 @@
 					"format": "named",
 					"line": 1,
 					"column": 41
+				},
+				{
+					"value": "#F0A",
+					"format": "hex",
+					"line": 3,
+					"column": 18
+				},
+				{
+					"value": "rgb(1, 2, 3)",
+					"format": "rgb",
+					"line": 3,
+					"column": 32
 				}
 			]
 		},
@@ -162,7 +174,7 @@
 			]
 		},
 		{
-			"name": "chart.xml as xml — the SVG attributes, and bgcolor with them",
+			"name": "chart.xml as xml \u2014 the SVG attributes, and bgcolor with them",
 			"file": "chart.xml",
 			"fileType": "xml",
 			"expected": [
@@ -193,7 +205,7 @@
 			]
 		},
 		{
-			"name": "notes.md as markdown — #250 is an issue reference, #FFF is a colour",
+			"name": "notes.md as markdown \u2014 #250 is an issue reference, #FFF is a colour",
 			"file": "notes.md",
 			"fileType": "markdown",
 			"expected": [
@@ -224,7 +236,7 @@
 			]
 		},
 		{
-			"name": "tokens.json as json — short hex counts where tokens live",
+			"name": "tokens.json as json \u2014 short hex counts where tokens live",
 			"file": "tokens.json",
 			"fileType": "json",
 			"expected": [
