@@ -9,6 +9,26 @@ This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
 separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md).
 
+## [Unreleased]
+
+### Fixed
+
+- **Element text and inline SVG colours are read.** A colour written as
+  the text of an element, and one written inside an inline `<svg>`, were
+  both skipped — so a document could report no colours while plainly
+  holding several. Fixed on both frontends, and the shared corpus covers
+  it.
+
+### Changed
+
+- **New icon artwork.** A new drawing in the style the family is moving
+  to, framed like the rest of the set.
+
+### Fixed
+
+- **The agent-files check no longer times out on Windows.** A test-only
+  fix; nothing a user of the extension can observe.
+
 ## [2.3.0] - 2026-08-14
 
 ### Changed
