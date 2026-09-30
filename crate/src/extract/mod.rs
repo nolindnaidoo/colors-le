@@ -1,4 +1,5 @@
 pub(crate) mod corpus;
+pub(crate) mod css_color;
 pub(crate) mod format;
 pub(crate) mod formats;
 pub(crate) mod heuristics;

@@ -221,8 +221,10 @@ resolved on one server and fell through to the raw scan on the other.
 
 Ported limitations, not gaps to fix here:
 
-- **Modern space-separated syntax** — `rgb(255 0 0 / 50%)` — and
-  `lab()`, `lch()`, `oklch()`, `color()`.
+- **Relative colours, `calc()` and `var()`** inside a colour call —
+  `rgb(from red r g b)`, `rgb(var(--r) 0 0)`. CSS Color 4 modern syntax
+  itself is read: space-separated `rgb()`/`hsl()` with `/` alpha,
+  `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()` and `color()`.
 - **`currentColor` and `inherit`**, which are indirections rather than
   colours.
 - **SCSS and LESS variable references.** `$brand` is a name; the colour
@@ -312,8 +314,6 @@ saying so beats a flag that quietly means something different here.
 ## Not in v1
 
 - **WCAG contrast**, deliberately — see above.
-- **Modern colour syntax**, which is a parity change and belongs in both
-  frontends at once.
 - **Perceptual nearest-match** — "this is 2% off brand blue". That needs
   a colour space this does not carry and a tolerance nobody has agreed.
 

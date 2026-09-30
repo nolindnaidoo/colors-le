@@ -137,10 +137,23 @@ fn resolve(value: &str) -> Option<[u8; 4]> {
     let value = value.trim();
     match classify(value) {
         Notation::Hex => resolve_hex(value),
-        Notation::Rgb | Notation::Rgba => resolve_rgb(value),
-        Notation::Hsl | Notation::Hsla => resolve_hsl(value),
+        Notation::Rgb | Notation::Rgba => resolve_rgb(value).or_else(|| resolve_modern(value)),
+        Notation::Hsl | Notation::Hsla => resolve_hsl(value).or_else(|| resolve_modern(value)),
+        Notation::Hwb
+        | Notation::Lab
+        | Notation::Lch
+        | Notation::Oklab
+        | Notation::Oklch
+        | Notation::Color => resolve_modern(value),
         Notation::Named | Notation::Unknown => None,
     }
+}
+
+/// A CSS Color 4 colour, clipped to sRGB, with alpha rounded as the
+/// legacy forms round it.
+fn resolve_modern(value: &str) -> Option<[u8; 4]> {
+    let pixel = super::css_color::parse_modern_color(value)?;
+    Some([pixel.r, pixel.g, pixel.b, round_channel(pixel.a * 255.0)])
 }
 
 fn resolve_hex(value: &str) -> Option<[u8; 4]> {
@@ -256,6 +269,18 @@ mod tests {
 
     fn palette(text: &str) -> Palette {
         Palette::parse(text).0
+    }
+
+    #[test]
+    fn a_modern_colour_is_compared_by_pixel() {
+        let approved = palette("#ff0000\n");
+        assert!(approved.contains("oklch(62.8% 0.2577 29.23)"));
+        assert!(approved.contains("rgb(255 0 0)"));
+        assert!(approved.contains("color(display-p3 1 0 0)"));
+        assert!(!approved.contains("rgb(255 0 0 / 50%)"));
+        assert!(!approved.contains("oklch(70% 0.1 250)"));
+        let modern = palette("oklch(62.8% 0.2577 29.23)\n");
+        assert!(modern.contains("#f00"));
     }
 
     #[test]

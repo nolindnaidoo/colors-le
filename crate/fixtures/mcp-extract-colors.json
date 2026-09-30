@@ -75,6 +75,105 @@
 		}
 	},
 	{
+		"name": "modern css colour syntax",
+		"file": "modern.css",
+		"arguments": {
+			"format": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "rgb(255 0 0 / 50%)",
+						"format": "rgb",
+						"line": 3,
+						"column": 16
+					},
+					{
+						"value": "hsl(120deg 100% 50%)",
+						"format": "hsl",
+						"line": 4,
+						"column": 16
+					},
+					{
+						"value": "hsl(0.5turn 50% 50% / .3)",
+						"format": "hsl",
+						"line": 5,
+						"column": 11
+					},
+					{
+						"value": "hwb(0 0% 0%)",
+						"format": "hwb",
+						"line": 6,
+						"column": 10
+					},
+					{
+						"value": "lab(54.29 80.8 69.89)",
+						"format": "lab",
+						"line": 7,
+						"column": 10
+					},
+					{
+						"value": "lch(54.29% 106.84 40.85)",
+						"format": "lch",
+						"line": 8,
+						"column": 10
+					},
+					{
+						"value": "oklab(0.628 0.2249 0.1258)",
+						"format": "oklab",
+						"line": 9,
+						"column": 12
+					},
+					{
+						"value": "oklch(62.8% 0.2577 29.23)",
+						"format": "oklch",
+						"line": 10,
+						"column": 12
+					},
+					{
+						"value": "color(display-p3 1 0 0)",
+						"format": "color",
+						"line": 11,
+						"column": 9
+					},
+					{
+						"value": "oklch(none 0 0)",
+						"format": "oklch",
+						"line": 12,
+						"column": 11
+					},
+					{
+						"value": "RGB(255 0 0)",
+						"format": "rgb",
+						"line": 13,
+						"column": 12
+					},
+					{
+						"value": "oklch(70% 0.1 250)",
+						"format": "oklch",
+						"line": 14,
+						"column": 12
+					},
+					{
+						"value": "red",
+						"format": "named",
+						"line": 18,
+						"column": 24
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 13,
+				"truncated": false
+			}
+		}
+	},
+	{
 		"name": "format inferred from the filename",
 		"file": "theme.scss",
 		"arguments": {

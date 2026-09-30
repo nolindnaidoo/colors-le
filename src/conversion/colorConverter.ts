@@ -5,6 +5,8 @@ import type { Color } from '../types';
 // before the duplicate was removed. The interfaces differ only by `readonly`,
 // which TypeScript ignores for assignability.
 import { rgbToHsl as sharedRgbToHsl } from '../utils/colorConversion';
+import { parseModernColor, srgbToOklch } from '../utils/cssColor';
+import { NAMED_COLOR_RGB } from '../utils/namedColors';
 
 export interface ColorConversionOptions {
 	readonly targetFormat: 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'oklch';
@@ -196,6 +198,13 @@ function parseColorToRGB(colorString: string): ColorSpace | null {
 		return namedColor;
 	}
 
+	// CSS Color 4: space-separated rgb()/hsl(), hwb(), lab(), lch(),
+	// oklab(), oklch(), color().
+	const modern = parseModernColor(color);
+	if (modern) {
+		return modern.a === 1 ? { r: modern.r, g: modern.g, b: modern.b } : modern;
+	}
+
 	return null;
 }
 
@@ -355,52 +364,34 @@ function rgbToHslaString(
 }
 
 /**
- * Convert RGB to OKLCH string (simplified implementation)
+ * Convert RGB to OKLCH string. This used to relabel HSL as OKLCH, which put
+ * every hue and lightness in the wrong place: red came out `oklch(0.5 0.4 0)`
+ * rather than `oklch(0.628 0.258 29.23)`.
  */
 function rgbToOklchString(
 	rgb: ColorSpace,
 	options: ColorConversionOptions,
 ): string {
-	// Simplified OKLCH conversion - in a real implementation, you'd use a proper color space library
-	const hsl = sharedRgbToHsl(rgb);
-	const l = hsl.l / 100; // Lightness 0-1
-	const c = (hsl.s / 100) * 0.4; // Chroma approximation
-	const h = hsl.h; // Hue
+	const { l, c, h } = srgbToOklch(rgb.r, rgb.g, rgb.b);
 
-	const lVal = options.roundValues ? Math.round(l * 100) / 100 : l;
-	const cVal = options.roundValues ? Math.round(c * 100) / 100 : c;
-	const hVal = options.roundValues ? Math.round(h) : h;
+	const lVal = options.roundValues ? Math.round(l * 1000) / 1000 : l;
+	const cVal = options.roundValues ? Math.round(c * 1000) / 1000 : c;
+	const hVal = options.roundValues ? Math.round(h * 100) / 100 : h;
+	const alpha =
+		options.preserveAlpha && rgb.a !== undefined && rgb.a < 1
+			? ` / ${rgb.a}`
+			: '';
 
-	return `oklch(${lVal} ${cVal} ${hVal})`;
+	return `oklch(${lVal} ${cVal} ${hVal}${alpha})`;
 }
 
 /**
  * Get RGB values for named colors
  */
 function getNamedColorRGB(colorName: string): ColorSpace | null {
-	const namedColors: Record<string, ColorSpace> = {
-		black: { r: 0, g: 0, b: 0 },
-		white: { r: 255, g: 255, b: 255 },
-		red: { r: 255, g: 0, b: 0 },
-		green: { r: 0, g: 128, b: 0 },
-		blue: { r: 0, g: 0, b: 255 },
-		yellow: { r: 255, g: 255, b: 0 },
-		cyan: { r: 0, g: 255, b: 255 },
-		magenta: { r: 255, g: 0, b: 255 },
-		silver: { r: 192, g: 192, b: 192 },
-		gray: { r: 128, g: 128, b: 128 },
-		maroon: { r: 128, g: 0, b: 0 },
-		olive: { r: 128, g: 128, b: 0 },
-		lime: { r: 0, g: 255, b: 0 },
-		aqua: { r: 0, g: 255, b: 255 },
-		teal: { r: 0, g: 128, b: 128 },
-		navy: { r: 0, g: 0, b: 128 },
-		fuchsia: { r: 255, g: 0, b: 255 },
-		purple: { r: 128, g: 0, b: 128 },
-		transparent: { r: 0, g: 0, b: 0, a: 0 },
-	};
-
-	return namedColors[colorName.toLowerCase()] || null;
+	if (colorName === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+	const rgb = NAMED_COLOR_RGB[colorName];
+	return rgb ? { r: rgb[0], g: rgb[1], b: rgb[2] } : null;
 }
 
 /**
