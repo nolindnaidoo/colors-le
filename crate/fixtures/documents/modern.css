@@ -1,0 +1,24 @@
+/* CSS Color 4: the modern syntax, and the calls that are not colours. */
+:root {
+  --space-rgb: rgb(255 0 0 / 50%);
+  --space-hsl: hsl(120deg 100% 50%);
+  --turn: hsl(0.5turn 50% 50% / .3);
+  --hwb: hwb(0 0% 0%);
+  --lab: lab(54.29 80.8 69.89);
+  --lch: lch(54.29% 106.84 40.85);
+  --oklab: oklab(0.628 0.2249 0.1258);
+  --oklch: oklch(62.8% 0.2577 29.23);
+  --p3: color(display-p3 1 0 0);
+  --none: oklch(none 0 0);
+  --upper: RGB(255 0 0);
+  --split: oklch(
+    70% 0.1 250
+  );
+
+  --relative: rgb(from red r g b);
+  --variable: rgb(var(--x) 0 0);
+  --short: lab(1 2);
+  --spaceless: color(1 2 3);
+  --unknown-space: color(cmyk 1 2 3);
+  --four: rgb(255 0 0 0);
+}

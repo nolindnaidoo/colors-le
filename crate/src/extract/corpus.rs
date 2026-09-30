@@ -15,6 +15,7 @@
 pub(crate) fn document(name: &str) -> &'static str {
     match name {
         "theme.css" => include_str!("../../fixtures/documents/theme.css"),
+        "modern.css" => include_str!("../../fixtures/documents/modern.css"),
         "theme.scss" => include_str!("../../fixtures/documents/theme.scss"),
         "page.html" => include_str!("../../fixtures/documents/page.html"),
         "theme.ts" => include_str!("../../fixtures/documents/theme.ts"),

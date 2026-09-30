@@ -40,6 +40,12 @@ export type ColorFormat =
 	| 'rgba'
 	| 'hsl'
 	| 'hsla'
+	| 'hwb'
+	| 'lab'
+	| 'lch'
+	| 'oklab'
+	| 'oklch'
+	| 'color'
 	| 'named'
 	| 'unknown';
 

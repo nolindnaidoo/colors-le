@@ -356,7 +356,7 @@ Order matters beyond this repo: npm must be published *before* any Zed registry 
   than a computation. It is well under the line-count smell — it is listed
   here for the layering exception, not the size.
 
-- Modern space-separated color syntax (`rgb(255 0 0 / 50%)`) and `lab()`/`lch()`/`oklch()`/`color()` are not extracted.
+- Relative colours (`rgb(from red r g b)`), `calc()` and `var()` inside a colour call are not read, and a colour outside sRGB is clipped when converted. Modern syntax is parsed once, in `utils/cssColor.ts`, which the crate's `extract/css_color.rs` mirrors.
 - JS/TS extraction is string-literal-scoped: any hex/functional match inside a string extracts, including URL fragments (`'https://x/#ff0000'`). Identifiers and comments never match.
 - Stylus named colors are only recognized after `:` or `=`; omitted-colon property lines yield hex/functional literals only.
 - Unknown language ids fall back to CSS-style extraction (hex/functional literals anywhere) rather than erroring.

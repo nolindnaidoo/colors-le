@@ -1,4 +1,5 @@
 import type { ColorFormat } from '../types';
+import { parseModernColor } from './cssColor';
 
 /**
  * Which of (c, x, 0) lands in r, g and b, per 60-degree hue sector.
@@ -36,15 +37,15 @@ export function parseColor(colorValue: string): RgbColor | null {
 
 	// RGB/RGBA colors
 	if (trimmed.startsWith('rgb')) {
-		return parseRgb(trimmed);
+		return parseRgb(trimmed) ?? parseModernColor(trimmed);
 	}
 
 	// HSL/HSLA colors
 	if (trimmed.startsWith('hsl')) {
-		return parseHsl(trimmed);
+		return parseHsl(trimmed) ?? parseModernColor(trimmed);
 	}
 
-	return null;
+	return parseModernColor(trimmed);
 }
 
 function parseHex(hex: string): RgbColor | null {
@@ -223,6 +224,17 @@ export function detectColorFormat(colorValue: string): ColorFormat {
 		return 'hsla';
 	}
 
+	for (const name of [
+		'hwb',
+		'lab',
+		'lch',
+		'oklab',
+		'oklch',
+		'color',
+	] as const) {
+		if (trimmed.startsWith(`${name}(`)) return name;
+	}
+
 	return 'unknown';
 }
 
@@ -240,7 +252,10 @@ export function isValidColorFormat(color: string): boolean {
 		/^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i,
 	];
 
-	return patterns.some((pattern) => pattern.test(color));
+	return (
+		patterns.some((pattern) => pattern.test(color)) ||
+		parseModernColor(color) !== null
+	);
 }
 
 /**
@@ -273,6 +288,12 @@ export function hexToHSL(
 export function parseColorToHSL(
 	color: string,
 ): { h: number; s: number; l: number } | null {
+	const modern = parseModernColor(color);
+	if (modern) {
+		const { h, s, l } = rgbToHsl(modern);
+		return { h, s, l };
+	}
+
 	if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) {
 		return hexToHSL(color);
 	}

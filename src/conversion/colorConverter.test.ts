@@ -55,6 +55,46 @@ describe('convertColor', () => {
 	});
 });
 
+describe('convertColor: oklch and CSS Color 4', () => {
+	it('converts to real OKLCH, not relabelled HSL', () => {
+		const red = convertColor(color('#ff0000'), {
+			targetFormat: 'oklch',
+			roundValues: true,
+		});
+		expect(red.converted).toBe('oklch(0.628 0.258 29.23)');
+		const white = convertColor(color('#ffffff'), {
+			targetFormat: 'oklch',
+			roundValues: true,
+		});
+		expect(white.converted).toBe('oklch(1 0 0)');
+	});
+
+	it('reads modern syntax as a source', () => {
+		for (const value of [
+			'oklch(62.8% 0.2577 29.23)',
+			'rgb(255 0 0)',
+			'lab(54.29 80.8 69.89)',
+			'color(display-p3 1 0 0)',
+		]) {
+			expect(
+				convertColor(color(value, 'oklch'), { targetFormat: 'hex' }).converted,
+				value,
+			).toBe('#ff0000');
+		}
+	});
+
+	it('knows every named colour the extractor finds', () => {
+		expect(
+			convertColor(color('rebeccapurple', 'named'), { targetFormat: 'hex' })
+				.converted,
+		).toBe('#663399');
+		expect(
+			convertColor(color('mediumpurple', 'named'), { targetFormat: 'hex' })
+				.converted,
+		).toBe('#9370db');
+	});
+});
+
 describe('convertColors', () => {
 	it('converts a batch and preserves order', () => {
 		const results = convertColors([color('#ff0000'), color('#00ff00')], {

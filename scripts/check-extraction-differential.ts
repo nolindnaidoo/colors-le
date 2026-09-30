@@ -131,6 +131,34 @@ const VALUES: readonly string[] = [
 	// stripped before its components are validated.
 	'rgb(1,\ufeff2, 3)',
 	'rgb(1,\u00852, 3)',
+	// CSS Color 4, and the calls that only look like it. The modern
+	// grammar splits on whitespace, so the same two characters matter
+	// between its components as between the legacy ones.
+	'rgb(255 0 0 / 50%)',
+	'hsl(120deg 100% 50%)',
+	'hsl(0.5turn 50% 50% / .3)',
+	'hwb(0 0% 0%)',
+	'lab(54.29 80.8 69.89)',
+	'lch(54.29% 106.84 40.85)',
+	'oklab(0.628 0.2249 0.1258)',
+	'oklch(62.8% 0.2577 29.23)',
+	'OKLCH(70% 0.1 250)',
+	'color(display-p3 1 0 0)',
+	'color(xyz-d50 0.4 0.2 0.1)',
+	'oklch(none 0 0)',
+	'oklch(\n  70% 0.1 250\n)',
+	'rgb(from red r g b)',
+	'rgb(var(--x) 0 0)',
+	'lab(1 2)',
+	'color(1 2 3)',
+	'color(cmyk 1 2 3)',
+	'rgb(255 0 0 0)',
+	'lch(50 50 40%)',
+	'rgb(1.2.3 0 0)',
+	'oklch(70%\ufeff0.1 250)',
+	'oklch(70%\u00850.1 250)',
+	'lab(\u0661 2 3)',
+	'hsl(120\u212a 100% 50%)',
 ];
 
 /** Where a colour can sit, per extractor family. `%s` is the value. */

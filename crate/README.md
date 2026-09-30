@@ -134,8 +134,10 @@ stylesheet.
 
 Ported limitations, not gaps:
 
-- **Modern space-separated syntax** — `rgb(255 0 0 / 50%)` — and
-  `lab()`, `lch()`, `oklch()`, `color()`.
+- **Relative colours, `calc()` and `var()`** inside a colour call —
+  `rgb(from red r g b)`, `rgb(var(--r) 0 0)`. CSS Color 4 modern syntax
+  itself is read: space-separated `rgb()`/`hsl()` with `/` alpha,
+  `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()` and `color()`.
 - **`currentColor` and `inherit`**, which are indirections.
 - **SCSS and LESS variable references.** `$brand` is a name; the colour
   is wherever it was defined.

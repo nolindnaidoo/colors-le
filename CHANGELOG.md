@@ -9,6 +9,31 @@ This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
 separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md).
 
+## [Unreleased]
+
+### Added
+
+- **Modern CSS colour syntax is extracted.** `rgb(255 0 0 / 50%)`,
+  `hsl(120deg 100% 50%)`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`
+  and `color()` in the nine predefined spaces were invisible, which left
+  every Tailwind v4 palette, written in `oklch()`, unreported. They are
+  found in every format, reported under their own format names (`hwb`,
+  `lab`, `lch`, `oklab`, `oklch`, `color`), and read by convert, analyze,
+  filter and validate: a CSS Color 4 value converts to hex, rgb, hsl or
+  oklch like any other. A colour outside sRGB is clipped when converted.
+- Relative colours, `calc()` and `var()` inside a colour call are still not
+  read, and are refused rather than guessed at.
+
+### Fixed
+
+- **Convert to OKLCH was wrong for every colour.** It relabelled the HSL
+  values as OKLCH, so red came out `oklch(0.5 0.4 0)`. It now converts
+  through OKLab: red is `oklch(0.628 0.258 29.23)`, and alpha is kept as
+  `/ a` when asked to preserve it.
+- **Most named colours could not be converted.** The extractor finds all
+  148 CSS keywords, but the converter knew 19, so `coral` or
+  `rebeccapurple` failed. It now knows them all.
+
 ## [2.3.1] - 2026-08-16
 
 ### Fixed

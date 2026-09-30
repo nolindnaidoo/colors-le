@@ -7,6 +7,16 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Modern CSS colour syntax is extracted**, as the extension now does:
+  space-separated `rgb()`/`hsl()` with `/` alpha, `hwb()`, `lab()`, `lch()`,
+  `oklab()`, `oklch()` and `color()`, reported under their own notations.
+  `--palette` compares them by pixel, so `oklch(62.8% 0.2577 29.23)` is the
+  approved `#ff0000`. `modern.css` joins the shared corpus.
+
 ## [0.3.0] - 2026-08-15
 
 Two silent misses, both on the file types the tool exists for. Fixed on

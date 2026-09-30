@@ -13,6 +13,7 @@ use std::sync::LazyLock;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use super::css_color::is_modern_color;
 use super::js::{JS_SPACE_CLASS, is_js_whitespace};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -23,6 +24,12 @@ pub(crate) enum Notation {
     Rgba,
     Hsl,
     Hsla,
+    Hwb,
+    Lab,
+    Lch,
+    Oklab,
+    Oklch,
+    Color,
     Named,
     Unknown,
 }
@@ -218,7 +225,7 @@ static HEX: LazyLock<Regex> = LazyLock::new(|| {
 /// what finds a declaration split across four lines.
 static FUNCTIONAL: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(&format!(
-        r"(?-u:\b)(?i-u:rgba?|hsla?)\([{JS_SPACE_CLASS}]*[0-9.,%{JS_SPACE_CLASS}]*?\)"
+        r"(?-u:\b)(?i-u:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([{JS_SPACE_CLASS}]*[0-9.,%a-zA-Z/+\-{JS_SPACE_CLASS}]*?\)"
     ))
     .expect("a constant pattern compiles")
 });
@@ -268,6 +275,18 @@ pub(crate) fn classify(value: &str) -> Notation {
         Notation::Hsla
     } else if value.starts_with("hsl(") {
         Notation::Hsl
+    } else if value.starts_with("hwb(") {
+        Notation::Hwb
+    } else if value.starts_with("lab(") {
+        Notation::Lab
+    } else if value.starts_with("lch(") {
+        Notation::Lch
+    } else if value.starts_with("oklab(") {
+        Notation::Oklab
+    } else if value.starts_with("oklch(") {
+        Notation::Oklch
+    } else if value.starts_with("color(") {
+        Notation::Color
     } else if is_named_color(&value) {
         Notation::Named
     } else {
@@ -312,10 +331,10 @@ pub(crate) fn find_literals(content: &str) -> Vec<ColorMatch> {
         // layout. Whitespace means JavaScript's, or a call holding a
         // U+FEFF is valid on one server and not the other.
         let bare: String = raw.chars().filter(|c| !is_js_whitespace(*c)).collect();
-        if !is_valid_functional(&bare) {
+        let normalised = normalise_whitespace(raw);
+        if !is_valid_functional(&bare) && !is_modern_color(&normalised) {
             continue;
         }
-        let normalised = normalise_whitespace(raw);
         matches.push(ColorMatch {
             notation: classify(&normalised),
             value: normalised,

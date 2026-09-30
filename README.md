@@ -40,7 +40,7 @@
 
 Open a file, press `Ctrl+Alt+C` (`Cmd+Alt+C` on Mac), and every color in the document lands in a new editor — deduplicate, sort, convert, filter, analyze, or validate it from there. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
 
-- **Palette auditing** — every hex, rgb()/rgba(), hsl()/hsla(), and named color in stylesheets, markup, and code
+- **Palette auditing** — every hex, rgb()/rgba(), hsl()/hsla(), hwb(), lab()/lch(), oklab()/oklch(), color(), and named color in stylesheets, markup, and code
 - **Design-system review** — analyze distribution, cluster similar colors, spot near-duplicates
 - **Accessibility checks** — contrast ratios against WCAG AA/AAA via the Validate command
 
@@ -130,9 +130,9 @@ That prints the tool list and exits — if you see `extract_colors`, the server 
 
 **No document is refused.** A language with no reader of its own is read as raw text, and `metadata.fileType` says which of the two answered.
 
-Recognized syntax: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, comma-form `rgb()/rgba()/hsl()/hsla()` (calls may span multiple lines), and the CSS named colors including `rebeccapurple` and `transparent`. Positions are real 1-based line/column of each literal. Comments never produce colors, and comment markers inside strings don't start comments.
+Recognized syntax: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, comma-form `rgb()/rgba()/hsl()/hsla()`, CSS Color 4 modern syntax — space-separated `rgb()`/`hsl()` with `/` alpha, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()` and `color()` in the nine predefined spaces, with angles in deg, rad, grad or turn and `none` (calls may span multiple lines), and the CSS named colors including `rebeccapurple` and `transparent`. Positions are real 1-based line/column of each literal. Comments never produce colors, and comment markers inside strings don't start comments.
 
-Known limitations (documented, not bugs): modern space-separated syntax (`rgb(255 0 0 / 50%)`) and `lab()`/`lch()`/`oklch()`/`color()` are not extracted; a hex inside any JS string matches, including URL fragments; Stylus values without `:` or `=` only yield hex/functional literals, not named colors; in the raw-text scan a value segment runs to the end of the line, so two tokens on one line cost the named one.
+Known limitations (documented, not bugs): relative colours (`rgb(from red r g b)`), `calc()` and `var()` inside a colour call are not read; a colour outside sRGB is clipped when converted; a hex inside any JS string matches, including URL fragments; Stylus values without `:` or `=` only yield hex/functional literals, not named colors; in the raw-text scan a value segment runs to the end of the line, so two tokens on one line cost the named one.
 
 ## The CLI
 
@@ -236,12 +236,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 90.79% |
-| Branches | 79.43% |
-| Functions | 95.48% |
-| Lines | 92.13% |
+| Statements | 90.59% |
+| Branches | 79.63% |
+| Functions | 95.29% |
+| Lines | 92.24% |
 
-347 test cases across 24 files, plus an integration suite that runs
+354 test cases across 25 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 
