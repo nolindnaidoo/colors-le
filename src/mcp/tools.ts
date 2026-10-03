@@ -85,7 +85,7 @@ export const TOOLS: readonly ToolDefinition[] = Object.freeze([
 	Object.freeze({
 		name: 'extract_colors',
 		description:
-			'Extract every color from a stylesheet or document, with its notation and 1-based line and column. Reads CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, SVG, XML, JSON, YAML, TOML, Markdown and plain text by name, and anything else as raw text, so a format is optional. Reports hex, rgb/rgba, hsl/hsla and named colors as written.',
+			'Extract every color from a stylesheet or document, with its notation and 1-based line and column. Reads CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, SVG, XML, JSON, YAML, TOML, Markdown and plain text by name, and anything else as raw text, so a format is optional. Reports hex, rgb/rgba, hsl/hsla, hwb, lab, lch, oklab, oklch, color() and named colors as written.',
 		inputSchema: {
 			type: 'object',
 			properties: {

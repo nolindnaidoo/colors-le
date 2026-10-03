@@ -7,6 +7,14 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The `extract_colors` MCP tool described only the notations it had before 2.4.0.** The
+  tool's description listed hex, rgb, hsl and named colors; it now names hwb,
+  lab, lch, oklab, oklch and color() as well, which it has reported since.
+
 ## [0.4.0] - 2026-09-30
 
 ### Added
