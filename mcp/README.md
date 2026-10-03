@@ -50,7 +50,7 @@ claude mcp add colors-le -- npx -y colors-le-mcp
 carries this server and registers it for you:
 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le)
 · [Open VSX](https://open-vsx.org/extension/OffensiveEdge/colors-le)
-· [Zed](https://github.com/zed-industries/extensions/pull/7078) *(pending review)*
+· [Zed](https://zed.dev/docs/ai/mcp) *(no listing yet — add it by hand)*
 
 **No Node?** The same `extract_colors` tool ships in a static Rust
 binary: `cargo install colors-le`, then `colors-le mcp`
@@ -88,24 +88,33 @@ If that prints the tool name, the server works.
 
 | argument | type | |
 |---|---|---|
-| `content` | string | **required.** The text to scan. |
-| `format` | string | The language: `css`, `scss`, `less`, `stylus`, `html`, `javascript`, `typescript`, `svg`, `xml`, `json`, `yaml`, `toml`, `markdown`, `plaintext`. Optional — anything else is read as raw text and reported as `unknown`. |
+| `content` | string | **required.** The document text to scan. |
+| `format` | string | `css`, `scss`, `less`, `stylus`, `html`, `javascript`, `typescript`, `svg`, `xml`, `json`, `yaml`, `toml`, `markdown` or `plaintext`. Optional — anything else, or nothing, is read as raw text and reported as `unknown`. |
 | `filename` | string | Used to infer `format` when it is absent — `theme.scss` resolves to `scss`. |
-| `dedupe` | boolean | Collapse repeats. Default `false`. |
+| `dedupe` | boolean | Collapse repeated colors to their first occurrence. Default `false`. |
 | `maxResults` | number | Default `500`, ceiling `5000`. |
 
-Returns each color with its notation and 1-based line and column, plus
-`meta.truncated` so a capped result is never mistaken for a complete one.
+Returns each color as written, with its notation — `hex`, `rgb`, `rgba`,
+`hsl`, `hsla`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color` or `named` —
+and 1-based line and column, plus `meta.truncated` so a capped result is
+never mistaken for a complete one.
 
 ```json
 {
   "ok": true,
   "data": {
     "colors": [
-      { "value": "#ff0000", "format": "hex", "line": 2, "column": 12 }
-    ]
+      {"value": "#ff0000", "format": "hex", "line": 1, "column": 15},
+      {"value": "oklch(70% 0.1 200)", "format": "oklch", "line": 1, "column": 38}
+    ],
+    "fileType": "css"
   },
-  "meta": { "count": 1, "truncated": false }
+  "diagnostics": [],
+  "meta": {
+    "tool": "extract_colors",
+    "count": 2,
+    "truncated": false
+  }
 }
 ```
 
@@ -149,7 +158,7 @@ Architecture. [nolindnaidoo.com](https://nolindnaidoo.com) ·
 
 Twelve Rust tools built the same way: small, single-purpose, and driven by a
 machine rather than a person. pixelcoords and pixelactions make up one loop —
-pixelcoords answers *where*, pixelactions *acts* there. The nine LE crates are
+pixelcoords answers *where*, pixelactions *acts* there. The ten LE crates are
 the terminal half of the extensions they sit in: the same detection, held to
 the extension's own corpus, and an exit code instead of a results editor.
 
@@ -165,6 +174,7 @@ the extension's own corpus, and an exit code instead of a results editor.
 | **[numbers-le](https://github.com/nolindnaidoo/numbers-le/tree/main/crate)** | Find every hardcoded number in a codebase so a person can check them | [crates.io](https://crates.io/crates/numbers-le) |
 | **[envsync-le](https://github.com/nolindnaidoo/envsync-le/tree/main/crate)** | Compare the dotenv files in a tree and say which keys are missing from which | [crates.io](https://crates.io/crates/envsync-le) |
 | **[colors-le](https://github.com/nolindnaidoo/colors-le/tree/main/crate)** | Find every colour in a codebase, and say which are not in your palette | [crates.io](https://crates.io/crates/colors-le) |
+| **[dates-le](https://github.com/nolindnaidoo/dates-le/tree/main/crate)** | Extract every date and timestamp, and the exact instant each one resolves to | [crates.io](https://crates.io/crates/dates-le) |
 | **[scrape-le](https://github.com/nolindnaidoo/scrape-le/tree/main/crate)** | Check whether a page is scrapeable before the scraper is written | [crates.io](https://crates.io/crates/scrape-le) |
 
 ## Licence
