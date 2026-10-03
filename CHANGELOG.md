@@ -9,6 +9,20 @@ This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
 separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md).
 
+## [Unreleased]
+
+### Fixed
+
+- **`extract_colors` described only the notations it had before 2.4.0.** The
+  tool's description listed hex, rgb, hsl and named colors; it now names hwb,
+  lab, lch, oklab, oklch and color() as well, which it has reported since.
+
+### Added
+
+- The differential test now holds the tool's definition identical on both
+  servers — name, description and schema — not only its answers. Both servers'
+  descriptions had drifted from the code, and nothing compared them.
+
 ## [2.4.1] - 2026-10-03
 
 ### Fixed
