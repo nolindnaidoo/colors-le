@@ -11,8 +11,8 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le">
     <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
   </a>
-  <a href="https://open-vsx.org/extension/OffensiveEdge/colors-le">
-    <img src="https://img.shields.io/open-vsx/dt/OffensiveEdge/colors-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  <a href="https://open-vsx.org/extension/nolindnaidoo/colors-le">
+    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/colors-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
   </a>
   <a href="https://www.npmjs.com/package/colors-le-mcp">
     <img src="https://img.shields.io/npm/v/colors-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="colors-le-mcp on npm" />
@@ -33,7 +33,7 @@
 
 > **Useful?** A star or rating is how other developers find it —
 > [★ GitHub](https://github.com/nolindnaidoo/colors-le) ·
-> [★ Open VSX](https://open-vsx.org/extension/OffensiveEdge/colors-le/reviews) ·
+> [★ Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le/reviews) ·
 > [★ Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le&ssr=false#review-details)
 
 ## What it does
@@ -49,7 +49,7 @@ Open a file, press `Ctrl+Alt+C` (`Cmd+Alt+C` on Mac), and every color in the doc
 | Where | What you get | Install |
 |---|---|---|
 | **VS Code** | Extraction, conversion, analysis and validation in your editor | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) |
-| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/OffensiveEdge/colors-le) |
+| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le) |
 | **A terminal or a CI step** | The same extraction over a whole tree, with exit codes | `cargo install colors-le` · [crates.io](https://crates.io/crates/colors-le) |
 | **Any MCP agent, via Node** | `extract_colors` over stdio | `npx colors-le-mcp` · [npm](https://www.npmjs.com/package/colors-le-mcp) |
 | **Zed** | The MCP server as a context server | [add it by hand](https://zed.dev/docs/ai/mcp) *(no listing yet)* |

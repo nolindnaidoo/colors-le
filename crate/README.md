@@ -224,7 +224,7 @@ no palette file to point at.
 | Where | What you get | Install |
 |---|---|---|
 | **VS Code** | Extraction, conversion, analysis and validation in your editor | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) |
-| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/OffensiveEdge/colors-le) |
+| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le) |
 | **Any MCP agent, via Node** | `extract_colors` over stdio | `npx colors-le-mcp` · [npm](https://www.npmjs.com/package/colors-le-mcp) |
 | **Zed** | The MCP server as a context server | [zed-industries/extensions#7078](https://github.com/zed-industries/extensions/pull/7078) *(pending review)* |
 
