@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
+	_createExtensionContext,
 	_registeredCommands,
 	_resetMockState,
 	_respondToQuickPick,
@@ -42,7 +43,12 @@ function makeDeps(events: string[] = []) {
 		hideProgress: () => {},
 		dispose: () => {},
 	};
-	return { telemetry, notifier: createNotifier(), statusBar };
+	return {
+		telemetry,
+		notifier: createNotifier(),
+		statusBar,
+		ratingPrompt: { recordSuccess: async () => {} },
+	};
 }
 
 async function runCommand(id: string): Promise<void> {
@@ -181,9 +187,7 @@ describe('analyze: report sections', () => {
 
 describe('activation', () => {
 	it('registers every declared command', () => {
-		const context = makeContext() as unknown as {
-			subscriptions: Array<{ dispose(): void }>;
-		};
+		const context = _createExtensionContext();
 		activate(context as never);
 
 		const declared = [
