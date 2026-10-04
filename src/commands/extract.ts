@@ -3,6 +3,7 @@ import { getConfiguration } from '../config/config';
 import { extractColors } from '../extraction/extract';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
+import type { RatingPrompt } from '../ui/ratingPrompt';
 import type { StatusBar } from '../ui/statusBar';
 import { copyResults } from '../utils/clipboard';
 import { dedupeColors } from '../utils/dedupe';
@@ -17,6 +18,7 @@ export function registerExtractCommand(
 		telemetry: Telemetry;
 		notifier: Notifier;
 		statusBar: StatusBar;
+		ratingPrompt: RatingPrompt;
 	}>,
 ): void {
 	const command = vscode.commands.registerCommand(
@@ -152,6 +154,9 @@ export function registerExtractCommand(
 					processingTimeMs: result.metadata?.processingTimeMs,
 					warnings: result.warnings.length,
 				});
+				// Not awaited: it resolves when the toast is answered, and a command that
+				// waited on that would stay pending for as long as the toast is ignored.
+				void deps.ratingPrompt.recordSuccess();
 			} catch (error) {
 				const message =
 					error instanceof Error ? error.message : 'Unknown error occurred';

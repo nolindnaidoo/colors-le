@@ -33,7 +33,12 @@ function makeDeps(events: string[] = []) {
 		hideProgress: () => {},
 		dispose: () => {},
 	};
-	return { telemetry, notifier: createNotifier(), statusBar };
+	return {
+		telemetry,
+		notifier: createNotifier(),
+		statusBar,
+		ratingPrompt: { recordSuccess: async () => {} },
+	};
 }
 
 async function runCommand(id: string): Promise<void> {
