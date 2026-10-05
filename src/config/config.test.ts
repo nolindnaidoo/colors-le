@@ -20,6 +20,7 @@ describe('config defaults parity with package.json', () => {
 	const props = manifest.contributes.configuration.properties;
 
 	const KEY_MAP: Record<string, keyof typeof CONFIG_DEFAULTS> = {
+		'colors-le.clipboardIncludesPositions': 'clipboardIncludesPositions',
 		'colors-le.copyToClipboardEnabled': 'copyToClipboardEnabled',
 		'colors-le.dedupeEnabled': 'dedupeEnabled',
 		'colors-le.notificationsLevel': 'notificationsLevel',
@@ -29,6 +30,7 @@ describe('config defaults parity with package.json', () => {
 		'colors-le.safety.largeOutputLinesThreshold':
 			'safetyLargeOutputLinesThreshold',
 		'colors-le.sortMode': 'sortMode',
+		'colors-le.showPositions': 'showPositions',
 		'colors-le.statusBar.enabled': 'statusBarEnabled',
 		'colors-le.telemetryEnabled': 'telemetryEnabled',
 	};

@@ -3,6 +3,7 @@ import { getConfiguration } from '../config/config';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
+import { bareValue, onValues } from '../utils/positions';
 import { sortColors } from '../utils/sort';
 
 export function registerSortCommand(
@@ -42,9 +43,9 @@ export function registerSortCommand(
 						const trimmed = line.trim();
 						return (
 							trimmed === '' ||
-							/^#[0-9a-f]{6}$/i.test(trimmed) ||
-							/^rgb\(/.test(trimmed) ||
-							/^hsl\(/.test(trimmed)
+							/^#[0-9a-f]{6}$/i.test(bareValue(trimmed)) ||
+							/^rgb\(/.test(bareValue(trimmed)) ||
+							/^hsl\(/.test(bareValue(trimmed))
 						);
 					});
 
@@ -54,13 +55,15 @@ export function registerSortCommand(
 					? lines
 					: lines.filter(
 							(line) =>
-								/^#[0-9a-f]{6}$/i.test(line) ||
-								/^rgb\(/.test(line) ||
-								/^hsl\(/.test(line),
+								/^#[0-9a-f]{6}$/i.test(bareValue(line)) ||
+								/^rgb\(/.test(bareValue(line)) ||
+								/^hsl\(/.test(bareValue(line)),
 						);
 
 				// Sort colors based on configuration
-				const sortedLines = sortColors(colorsToSort, config.sortMode);
+				const sortedLines = onValues(colorsToSort, (values) =>
+					sortColors(values, config.sortMode),
+				);
 
 				// Replace document content
 				const edit = new vscode.WorkspaceEdit();

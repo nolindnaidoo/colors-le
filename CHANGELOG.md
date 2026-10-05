@@ -11,6 +11,16 @@ separate product on its own cadence and keeps its own
 
 ## [Unreleased]
 
+### Added
+
+- Positions are now a setting. `colors-le.showPositions` decides whether the
+  output gives the line and column of each color, and
+  `colors-le.clipboardIncludesPositions` decides the same for the copy on the
+  clipboard. Both are off by default, so the output is what it was. With
+  positions shown, Sort still orders by the color and keeps each position with
+  it, and Dedupe keeps the first occurrence of a color, with that occurrence's
+  position.
+
 ### Changed
 
 - No command is bound to a key by default any more. The one default this
