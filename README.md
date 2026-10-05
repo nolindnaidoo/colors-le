@@ -175,7 +175,9 @@ No command is bound to a key by default. Give any of them one under **Keyboard S
 | Setting | Default | Description |
 |---|---|---|
 | `colors-le.openResultsSideBySide` | `true` | Open results beside the current editor (off = replace in place) |
+| `colors-le.showPositions` | `false` | Show the line and column of each color |
 | `colors-le.copyToClipboardEnabled` | `false` | Also copy results to the clipboard |
+| `colors-le.clipboardIncludesPositions` | `false` | Include the line and column in that copy |
 | `colors-le.dedupeEnabled` | `false` | Deduplicate extraction results automatically |
 | `colors-le.sortMode` | `off` | Sort order used by the Sort command (hue/saturation/lightness/hex, asc/desc) |
 | `colors-le.notificationsLevel` | `silent` | `all` = every notification, `important` = warnings + errors, `silent` = errors only |
@@ -236,12 +238,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 90.59% |
-| Branches | 79.63% |
-| Functions | 95.29% |
-| Lines | 92.24% |
+| Statements | 90.67% |
+| Branches | 79.81% |
+| Functions | 95.40% |
+| Lines | 92.30% |
 
-360 test cases across 26 files, plus an integration suite that runs
+372 test cases across 27 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 

@@ -70,6 +70,26 @@ describe('colors-le.postProcess.dedupe', () => {
 		);
 	});
 
+	it('dedupes by color when positions are shown, keeping the first, and says so', async () => {
+		_setConfig('colors-le.notificationsLevel', 'all');
+		registerDedupeCommand(makeContext(), makeDeps());
+		_setActiveEditor(
+			_createDocument({
+				content: '1:1\t#aabbcc\n2:1\t#ddeeff\n9:4\t#aabbcc\n',
+			}),
+		);
+		await runCommand('colors-le.postProcess.dedupe');
+
+		// A line that leads with a position is still a color line, and whole
+		// lines all differ here: only by color is there a duplicate at all.
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'1:1\t#aabbcc\n2:1\t#ddeeff',
+		);
+		expect(_shownMessages()[0]?.message).toBe(
+			'Removed 1 duplicate colors (2 remaining). Each color shows its first position only.',
+		);
+	});
+
 	it('suppresses the success toast at the default silent level', async () => {
 		registerDedupeCommand(makeContext(), makeDeps());
 		_setActiveEditor(_createDocument({ content: '#aabbcc\n#aabbcc' }));
@@ -92,6 +112,22 @@ describe('colors-le.postProcess.sort', () => {
 			'#aabbcc\n#ccddee\n#ddeeff',
 		);
 		expect(_shownMessages()[0]?.message).toBe('Sorted 3 colors by hex-asc');
+	});
+
+	it('sorts by color when positions are shown, and each keeps its own', async () => {
+		_setConfig('colors-le.sortMode', 'hex-asc');
+		registerSortCommand(makeContext(), makeDeps());
+		_setActiveEditor(
+			_createDocument({
+				content: '1:1\t#ddeeff\n2:1\t#aabbcc\n10:1\t#ccddee',
+			}),
+		);
+		await runCommand('colors-le.postProcess.sort');
+
+		// By the line number these would come out 1, 10, 2.
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'2:1\t#aabbcc\n10:1\t#ccddee\n1:1\t#ddeeff',
+		);
 	});
 
 	it('warns when no editor is active', async () => {
@@ -182,6 +218,23 @@ describe('colors-le.extractColors edge paths', () => {
 		await runCommand('colors-le.extractColors');
 		expect(appliedEdits).toHaveLength(1);
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe('#123456');
+	});
+
+	it('shows and copies positions only as each setting says', async () => {
+		registerExtractCommand(makeContext(), makeDeps());
+		_setConfig('colors-le.openResultsSideBySide', false);
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		_setConfig('colors-le.showPositions', true);
+		_setActiveEditor(
+			_createDocument({ content: 'a { color: #123456; }', languageId: 'css' }),
+		);
+		await runCommand('colors-le.extractColors');
+
+		expect(appliedEdits[0]?.replacements[0]?.newText).toMatch(
+			/^1:\d+\t#123456$/,
+		);
+		// The clipboard has its own setting, and that one is still off.
+		expect(_clipboardText()).toBe('#123456');
 	});
 
 	it('blocks oversized documents when safety says no', async () => {

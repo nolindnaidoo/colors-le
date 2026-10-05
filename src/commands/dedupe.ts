@@ -3,6 +3,7 @@ import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { dedupeColors } from '../utils/dedupe';
+import { bareValue, hasPosition, onValues } from '../utils/positions';
 
 export function registerDedupeCommand(
 	context: vscode.ExtensionContext,
@@ -40,9 +41,9 @@ export function registerDedupeCommand(
 						const trimmed = line.trim();
 						return (
 							trimmed === '' ||
-							/^#[0-9a-f]{6}$/i.test(trimmed) ||
-							/^rgb\(/.test(trimmed) ||
-							/^hsl\(/.test(trimmed)
+							/^#[0-9a-f]{6}$/i.test(bareValue(trimmed)) ||
+							/^rgb\(/.test(bareValue(trimmed)) ||
+							/^hsl\(/.test(bareValue(trimmed))
 						);
 					});
 
@@ -52,13 +53,13 @@ export function registerDedupeCommand(
 					? lines
 					: lines.filter(
 							(line) =>
-								/^#[0-9a-f]{6}$/i.test(line) ||
-								/^rgb\(/.test(line) ||
-								/^hsl\(/.test(line),
+								/^#[0-9a-f]{6}$/i.test(bareValue(line)) ||
+								/^rgb\(/.test(bareValue(line)) ||
+								/^hsl\(/.test(bareValue(line)),
 						);
 
 				// Extract colors from each line and dedupe
-				const dedupedLines = dedupeColors(colorsToDedupe);
+				const dedupedLines = onValues(colorsToDedupe, dedupeColors);
 
 				// Replace document content
 				const edit = new vscode.WorkspaceEdit();
@@ -85,8 +86,12 @@ export function registerDedupeCommand(
 				const dedupedCount = dedupedLines.length;
 				const removedCount = originalCount - dedupedCount;
 
+				// A color found five times has five positions, and only one can stay.
+				const firstOnly = colorsToDedupe.some(hasPosition)
+					? '. Each color shows its first position only.'
+					: '';
 				deps.notifier.showInfo(
-					`Removed ${removedCount} duplicate colors (${dedupedCount} remaining)`,
+					`Removed ${removedCount} duplicate colors (${dedupedCount} remaining)${firstOnly}`,
 				);
 				deps.telemetry.event('dedupe-success', {
 					original: originalCount,

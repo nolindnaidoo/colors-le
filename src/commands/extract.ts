@@ -7,6 +7,7 @@ import type { StatusBar } from '../ui/statusBar';
 import { copyResults } from '../utils/clipboard';
 import { dedupeColors } from '../utils/dedupe';
 import { sanitizeErrorMessage } from '../utils/errors';
+import { onValues, positioned, withPosition } from '../utils/positions';
 import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
 import { deliverResults } from './output';
 
@@ -106,14 +107,18 @@ export function registerExtractCommand(
 				}
 
 				// Output colors in original format (Zero Hassle)
-				let formattedColors: readonly string[] = result.colors.map(
-					(color) => color.value,
+				// Each color with where it was found. The screen and the clipboard
+				// are each asked separately whether they want that.
+				let formattedColors: readonly string[] = result.colors.map((color) =>
+					withPosition(color.value, color.position),
 				);
 				if (config.dedupeEnabled) {
-					formattedColors = dedupeColors(formattedColors);
+					// By color, keeping the first: with positions every line differs.
+					formattedColors = onValues(formattedColors, dedupeColors);
 				}
 
-				const content = formattedColors.join('\n');
+				const all = formattedColors.join('\n');
+				const content = positioned(all, config.showPositions);
 				const delivered = await deliverResults(
 					content,
 					document,
@@ -122,7 +127,11 @@ export function registerExtractCommand(
 				);
 
 				const copiedToClipboard = config.copyToClipboardEnabled
-					? await copyResults(content, result.colors.length, deps.notifier)
+					? await copyResults(
+							positioned(all, config.clipboardIncludesPositions),
+							result.colors.length,
+							deps.notifier,
+						)
 					: false;
 
 				if (!config.copyToClipboardEnabled && delivered) {

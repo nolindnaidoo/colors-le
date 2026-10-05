@@ -84,6 +84,8 @@ export type SortMode =
 	| 'hex-desc';
 
 export interface Configuration {
+	/** Whether the copy on the clipboard carries positions, whatever the screen shows. */
+	readonly clipboardIncludesPositions: boolean;
 	readonly copyToClipboardEnabled: boolean;
 	readonly dedupeEnabled: boolean;
 	readonly notificationsLevel: 'all' | 'important' | 'silent';
@@ -92,6 +94,8 @@ export interface Configuration {
 	readonly safetyFileSizeWarnBytes: number;
 	readonly safetyLargeOutputLinesThreshold: number;
 	readonly sortMode: SortMode;
+	/** Whether the output gives the line and column of each color. */
+	readonly showPositions: boolean;
 	readonly statusBarEnabled: boolean;
 	readonly telemetryEnabled: boolean;
 }
