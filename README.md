@@ -38,7 +38,7 @@
 
 ## What it does
 
-Open a file, press `Ctrl+Alt+C` (`Cmd+Alt+C` on Mac), and every color in the document lands in a new editor — deduplicate, sort, convert, filter, analyze, or validate it from there. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
+Open a file, run `Colors-LE: Extract Colors`, and every color in the document lands in a new editor — deduplicate, sort, convert, filter, analyze, or validate it from there. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
 
 - **Palette auditing** — every hex, rgb()/rgba(), hsl()/hsla(), hwb(), lab()/lch(), oklab()/oklch(), color(), and named color in stylesheets, markup, and code
 - **Design-system review** — analyze distribution, cluster similar colors, spot near-duplicates
@@ -158,7 +158,7 @@ pixel and not the same decision.
 
 | Command | Description |
 |---|---|
-| `Colors-LE: Extract Colors` (`Ctrl+Alt+C` / `Cmd+Alt+C`) | Extract all colors from the active document |
+| `Colors-LE: Extract Colors` | Extract all colors from the active document |
 | `Colors-LE: Analyze Colors` | Statistics, clusters, patterns, and palette report |
 | `Colors-LE: Convert Colors` | Convert extracted colors to hex/rgb/hsl |
 | `Colors-LE: Filter Colors` | Filter by format, lightness, saturation |
@@ -167,6 +167,8 @@ pixel and not the same decision.
 | `Colors-LE: Sort Colors` | Sort results by the configured `sortMode` |
 | `Colors-LE: Open Settings` | Open Colors-LE settings |
 | `Colors-LE: Help` | Built-in documentation |
+
+No command is bound to a key by default. Give any of them one under **Keyboard Shortcuts** in the editor.
 
 ## Settings
 

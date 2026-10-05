@@ -20,7 +20,7 @@ export function registerHelpCommand(
 # Colors-LE Help & Troubleshooting
 
 ## Commands
-- **Extract Colors** (Ctrl+Alt+C / Cmd+Alt+C): Extract colors from the current document
+- **Extract Colors**: Extract colors from the current document
 - **Analyze Colors**: Analyze the current document's colors (distribution, stats)
 - **Convert Colors**: Convert extracted colors to another format
 - **Filter Colors**: Filter extracted colors by format
