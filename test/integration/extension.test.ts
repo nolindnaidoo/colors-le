@@ -1,4 +1,7 @@
 import * as assert from 'node:assert';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import * as vscode from 'vscode';
 
 const EXTENSION_ID = 'nolindnaidoo.colors-le';
@@ -30,6 +33,8 @@ describe('Colors-LE integration', function () {
 		const commands = await vscode.commands.getCommands(true);
 		for (const id of [
 			'colors-le.extractColors',
+			'colors-le.extractWorkspace',
+			'colors-le.extractFolder',
 			'colors-le.analyze',
 			'colors-le.convert',
 			'colors-le.filter',
@@ -100,5 +105,27 @@ describe('Colors-LE integration', function () {
 		await vscode.commands.executeCommand('colors-le.postProcess.dedupe');
 
 		assert.strictEqual(editor.document.getText(), '#aabbcc\n#ddeeff');
+	});
+	it('extracts the palette of a folder from disk, one row per color across its spellings', async () => {
+		const root = mkdtempSync(join(tmpdir(), 'colors-le-extract-'));
+		for (const dir of ['styles', 'node_modules', 'generated']) mkdirSync(join(root, dir));
+		writeFileSync(join(root, '.gitignore'), 'generated/\n');
+		writeFileSync(join(root, 'styles', 'a.css'), 'a { color: #f00; background: #FF0000; }\nb { color: red; }\n');
+		writeFileSync(join(root, 'styles', 'b.css'), 'c { color: rgb(255, 0, 0); outline-color: #00ff00; }\n');
+		writeFileSync(join(root, 'node_modules', 'x.css'), 'd { color: #123456; }\n');
+		writeFileSync(join(root, 'generated', 'g.css'), 'e { color: #654321; }\n');
+
+		await vscode.commands.executeCommand('colors-le.extractFolder', vscode.Uri.file(root));
+
+		const report = vscode.workspace.textDocuments.find(
+			(doc) => doc.languageId === 'markdown' && doc.getText().includes('colors-le-extract-'),
+		);
+		assert.ok(report, 'no workspace report was opened');
+		const text = report.getText();
+		assert.match(text, /2 distinct color\(s\), 5 occurrence\(s\) in 2 file\(s\)/);
+		assert.ok(text.includes('| `#ff0000` | `#FF0000`, `#f00`, `red`, `rgb(255, 0, 0)` | 4 | 2 |'));
+		assert.ok(text.includes('- `styles/a.css` (3)\n- `styles/b.css`'));
+		assert.ok(!text.includes('#123456') && !text.includes('#654321'));
+		assert.match(text, /1 file\(s\) ignored by \.gitignore/);
 	});
 });

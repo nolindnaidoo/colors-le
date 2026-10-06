@@ -83,6 +83,23 @@ export async function extractColors(
 	});
 }
 
+/**
+ * The same extraction with nothing to await, for a caller that reads many
+ * files in a row. A document a reader throws on yields nothing here, as it
+ * yields an error and no colors there.
+ */
+export function extractColorsFromText(
+	content: string,
+	languageId: string,
+): readonly Color[] {
+	if (content.trim().length === 0) return [];
+	try {
+		return extractColorsByFileType(content, determineFileType(languageId));
+	} catch {
+		return [];
+	}
+}
+
 function extractColorsByFileType(
 	content: string,
 	fileType: FileType,

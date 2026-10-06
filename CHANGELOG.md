@@ -9,10 +9,31 @@ This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
 separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md).
 
-## [2.5.0] - 2026-10-05
+## [2.5.0] - 2026-10-06
 
 ### Added
 
+- Extract across a folder or the whole workspace.
+  `Colors-LE: Extract Colors from Workspace` reads every file in the workspace
+  from disk, and `Colors-LE: Extract Colors from Folder` does the same for one
+  folder, from the command palette or from a folder in the Explorer. The
+  report is the palette: each color once however it is spelled, so `#f00`,
+  `#FF0000`, `red` and `rgb(255, 0, 0)` are one row, with the spellings, how
+  often it is written, in how many files, and where. It ends with a line for
+  each thing the scan left unread.
+- A scan skips three things by default, each with its own switch:
+  dependency folders, build output, caches and lockfiles
+  (`colors-le.workspace.scanUseDefaultExcludes`), whatever the project's
+  `.gitignore` files skip (`colors-le.workspace.scanRespectGitignore`), and
+  images, fonts, archives and other files that are not text
+  (`colors-le.workspace.scanSkipBinaryFiles`). `colors-le.workspace.scanExcludes`
+  skips more, and `colors-le.workspace.scanAlwaysInclude` reads a path whatever
+  the switches say. `colors-le.workspace.scanPatterns` chooses the files to
+  read in the first place.
+- `colors-le.workspace.scanMaxFiles` caps how many files are read and
+  `colors-le.workspace.scanMaxResults` caps how many occurrences are listed.
+- The positions settings apply to a scan as they do to Extract: off by
+  default, and then each line is a file and how many times the color is in it.
 - Positions are now a setting. `colors-le.showPositions` decides whether the
   output gives the line and column of each color, and
   `colors-le.clipboardIncludesPositions` decides the same for the copy on the
