@@ -1,6 +1,6 @@
 {
 	"name": "colors-le-mcp",
-	"version": "2.4.3",
+	"version": "2.5.0",
 	"mcpName": "io.github.nolindnaidoo/colors-le",
 	"description": "Extract colors from stylesheets and code, with their notation and position.",
 	"keywords": [
