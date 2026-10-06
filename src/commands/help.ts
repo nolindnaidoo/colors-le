@@ -21,6 +21,8 @@ export function registerHelpCommand(
 
 ## Commands
 - **Extract Colors**: Extract colors from the current document
+- **Extract Colors from Workspace**: The palette of every file in the workspace: each color once, with its spellings and where it is
+- **Extract Colors from Folder**: The same for one folder. Also on a folder in the Explorer
 - **Analyze Colors**: Analyze the current document's colors (distribution, stats)
 - **Convert Colors**: Convert extracted colors to another format
 - **Filter Colors**: Filter extracted colors by format

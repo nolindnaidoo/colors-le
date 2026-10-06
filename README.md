@@ -132,6 +132,89 @@ Recognized syntax: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, comma-form `rgb()/rg
 
 Known limitations (documented, not bugs): relative colours (`rgb(from red r g b)`), `calc()` and `var()` inside a colour call are not read; a colour outside sRGB is clipped when converted; a hex inside any JS string matches, including URL fragments; Stylus values without `:` or `=` only yield hex/functional literals, not named colors; in the raw-text scan a value segment runs to the end of the line, so two tokens on one line cost the named one.
 
+## Across a folder or a workspace
+
+Extract reads the document you have open. A scan reads many files from disk and gives one report: the project's palette.
+
+- **The whole workspace**: run `Colors-LE: Extract Colors from Workspace` from the command palette.
+- **One folder**: right-click it in the Explorer and choose `Extract Colors from Folder`, or run `Colors-LE: Extract Colors from Folder` and pick one.
+
+Each color is listed once however it is spelled, the most widely used first, with the spellings, how often it is written and where:
+
+```markdown
+# Colors-LE workspace report
+
+`my-project` · 3 file(s) read · 3 distinct color(s), 7 occurrence(s) in 3 file(s)
+
+| Color | Written as | Occurrences | Files |
+|---|---|---|---|
+| `#ff0000` | `#FF0000`, `#f00`, `red`, `rgb(255, 0, 0)` | 4 | 2 |
+| `#00ff00` | `#00ff00` | 2 | 2 |
+| `#0000ff` | `#0000ff` | 1 | 1 |
+
+## `#ff0000` (4)
+
+- `styles/a.css` · **1:12**, **1:30**, **2:12**
+- `styles/b.css` · **1:12**
+
+## `#00ff00` (2)
+
+- `styles/a.css` · **2:31**
+- `styles/b.css` · **1:43**
+
+## `#0000ff` (1)
+
+- `theme.json` · **2:14**
+```
+
+**The same color is one row.** `#f00`, `#FF0000`, `red` and `rgb(255, 0, 0)` are one color written four ways, and the table says so. Alpha keeps colors apart: a half-transparent red is another color. A value that is not a color in sRGB on its own, such as a `var()`, is compared as written.
+
+That is with `colors-le.showPositions` on. It is off by default, and then each line is the file and how many times the color is in it: `styles/a.css (3)`. The copy on the clipboard follows `colors-le.clipboardIncludesPositions`, as it does for Extract.
+
+**What a scan reads.** Files come from disk, so an unsaved edit is not seen. A file over the safety size, or one that is not UTF-8 text, is left unread. It stops at 5,000 files or 10,000 listed occurrences. The report ends with a line for each thing it left out, so a short report is never mistaken for a clean project.
+
+**What it skips, and how to change that.** Three switches are on by default, and each can be turned off on its own in Settings:
+
+| Switch | Skips |
+|---|---|
+| `scanUseDefaultExcludes` | Dependency folders, build output, tool caches and lockfiles. The full list is below |
+| `scanRespectGitignore` | Whatever the project's `.gitignore` files skip |
+| `scanSkipBinaryFiles` | Images, fonts, archives and other files that are not text |
+
+Two lists adjust the result without turning a switch off. To skip more, add a pattern to `scanExcludes`. To read something a switch would skip, add it to `scanAlwaysInclude`:
+
+```jsonc
+{
+	// Also skip the test fixtures.
+	"colors-le.workspace.scanExcludes": ["**/fixtures/**"],
+	// Read the vendored code, though the built-in list skips it.
+	"colors-le.workspace.scanAlwaysInclude": ["**/vendor/**"]
+}
+```
+
+`Colors-LE: Open Settings` opens all of these in the Settings editor.
+
+<details>
+<summary>The built-in list</summary>
+
+Folders, wherever they appear:
+
+<!-- built-in-folders -->
+`.git`, `.hg`, `.svn`, `node_modules`, `bower_components`, `jspm_packages`, `.pnpm-store`, `.yarn`, `vendor`, `site-packages`, `Pods`, `Carthage`, `dist`, `build`, `out`, `target`, `_build`, `_site`, `dist-newstyle`, `zig-out`, `storybook-static`, `cdk.out`, `DerivedData`, `CMakeFiles`, `.next`, `.nuxt`, `.output`, `.svelte-kit`, `.angular`, `.astro`, `.docusaurus`, `.vuepress`, `.expo`, `.turbo`, `.parcel-cache`, `.cache`, `.sass-cache`, `.jekyll-cache`, `.dart_tool`, `.pub-cache`, `.gradle`, `.kotlin`, `.cxx`, `.externalNativeBuild`, `captures`, `ephemeral`, `.symlinks`, `.swiftpm`, `.build`, `.bundle`, `.stack-work`, `.zig-cache`, `.godot`, `elm-stuff`, `.vercel`, `.netlify`, `.serverless`, `.aws-sam`, `.terraform`, `.venv`, `venv`, `__pycache__`, `.tox`, `.nox`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `.ipynb_checkpoints`, `.eggs`, `coverage`, `htmlcov`, `.nyc_output`, `.vscode-test`, `.idea`, `.vs`, `xcuserdata`, `*.egg-info`
+<!-- /built-in-folders -->
+
+Files, wherever they appear:
+
+<!-- built-in-files -->
+`*.min.js`, `*.min.css`, `*.map`, `*.snap`, `*.lock`, `package-lock.json`, `pnpm-lock.yaml`, `npm-shrinkwrap.json`, `go.sum`, `*.pbxproj`, `*.iml`, `local.properties`, `output-metadata.json`, `.flutter-plugins`, `.flutter-plugins-dependencies`, `.packages`, `Generated.xcconfig`, `flutter_export_environment.sh`, `GeneratedPluginRegistrant.*`, `fastlane/report.xml`, `fastlane/test_output/**`, `doc/api/**`
+<!-- /built-in-files -->
+
+Not on the list, because they are ordinary folders in many projects: `bin`, `obj`, `tmp`, `logs`, `public`, `generated`. A project that generates those ignores them in git, and the scan reads `.gitignore`.
+
+</details>
+
+The settings that shape a scan are under [Settings](#settings).
+
 ## The CLI
 
 The same extraction from a terminal or a CI step — a Rust CLI in
@@ -159,6 +242,8 @@ pixel and not the same decision.
 | Command | Description |
 |---|---|
 | `Colors-LE: Extract Colors` | Extract all colors from the active document |
+| `Colors-LE: Extract Colors from Workspace` | The palette of every file in the workspace: each color once, with its spellings and where it is |
+| `Colors-LE: Extract Colors from Folder` | The same for one folder. Also on a folder in the Explorer |
 | `Colors-LE: Analyze Colors` | Statistics, clusters, patterns, and palette report |
 | `Colors-LE: Convert Colors` | Convert extracted colors to hex/rgb/hsl |
 | `Colors-LE: Filter Colors` | Filter by format, lightness, saturation |
@@ -181,6 +266,14 @@ No command is bound to a key by default. Give any of them one under **Keyboard S
 | `colors-le.dedupeEnabled` | `false` | Deduplicate extraction results automatically |
 | `colors-le.sortMode` | `off` | Sort order used by the Sort command (hue/saturation/lightness/hex, asc/desc) |
 | `colors-le.notificationsLevel` | `silent` | `all` = every notification, `important` = warnings + errors, `silent` = errors only |
+| `colors-le.workspace.scanPatterns` | `["**/*"]` | The files a folder or workspace scan reads |
+| `colors-le.workspace.scanUseDefaultExcludes` | `true` | Skip dependency folders, build output, caches and lockfiles |
+| `colors-le.workspace.scanRespectGitignore` | `true` | Skip what the project's `.gitignore` files skip |
+| `colors-le.workspace.scanSkipBinaryFiles` | `true` | Skip images, fonts, archives and other files that are not text |
+| `colors-le.workspace.scanExcludes` | `[]` | More files to skip, as glob patterns |
+| `colors-le.workspace.scanAlwaysInclude` | `[]` | Files to read even when one of the three above would skip them |
+| `colors-le.workspace.scanMaxFiles` | `5000` | The most files one scan reads |
+| `colors-le.workspace.scanMaxResults` | `10000` | The most occurrences one scan lists before it stops reading |
 | `colors-le.safety.enabled` | `true` | Guardrails for very large files |
 | `colors-le.safety.fileSizeWarnBytes` | `1000000` | Refuse extraction above this file size (override prompt offered) |
 | `colors-le.safety.largeOutputLinesThreshold` | `50000` | Warn above this line count |
@@ -238,12 +331,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 90.67% |
-| Branches | 79.81% |
-| Functions | 95.40% |
-| Lines | 92.30% |
+| Statements | 91.26% |
+| Branches | 80.73% |
+| Functions | 96.00% |
+| Lines | 92.84% |
 
-372 test cases across 27 files, plus an integration suite that runs
+423 test cases across 30 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 

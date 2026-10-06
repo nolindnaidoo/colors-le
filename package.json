@@ -98,6 +98,16 @@
 				"category": "%manifest.command.category%"
 			},
 			{
+				"command": "colors-le.extractWorkspace",
+				"title": "%manifest.command.extract-workspace.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "colors-le.extractFolder",
+				"title": "%manifest.command.extract-folder.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
 				"command": "colors-le.analyze",
 				"title": "%manifest.command.analyze.title%",
 				"category": "%manifest.command.category%"
@@ -151,6 +161,12 @@
 					"command": "colors-le.extractColors"
 				},
 				{
+					"command": "colors-le.extractWorkspace"
+				},
+				{
+					"command": "colors-le.extractFolder"
+				},
+				{
 					"command": "colors-le.analyze"
 				},
 				{
@@ -173,6 +189,13 @@
 				},
 				{
 					"command": "colors-le.help"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "colors-le.extractFolder",
+					"when": "explorerResourceIsFolder",
+					"group": "7_modification@1"
 				}
 			]
 		},
@@ -272,6 +295,67 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%manifest.settings.telemetry.desc%"
+				},
+				"colors-le.workspace.scanExcludes": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"description": "%manifest.settings.workspace.excludes.desc%",
+					"order": 104
+				},
+				"colors-le.workspace.scanMaxFiles": {
+					"type": "number",
+					"default": 5000,
+					"minimum": 1,
+					"description": "%manifest.settings.workspace.max-files.desc%",
+					"order": 106
+				},
+				"colors-le.workspace.scanMaxResults": {
+					"type": "number",
+					"default": 10000,
+					"minimum": 1,
+					"description": "%manifest.settings.workspace.max-results.desc%",
+					"order": 107
+				},
+				"colors-le.workspace.scanPatterns": {
+					"type": "array",
+					"default": [
+						"**/*"
+					],
+					"items": {
+						"type": "string"
+					},
+					"description": "%manifest.settings.workspace.patterns.desc%",
+					"order": 100
+				},
+				"colors-le.workspace.scanRespectGitignore": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.workspace.gitignore.desc%",
+					"order": 102
+				},
+				"colors-le.workspace.scanAlwaysInclude": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"description": "%manifest.settings.workspace.always-include.desc%",
+					"order": 105
+				},
+				"colors-le.workspace.scanSkipBinaryFiles": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.workspace.binary.desc%",
+					"order": 103
+				},
+				"colors-le.workspace.scanUseDefaultExcludes": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.workspace.default-excludes.desc%",
+					"order": 101
 				}
 			}
 		},

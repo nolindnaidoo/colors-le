@@ -6,6 +6,7 @@ import { registerAnalyzeCommand } from './analyze';
 import { registerConvertCommand } from './convert';
 import { registerDedupeCommand } from './dedupe';
 import { registerExtractCommand } from './extract';
+import { registerExtractWorkspaceCommands } from './extractWorkspace';
 import { registerFilterCommand } from './filter';
 import { registerHelpCommand } from './help';
 import { registerSortCommand } from './sort';
@@ -20,6 +21,7 @@ export function registerCommands(
 	}>,
 ): void {
 	registerExtractCommand(context, deps);
+	registerExtractWorkspaceCommands(context, deps);
 	registerAnalyzeCommand(context);
 	registerConvertCommand(context);
 	registerFilterCommand(context);

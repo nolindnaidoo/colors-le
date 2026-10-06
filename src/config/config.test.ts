@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+	DEFAULT_EXCLUDED_FILES,
+	DEFAULT_EXCLUDED_FOLDERS,
+	DEFAULT_EXCLUDED_PATHS,
+} from '../workspace/defaults';
 import { CONFIG_DEFAULTS } from './config';
 
 /**
@@ -33,6 +38,15 @@ describe('config defaults parity with package.json', () => {
 		'colors-le.showPositions': 'showPositions',
 		'colors-le.statusBar.enabled': 'statusBarEnabled',
 		'colors-le.telemetryEnabled': 'telemetryEnabled',
+		'colors-le.workspace.scanAlwaysInclude': 'workspaceScanAlwaysInclude',
+		'colors-le.workspace.scanExcludes': 'workspaceScanExcludes',
+		'colors-le.workspace.scanMaxFiles': 'workspaceScanMaxFiles',
+		'colors-le.workspace.scanMaxResults': 'workspaceScanMaxResults',
+		'colors-le.workspace.scanPatterns': 'workspaceScanPatterns',
+		'colors-le.workspace.scanRespectGitignore': 'workspaceScanRespectGitignore',
+		'colors-le.workspace.scanSkipBinaryFiles': 'workspaceScanSkipBinaryFiles',
+		'colors-le.workspace.scanUseDefaultExcludes':
+			'workspaceScanUseDefaultExcludes',
 	};
 
 	it('covers every declared setting', () => {
@@ -41,7 +55,57 @@ describe('config defaults parity with package.json', () => {
 
 	for (const [manifestKey, defaultsKey] of Object.entries(KEY_MAP)) {
 		it(`${manifestKey} default matches`, () => {
-			expect(CONFIG_DEFAULTS[defaultsKey]).toBe(props[manifestKey]?.default);
+			expect(CONFIG_DEFAULTS[defaultsKey]).toEqual(props[manifestKey]?.default);
 		});
 	}
+});
+
+describe('the README states the scan limits the code uses', () => {
+	const readme = readFileSync(join(__dirname, '..', '..', 'README.md'), 'utf8');
+	const grouped = (n: number) => n.toLocaleString('en-US');
+
+	it('in the settings table', () => {
+		expect(readme).toContain(
+			`| \`colors-le.workspace.scanMaxFiles\` | \`${CONFIG_DEFAULTS.workspaceScanMaxFiles}\` |`,
+		);
+		expect(readme).toContain(
+			`| \`colors-le.workspace.scanMaxResults\` | \`${CONFIG_DEFAULTS.workspaceScanMaxResults}\` |`,
+		);
+	});
+
+	it('in the prose', () => {
+		expect(readme).toContain(
+			`It stops at ${grouped(CONFIG_DEFAULTS.workspaceScanMaxFiles)} files or ${grouped(CONFIG_DEFAULTS.workspaceScanMaxResults)} listed occurrences.`,
+		);
+	});
+});
+
+describe('the README lists the folders a scan skips', () => {
+	it('exactly as the code has them', () => {
+		const readme = readFileSync(
+			join(__dirname, '..', '..', 'README.md'),
+			'utf8',
+		);
+		const listed =
+			/<!-- built-in-folders -->\n(.*)\n<!-- \/built-in-folders -->/
+				.exec(readme)?.[1]
+				?.split(', ')
+				.map((entry) => entry.replace(/`/g, ''));
+		expect(listed).toEqual([...DEFAULT_EXCLUDED_FOLDERS, '*.egg-info']);
+	});
+
+	it('and the files, exactly as the code has them', () => {
+		const readme = readFileSync(
+			join(__dirname, '..', '..', 'README.md'),
+			'utf8',
+		);
+		const listed = /<!-- built-in-files -->\n(.*)\n<!-- \/built-in-files -->/
+			.exec(readme)?.[1]
+			?.split(', ')
+			.map((entry) => entry.replace(/`/g, ''));
+		expect(listed).toEqual([
+			...DEFAULT_EXCLUDED_FILES,
+			...DEFAULT_EXCLUDED_PATHS,
+		]);
+	});
 });
