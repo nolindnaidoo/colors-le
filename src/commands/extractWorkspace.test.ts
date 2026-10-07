@@ -47,13 +47,22 @@ function open(files: Record<string, string> = TREE): void {
 	workspace.workspaceFolders = [{ uri: Uri.file('/w'), name: 'w', index: 0 }];
 }
 
+/** How many delivered scans the rating prompt was told about. */
+const successes = { count: 0 };
+
 beforeEach(() => {
 	_resetMockState();
+	successes.count = 0;
 	const context = { subscriptions: [] as Array<{ dispose(): void }> } as never;
 	registerExtractWorkspaceCommands(context, {
 		telemetry: createTelemetry(),
 		notifier: createNotifier(),
 		statusBar: createStatusBar(context),
+		ratingPrompt: {
+			recordSuccess: async () => {
+				successes.count++;
+			},
+		},
 	});
 });
 
@@ -92,6 +101,15 @@ describe('colors-le.extractWorkspace and colors-le.extractFolder', () => {
 		await runCommand('colors-le.extractWorkspace');
 		expect(_shownMessages()[0]).toMatchObject({ kind: 'warning' });
 		expect(_openedDocuments()).toHaveLength(0);
+	});
+
+	it('counts a delivered scan toward the rating prompt, and nothing else', async () => {
+		await runCommand('colors-le.extractWorkspace');
+		expect(successes.count).toBe(0);
+
+		open();
+		await runCommand('colors-le.extractWorkspace');
+		expect(successes.count).toBe(1);
 	});
 
 	it('lists each color once across its spellings, the most widely used first', async () => {
