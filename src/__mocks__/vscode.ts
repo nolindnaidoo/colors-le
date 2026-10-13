@@ -544,6 +544,8 @@ export function _setClipboardError(error: Error | undefined): void {
 }
 
 export const env = {
+	/** What `vscode.env.appName` reports; `_setAppName` makes it another host. */
+	appName: 'Visual Studio Code',
 	clipboard: {
 		writeText: async (text: string) => {
 			// The clipboard is the one output the OS can refuse — a remote or
@@ -618,6 +620,7 @@ export const FileType = {
 
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
+	env.appName = 'Visual Studio Code';
 	clipboardError = undefined;
 	applyEditResult = true;
 	openDocumentError = undefined;
@@ -654,3 +657,7 @@ export const l10n = {
 		});
 	},
 };
+
+export function _setAppName(name: string): void {
+	env.appName = name;
+}
