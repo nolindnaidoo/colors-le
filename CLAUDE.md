@@ -61,6 +61,13 @@ artifact users actually install.
   and the CLI is terminal-first, with a tree walk, exit codes and JSON Lines
   that have no editor equivalent. That is not drift, and nothing holds them
   equal. See `crate/SPEC.md`.
+- **The npm command line is the crate's surface, not the extension's.**
+  `src/cli/` builds the npm package `colors-le`, which installs the same
+  command the crate does, so it is held to the Rust CLI byte for byte by
+  `bun run check:cli-parity` (after `bun run build:cli` and a `cargo build`
+  in `crate/`). A change to the crate's flags, walk, palette, exit codes or
+  output changes `src/cli/` in the same commit. `--version` is the one
+  difference: the npm package carries this extension's version.
 - **Only extraction is ported.** Convert, analyze and validate are interactive
   and stay here; the crate's SPEC.md says so and contract tests enforce it.
 - **Localization is two mechanisms, and they fail separately.** `src/i18n/package.nls.*.json`

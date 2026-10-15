@@ -11,6 +11,15 @@ separate product on its own cadence and keeps its own
 
 ## [Unreleased]
 
+### Added
+
+- An npm command line, `colors-le`, built in `cli/` from `src/cli/`. It is
+  the Rust CLI's surface over this extension's extraction engine: the same
+  flags, walk, palette check, exit codes, JSON Lines and stderr summary, and
+  `colors-le mcp` serves the same two tools. `scripts/check-cli-parity.ts`
+  runs both binaries over one tree and fails on any byte of difference.
+  It carries this extension's version, not the crate's.
+
 ### Fixed
 
 - The rating prompt's Rate button opened the Marketplace review page for

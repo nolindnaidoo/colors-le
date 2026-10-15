@@ -63,6 +63,12 @@ with its own `CLAUDE.md`.
   `--palette`, `--strict`, the exit codes and JSON Lines have no editor
   equivalent and are not drift. SPEC.md's "Deliberate divergences" is
   the bar for a new one.
+- **The command line has a twin.** The npm package `colors-le`, built
+  from the extension's `src/cli/`, mirrors `cli.rs`, `scan.rs`, `walk.rs`
+  and `extract/palette.rs` byte for byte, and
+  `bun ../scripts/check-cli-parity.ts` fails on any difference. A change
+  to a flag, a message, the walk, the palette or an exit code changes
+  `src/cli/` in the same commit.
 - Write regression tests for every bug you fix; keep unit tests free of
   clocks, randomness, and the filesystem outside `walk`/`scan`.
 - **Run the binary, not only the tests.** 106 unit tests passed while

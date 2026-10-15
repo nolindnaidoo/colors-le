@@ -4,6 +4,8 @@ Technical source of truth for this repo. README.md is the user-facing doc; this 
 
 This repo hosts **two products**: the extension at the root (this document's scope) and the Rust CLI in `crate/` (its own `AGENTS.md` + `SPEC.md`), which ports extraction only. The shared corpus lives at `crate/fixtures/`; `scripts/check-extraction-parity.ts` fails CI when this extension drifts from it.
 
+The Rust CLI also ships **a second way, through npm**: `src/cli/` is its terminal surface rebuilt over this extension's extraction engine, bundled to `cli/cli.js` as the npm package `colors-le`. Both install a command named `colors-le`, so the npm one is held to the crate's surface byte for byte, which is a different contract from the extraction parity above. `src/cli/` follows `crate/src/cli.rs`, `scan.rs`, `walk.rs` and `extract/palette.rs`, not the extension's commands, and `scripts/check-cli-parity.ts` runs both binaries over one generated tree and fails on any difference in stdout, stderr or exit code, and in what `colors-le mcp` answers. A change to the crate's surface changes `src/cli/` in the same commit.
+
 ## What this is
 
 A VS Code extension that extracts colors from the active document (CSS/SCSS/LESS/Stylus, HTML, JS/TS, SVG) into a results editor, with dedupe/sort/convert/filter/analyze/validate post-processing. No network access, no filesystem writes.
@@ -33,6 +35,9 @@ utils/                  errors (sanitizeErrorMessage), safety (size guards),
                         sort, format (formatDuration)
 config/config.ts        getConfiguration() snapshot; CONFIG_DEFAULTS table
 types.ts                shared types only — no logic
+cli/                    the npm command line: args, walk + ignoreRules
+                        (ripgrep's precedence), palette, scan, run, and
+                        scanTool for `colors-le mcp`. No `vscode`, ever
 ```
 
 Conventions: factory functions + `Object.freeze` (no classes), guard clauses, dependency bags typed inline at the consumer — see **Code style** below. Both the manifest and the runtime strings are localized into 12 locales; see **Toolchain**.
@@ -221,6 +226,7 @@ most valuable line in the file, and it is what keeps the next person from
 - **Localization:** two separate mechanisms. The 12 `package.nls.*.json` catalogues in `src/i18n/` localize **manifest** strings (VS Code `%key%` substitution) and are copied to the package root at prepublish, then removed by `clean:i18n`. The 12 `l10n/bundle.l10n.*.json` catalogues localize **runtime** strings via `vscode.l10n.t()`, enabled by `"l10n": "./l10n"` in package.json. They fail independently: a working manifest says nothing about the runtime bundles. The rules that keep both correct are under **Code style** above.
 
 - **npm package:** `bun run build:npm` assembles `mcp/` and writes its version from the root manifest, so the two can never claim the same version while carrying different code. `bun run check:npm-package` packs it, installs the tarball into a throwaway project and drives the *installed* binary through a handshake — which is what `npx` does, minus the registry. Run it before publishing: a version cannot be reused, and the unpublish window is 72 hours.
+- **npm command line:** `bun run build:cli` bundles `src/cli/main.ts` to `cli/cli.js` and writes `cli/package.json`'s version from the root manifest. `bun run check:cli-parity` needs that and a `cargo build` of the crate, and is what the `cli-parity` job in `ci-crate.yml` runs. The `Release` workflow does not publish it yet: `release.yml` is fleet-shared, so a publish step lands across the family in one change.
 
 ## Generated documentation
 
