@@ -383,6 +383,7 @@
 		"build:cli": "node scripts/build-cli.js",
 		"build:cli:prod": "node scripts/build-cli.js --prod",
 		"check:cli-parity": "bun scripts/check-cli-parity.ts",
+		"check:cli-package": "node scripts/check-cli-package.js",
 		"test": "vitest run --pool=threads",
 		"test:watch": "vitest --pool=threads",
 		"test:coverage": "vitest run --coverage --pool=threads --reporter=default --reporter=json --outputFile.json=coverage/test-results.json",
