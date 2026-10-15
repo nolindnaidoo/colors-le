@@ -214,8 +214,8 @@ extension's `src/cli/` over the extension's engine, and nobody running
 this section byte for byte — flags, walk, palette, exit codes, stdout,
 stderr, and both tools `colors-le mcp` serves — by
 `scripts/check-cli-parity.ts`. A change to this surface changes
-`src/cli/` in the same commit. `--version` is the one difference: the
-npm package carries the extension's version.
+`src/cli/` in the same commit. That includes `--version`: every surface
+in the repository carries one version.
 
 **One implementation detail is held equal on purpose**: the extraction
 layer uses JavaScript's string semantics, not Rust's. The reference

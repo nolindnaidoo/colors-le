@@ -27,6 +27,9 @@ on:
       - 'cli/**'
       - 'scripts/build-cli.js'
       - 'scripts/check-cli-parity.ts'
+      - 'package.json'
+      - 'mcp/package.json'
+      - 'server.json'
       - '.github/workflows/ci-crate.yml'
       # The policy job greps every *.md, and in the crate-only repos holds
       # the six agent instruction files to one document. A change to one of
@@ -50,6 +53,9 @@ on:
       - 'cli/**'
       - 'scripts/build-cli.js'
       - 'scripts/check-cli-parity.ts'
+      - 'package.json'
+      - 'mcp/package.json'
+      - 'server.json'
       - '.github/workflows/ci-crate.yml'
       # The policy job greps every *.md, and in the crate-only repos holds
       # the six agent instruction files to one document. A change to one of
@@ -121,6 +127,34 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "code=$code, files changed:"
           echo "$files"
+
+  # Every surface releases one version from one tag. ci.yml holds the
+  # extension, the MCP package and server.json equal; this holds the crate
+  # and the npm command line to the same number. It lives here because
+  # ci.yml is byte-identical across the *-le repos and only this one has
+  # both. A mismatch found after publishing costs a version on a registry
+  # that never gives one back.
+  versions:
+    name: One version
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          set -euo pipefail
+          expected=$(node -p "require('./package.json').version")
+          crate=$(grep -m1 '^version' crate/Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+          cli=$(node -p "require('./cli/package.json').version")
+          status=0
+          for pair in "crate/Cargo.toml:$crate" "cli/package.json:$cli"; do
+            if [ "${pair#*:}" != "$expected" ]; then
+              echo "::error::${pair%%:*} is ${pair#*:}, package.json is $expected"
+              status=1
+            fi
+          done
+          exit $status
 
   test:
     needs: changes

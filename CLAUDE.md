@@ -66,8 +66,8 @@ artifact users actually install.
   command the crate does, so it is held to the Rust CLI byte for byte by
   `bun run check:cli-parity` (after `bun run build:cli` and a `cargo build`
   in `crate/`). A change to the crate's flags, walk, palette, exit codes or
-  output changes `src/cli/` in the same commit. `--version` is the one
-  difference: the npm package carries this extension's version.
+  output changes `src/cli/` in the same commit. `--version` is compared
+  too, because every surface carries one version; see AGENTS.md, Release.
 - **Only extraction is ported.** Convert, analyze and validate are interactive
   and stay here; the crate's SPEC.md says so and contract tests enforce it.
 - **Localization is two mechanisms, and they fail separately.** `src/i18n/package.nls.*.json`

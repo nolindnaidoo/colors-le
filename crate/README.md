@@ -94,9 +94,10 @@ what a reviewer should look at.
 | Route | Command | Worth knowing |
 |---|---|---|
 | **cargo** | `cargo install colors-le` | Any platform, needs **Rust 1.88+**. |
+| **npm** | `npm install -g colors-le` or `npx colors-le` | Needs **Node 20+**. The same command, held to this one byte for byte. |
 | **From source** | `git clone https://github.com/nolindnaidoo/colors-le`<br>`cd colors-le/crate && cargo build --release` | The same build CI runs. |
 
-No runtime, no network, nothing written.
+The cargo build needs no runtime. Neither one touches the network or writes anything.
 
 ## What counts as a colour
 

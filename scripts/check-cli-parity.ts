@@ -9,8 +9,9 @@
  * `colors-le mcp` serves.
  *
  * Every case runs both binaries over one generated tree with stdout piped,
- * which is how a script sees them. `--version` is not compared: the crate and
- * the npm package are versioned separately.
+ * which is how a script sees them. `--version` is compared too: every surface
+ * carries one version, and two binaries of one name disagreeing about it is
+ * the first thing a person comparing them would see.
  *
  * Run: bun run build:cli && cargo build --locked --manifest-path crate/Cargo.toml
  *      bun scripts/check-cli-parity.ts
@@ -135,6 +136,8 @@ function cases(): readonly Case[] {
 	const palette = (name: string): string => join(tree, name);
 	return [
 		{ args: ['--help'] },
+		{ args: ['--version'] },
+		{ args: ['-V'] },
 		{ args: ['-h'] },
 		{ args: [] },
 		{ args: [repo] },
