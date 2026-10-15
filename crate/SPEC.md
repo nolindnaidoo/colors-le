@@ -197,7 +197,7 @@ expects, and the following are differences by design rather than drift:
 - The **walk**, `--palette`, `--strict`, `--hidden`, `--no-ignore`,
   `--values` and the exit codes exist only here. The extension has no
   tree to walk and nothing to enforce against.
-- **JSON Lines on stdout**, one report per file, with a `notation`
+- **JSON Lines on stdout** when it is not a terminal, one report per file, with a `notation`
   field. The shared tool calls the same thing `format`; both names are
   published API on their own surface and neither moves to match the
   other.
@@ -238,8 +238,12 @@ offset after it still points where it did.
 
 ## Output contract
 
-**stdout is protocol, stderr is human.** One JSON report per line, one
-line per file.
+**stdout is protocol, stderr is human.** When stdout is a pipe, a file or
+a subprocess it carries one JSON report per line, one line per file, or
+with `--values` one colour per line. When it is a terminal it carries
+nothing, because the stderr summary already lists every colour a person
+reads there. At a terminal `--values` lists its colours on stderr instead.
+No script can tell the difference, since a script is never a terminal.
 
 ```json
 {
@@ -282,7 +286,8 @@ Options:
                        JSON object's values
   --dedupe             collapse repeated colours to their first
                        occurrence **within each file**
-  --values             print only the colours, one per line, for piping
+  --values             print only the colours, one per line, for piping;
+                       at a terminal they are listed on stderr instead
   --format <format>    force a format instead of inferring it from the
                        file name; required with --stdin
   --stdin              read one document from stdin

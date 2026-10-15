@@ -1,10 +1,11 @@
 //! The terminal surface.
 //!
-//! stdout is always protocol — one JSON report per line, one line per
-//! file. stderr is always for the human, and is a projection of the same
+//! stdout is protocol — one JSON report per line, one line per file —
+//! whenever something is reading it, and silent when it is a terminal.
+//! stderr is always for the human, and is a projection of the same
 //! reports rather than parallel prose.
 
-use std::io::{Read, Write};
+use std::io::{IsTerminal, Read, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -18,7 +19,8 @@ const USAGE: &str = "usage: colors-le [options] <file|dir>...
        colors-le --version | --help
 
 Finds every colour in a tree and, given a palette, says which of them are
-not in it.
+not in it. One JSON report per line on stdout when it is piped or
+redirected, human summary on stderr.
 
 Every file is read. CSS, SCSS, LESS, Stylus, HTML, XML, SVG, JavaScript,
 TypeScript, JSON, YAML, TOML, Markdown and plain text are read by name;
@@ -36,7 +38,8 @@ Options:
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
                        file name; a name this does not know is refused
-  --values             print only the values, one per line, for piping
+  --values             print only the values, one per line, for piping;
+                       at a terminal they are listed on stderr instead
   --strict             exit 2 if a file that looked like text could not
                        be read, rather than reporting it and carrying on
   --stdin              read one document from stdin
@@ -110,13 +113,24 @@ fn execute(args: &[String]) -> Result<u8, String> {
         read_tree(&options)?
     };
 
-    if options.values_only {
-        write_values(&reports)?;
+    let stdout = std::io::stdout();
+    let terminal = stdout.is_terminal();
+    let mut out = stdout.lock();
+    let written = if options.values_only {
+        write_values(&mut out, &reports, terminal)
     } else {
-        write_reports(&reports)?;
-    }
+        write_reports(&mut out, &reports, terminal)
+    };
+    written.map_err(|error| format!("could not write the report: {error}"))?;
+    drop(out);
 
-    summarise(&reports, binary, options.values_only);
+    let values_on_stdout = options.values_only && !terminal;
+    summarise(
+        &mut std::io::stderr().lock(),
+        &reports,
+        binary,
+        values_on_stdout,
+    );
     Ok(scan::exit_code(&reports, options.strict))
 }
 
@@ -137,22 +151,39 @@ fn read_tree(options: &Cli) -> Result<(Vec<FileReport>, usize), String> {
     Ok((reports, binary))
 }
 
-fn write_reports(reports: &[FileReport]) -> Result<(), String> {
-    let mut stdout = std::io::stdout().lock();
+/// A terminal gets nothing here. The stderr summary already lists every
+/// colour a person reads, and the JSON beside it on the same screen is
+/// the same answer a second time in a form nobody reads by eye. Anything
+/// that can parse — a pipe, a file, a subprocess — still gets every
+/// report, so no script sees a difference.
+fn write_reports(
+    out: &mut impl Write,
+    reports: &[FileReport],
+    terminal: bool,
+) -> std::io::Result<()> {
+    if terminal {
+        return Ok(());
+    }
     for report in reports {
         let line = serde_json::to_string(report).expect("a report serializes");
-        writeln!(stdout, "{line}")
-            .map_err(|error| format!("could not write the report: {error}"))?;
+        writeln!(out, "{line}")?;
     }
     Ok(())
 }
 
-fn write_values(reports: &[FileReport]) -> Result<(), String> {
-    let mut stdout = std::io::stdout().lock();
+/// Silent at a terminal for the same reason as the reports, which is
+/// why [`summarise`] lists the values itself when this stays quiet.
+fn write_values(
+    out: &mut impl Write,
+    reports: &[FileReport],
+    terminal: bool,
+) -> std::io::Result<()> {
+    if terminal {
+        return Ok(());
+    }
     for report in reports {
         for found in &report.colors {
-            writeln!(stdout, "{}", found.value)
-                .map_err(|error| format!("could not write the values: {error}"))?;
+            writeln!(out, "{}", found.value)?;
         }
     }
     Ok(())
@@ -254,8 +285,16 @@ fn parse(args: &[String]) -> Result<Cli, String> {
 
 /// The human half. Every line restates something already on stdout,
 /// except the binary count — the one fact stdout deliberately omits.
-fn summarise(reports: &[FileReport], binary: usize, values_only: bool) {
-    let mut stderr = std::io::stderr().lock();
+///
+/// `values_on_stdout` is true only when `--values` is actually printing
+/// them. At a terminal stdout is silent, so the colours are listed here
+/// or a `--values` run would show nothing but a count.
+fn summarise(
+    stderr: &mut impl Write,
+    reports: &[FileReport],
+    binary: usize,
+    values_on_stdout: bool,
+) {
     let mut colors = 0;
     let mut outside = 0;
 
@@ -265,7 +304,7 @@ fn summarise(reports: &[FileReport], binary: usize, values_only: bool) {
         }
         // With --values the values are already on stdout; repeating them
         // here would double every line a reviewer is piping.
-        if !values_only {
+        if !values_on_stdout {
             for found in &report.colors {
                 let _ = writeln!(stderr, "{}", scan::describe(report, found));
             }
@@ -309,6 +348,64 @@ fn plural(count: usize, one: &str, many: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::testing::TempTree;
+
+    fn sample_reports(tree: &TempTree) -> Vec<FileReport> {
+        tree.write("a.css", "a { color: #2563eb; }\n");
+        let options = parse(&[tree.path().join("a.css").to_string_lossy().into_owned()])
+            .expect("a valid command line");
+        read_tree(&options).expect("a read").0
+    }
+
+    #[test]
+    fn a_pipe_gets_one_report_per_line() {
+        let tree = TempTree::new("cli-pipe");
+        let reports = sample_reports(&tree);
+        let mut out = Vec::new();
+        write_reports(&mut out, &reports, false).expect("a write");
+        let text = String::from_utf8(out).expect("utf-8");
+        assert_eq!(text.lines().count(), reports.len());
+        assert!(text.starts_with('{'), "{text}");
+    }
+
+    #[test]
+    fn a_terminal_gets_no_json() {
+        let tree = TempTree::new("cli-terminal");
+        let reports = sample_reports(&tree);
+        let mut out = Vec::new();
+        write_reports(&mut out, &reports, true).expect("a write");
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn a_pipe_gets_the_values_and_a_terminal_none() {
+        let tree = TempTree::new("cli-values");
+        let reports = sample_reports(&tree);
+        let mut piped = Vec::new();
+        write_values(&mut piped, &reports, false).expect("a write");
+        assert_eq!(String::from_utf8(piped).expect("utf-8"), "#2563eb\n");
+        let mut shown = Vec::new();
+        write_values(&mut shown, &reports, true).expect("a write");
+        assert!(shown.is_empty());
+    }
+
+    /// With stdout silent at a terminal, a `--values` run would show a
+    /// bare count if stderr did not carry the colours.
+    #[test]
+    fn stderr_lists_the_colours_unless_values_are_on_stdout() {
+        let tree = TempTree::new("cli-stderr");
+        let reports = sample_reports(&tree);
+        let mut listed = Vec::new();
+        summarise(&mut listed, &reports, 0, false);
+        let text = String::from_utf8(listed).expect("utf-8");
+        assert!(text.contains("a.css:1:12  #2563eb\n"), "{text}");
+        assert!(text.ends_with("1 color in 1 file\n"), "{text}");
+
+        let mut quiet = Vec::new();
+        summarise(&mut quiet, &reports, 0, true);
+        let text = String::from_utf8(quiet).expect("utf-8");
+        assert_eq!(text, "1 color in 1 file\n");
+    }
 
     #[test]
     fn every_documented_flag_is_parsed_and_the_reverse() {
