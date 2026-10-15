@@ -28,7 +28,7 @@
 ---
 
 <p align="center">
-  <img src="src/assets/images/demo.gif" alt="Colors-LE Demo" style="max-width: 100%; height: auto;" />
+  <img src="assets/demos/editor.gif" alt="Colors-LE in VS Code" style="max-width: 100%; height: auto;" />
 </p>
 
 > **Useful?** A star or rating is how other developers find it —
@@ -62,6 +62,10 @@ The same engine runs as an [MCP](https://modelcontextprotocol.io) server, so an 
 | **VS Code** 1.101+ | Nothing to install — the extension registers `extract_colors` with agent mode |
 | **Claude Code** | `claude mcp add colors-le -- npx -y colors-le-mcp` |
 | **Cursor, Windsurf, anything else** | point it at `npx colors-le-mcp` |
+
+<p align="center">
+  <img src="assets/demos/mcp.gif" alt="An agent in Claude Code calling the colors-le MCP server" style="max-width: 100%; height: auto;" />
+</p>
 
 ```
 extract_colors(content, format?, filename?, dedupe?, maxResults?)
@@ -227,6 +231,10 @@ colors-le --palette brand.txt .          # what is not in the palette
 colors-le --values --dedupe . | sort -u  # write the palette in the first place
 colors-le mcp                            # the same extraction over MCP on stdio
 ```
+
+<p align="center">
+  <img src="assets/demos/cli.gif" alt="colors-le in a terminal" style="max-width: 100%; height: auto;" />
+</p>
 
 Exit codes: 0 clean, 1 none found or a colour outside the palette, 2 the
 question was malformed.
