@@ -19,7 +19,7 @@ Type `unset CLAUDECODE CLAUDE_CODE_CHILD_SESSION CLAUDE_CODE_ENTRYPOINT CLAUDE_C
 Enter
 Type `D=$PWD; cd "$(mktemp -d /tmp/colors-le.XXXX)" && cp -R "$D/../cli/input/." . && printf '{"mcpServers":{"colors-le":{"command":"node","args":["%s"]}}}' "$D/../../../mcp/server.js" > mcp.json && PS1="$ " && clear`
 Enter
-Type `clear && claude --mcp-config mcp.json --strict-mcp-config --allowedTools "mcp__colors-le Read" --disallowedTools Bash`
+Type `clear && claude --mcp-config mcp.json --strict-mcp-config --allowedTools "mcp__colors-le Read" --disallowedTools Bash WebFetch WebSearch Agent`
 Enter
 Sleep 6s
 # The folder-trust prompt opens on "No, exit".
