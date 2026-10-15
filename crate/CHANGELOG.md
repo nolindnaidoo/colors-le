@@ -1,11 +1,31 @@
 # Changelog
 
-The Rust CLI and MCP server. The VS Code extension has its own
-[CHANGELOG](../CHANGELOG.md) and its own version — the two products in
-this repository release on their own cadence.
+The Rust CLI and MCP server. The VS Code extension, the npm MCP server
+and the npm command line have their own [CHANGELOG](../CHANGELOG.md).
+Up to 0.4.4 the crate was versioned on its own. From 2.6.0 every surface
+in this repository carries one version and releases from one tag.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.6.0] - 2026-10-15
+
+### Changed
+
+- **The version jumps from 0.4.4 to 2.6.0** to match the extension and
+  the npm command line `colors-le`, which installs the same command and
+  is held to this one byte for byte. Two binaries called `colors-le`
+  printing different versions for the same behaviour would mislead
+  anyone comparing them. The number changes no behaviour on its own; the
+  one behaviour change in this release is below.
+
+### Fixed
+
+- **A palette file that starts with a byte-order mark is read.** Notepad
+  and Excel add one, and it was glued to the first entry, so that entry
+  was named as not a colour. A JSON palette with one did not parse at
+  all, and a one-colour palette was refused with "holds no colours this
+  can read".
 
 ## [0.4.4] - 2026-10-15
 

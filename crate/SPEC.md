@@ -207,6 +207,16 @@ expects, and the following are differences by design rather than drift:
 - **Convert, analyze and validate** stay in the editor — see "Half the
   extension, on purpose".
 
+**Held equal as well: this surface and the npm one.** The npm package
+`colors-le` installs a command of the same name, built from the
+extension's `src/cli/` over the extension's engine, and nobody running
+`colors-le` can tell which one they have. It is held to everything in
+this section byte for byte — flags, walk, palette, exit codes, stdout,
+stderr, and both tools `colors-le mcp` serves — by
+`scripts/check-cli-parity.ts`. A change to this surface changes
+`src/cli/` in the same commit. That includes `--version`: every surface
+in the repository carries one version.
+
 **One implementation detail is held equal on purpose**: the extraction
 layer uses JavaScript's string semantics, not Rust's. The reference
 implementation's patterns run without the `u` flag, so `\b`, `\d` and
@@ -367,3 +377,7 @@ entirely.
 
 A BOM anywhere other than the start is a zero-width no-break space and
 belongs to the text.
+
+A palette file gets the same treatment, for the same reason: it is as
+likely to have been saved by Notepad or exported by Excel as any file
+in the tree.

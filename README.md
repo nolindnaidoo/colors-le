@@ -50,7 +50,7 @@ Open a file, run `Colors-LE: Extract Colors`, and every color in the document la
 |---|---|---|
 | **VS Code** | Extraction, conversion, analysis and validation in your editor | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.colors-le) |
 | **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/colors-le) |
-| **A terminal or a CI step** | The same extraction over a whole tree, with exit codes | `cargo install colors-le` · [crates.io](https://crates.io/crates/colors-le) |
+| **A terminal or a CI step** | The same extraction over a whole tree, with exit codes | `npx colors-le` · [npm](https://www.npmjs.com/package/colors-le) or `cargo install colors-le` · [crates.io](https://crates.io/crates/colors-le) |
 | **Any MCP agent, via Node** | `extract_colors` over stdio | `npx colors-le-mcp` · [npm](https://www.npmjs.com/package/colors-le-mcp) |
 
 ## Use it from an AI agent
@@ -221,8 +221,11 @@ The settings that shape a scan are under [Settings](#settings).
 
 ## The CLI
 
-The same extraction from a terminal or a CI step — a Rust CLI in
-[`crate/`](crate/README.md), installed with `cargo install colors-le`.
+The same extraction from a terminal or a CI step, installed from npm
+with `npm install -g colors-le` (or run with `npx colors-le`) or from
+crates.io with `cargo install colors-le`. Both install the same command,
+documented in [`crate/`](crate/README.md), and are held to the same
+output byte for byte.
 Convert, analyze and validate are interactive and stay in the editor.
 
 ```bash
@@ -340,12 +343,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 91.48% |
-| Branches | 81.05% |
-| Functions | 96.16% |
-| Lines | 93.01% |
+| Statements | 87.74% |
+| Branches | 78.07% |
+| Functions | 90.57% |
+| Lines | 90.20% |
 
-459 test cases across 33 files, plus an integration suite that runs
+489 test cases across 34 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 
