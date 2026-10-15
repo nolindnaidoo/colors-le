@@ -143,7 +143,10 @@ function entriesOf(
 	} catch (error) {
 		// The crate ends the walk on an unreadable directory rather than
 		// reporting less than the tree holds as though it were all of it.
-		throw new Error(`${walk.root}: ${shown}: ${rustIoMessage(error)}`);
+		// walkdir's wording, inside the `ignore` crate's, inside the CLI's.
+		throw new Error(
+			`${walk.root}: ${shown}: IO error for operation on ${shown}: ${rustIoMessage(error)}`,
+		);
 	}
 }
 
