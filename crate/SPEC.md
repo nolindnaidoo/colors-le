@@ -377,3 +377,7 @@ entirely.
 
 A BOM anywhere other than the start is a zero-width no-break space and
 belongs to the text.
+
+A palette file gets the same treatment, for the same reason: it is as
+likely to have been saved by Notepad or exported by Excel as any file
+in the tree.

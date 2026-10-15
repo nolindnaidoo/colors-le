@@ -119,6 +119,8 @@ function build(): void {
 	file('palette.json', '["#1A2B3C", "rgb(255,255,255)", "teal", "#12345"]');
 	file('palette-object.json', '{"z": "#abc", "10": "nope", "a": "#def", "2": "#1a2b3c"}');
 	file('palette-empty.txt', 'nothing here\n');
+	file('palette-bom.txt', '\uFEFF#ffffff\n');
+	file('palette-bom.json', '\uFEFF["#1a2b3c", "bogus"]');
 	file('palette-latin1.txt', Buffer.from([0x23, 0x66, 0x66, 0x66, 0x0a, 0xe9]));
 
 	if (process.platform !== 'win32' && process.getuid?.() !== 0) {
@@ -153,6 +155,8 @@ function cases(): readonly Case[] {
 		{ args: [repo, '--palette', palette('palette.json'), '--values'] },
 		{ args: [repo, '--palette', palette('palette-object.json')] },
 		{ args: [repo, '--palette', palette('palette-empty.txt')] },
+		{ args: [repo, '--palette', palette('palette-bom.txt')] },
+		{ args: [repo, '--palette', palette('palette-bom.json')] },
 		{ args: [repo, '--palette', palette('palette-latin1.txt')] },
 		{ args: [repo, '--palette', palette('missing.txt')] },
 		{ args: [repo, '--palette'] },

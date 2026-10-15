@@ -119,6 +119,14 @@ describe('palette', () => {
 		expect(rejected).toEqual(['#12345']);
 	});
 
+	it('reads a palette saved with a byte-order mark', () => {
+		for (const text of ['\uFEFF#1a2b3c\n', '\uFEFF["#1a2b3c"]']) {
+			const { palette, rejected } = parsePalette(text);
+			expect(rejected).toEqual([]);
+			expect(paletteContains(palette, '#1a2b3c')).toBe(true);
+		}
+	});
+
 	it('reads a modern colour', () => {
 		const { palette } = parsePalette('rgb(255 0 0)');
 		expect(paletteContains(palette, '#ff0000')).toBe(true);

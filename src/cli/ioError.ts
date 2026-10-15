@@ -41,6 +41,15 @@ export function decodeUtf8OrThrow(bytes: Uint8Array): string {
 	}
 }
 
+/**
+ * Drop a leading byte-order mark. Notepad, Excel and a PowerShell redirect add
+ * one, and VS Code strips it before the extension sees a document, so a file
+ * read without this reads differently from the same file open in the editor.
+ */
+export function withoutBom(content: string): string {
+	return content.startsWith('\uFEFF') ? content.slice(1) : content;
+}
+
 export function rustIoMessage(error: unknown): string {
 	const code = codeOf(error);
 	// Rust's own wording, which carries no OS error number.

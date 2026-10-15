@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { basename, sep } from 'node:path';
 import { extractColors } from '../extraction/extract';
 import { resolveFormat } from '../mcp/fileType';
-import { decodeUtf8OrThrow, rustIoMessage } from './ioError';
+import { decodeUtf8OrThrow, rustIoMessage, withoutBom } from './ioError';
 import { type Palette, paletteContains } from './palette';
 
 export interface ReportDiagnostic {
@@ -196,10 +196,6 @@ function decodeUtf8(bytes: Buffer): string | null {
 		// Invalid UTF-8 is the answer, reported by the caller as a skip.
 		return null;
 	}
-}
-
-function withoutBom(content: string): string {
-	return content.startsWith('﻿') ? content.slice(1) : content;
 }
 
 /** Separators are always `/` in a report, and only where `\` is the separator. */

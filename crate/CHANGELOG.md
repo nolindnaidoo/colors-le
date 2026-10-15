@@ -7,6 +7,16 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **A palette file that starts with a byte-order mark is read.** Notepad
+  and Excel add one, and it was glued to the first entry, so that entry
+  was named as not a colour. A JSON palette with one did not parse at
+  all, and a one-colour palette was refused with "holds no colours this
+  can read".
+
 ## [0.4.4] - 2026-10-15
 
 ### Fixed

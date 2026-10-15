@@ -12,6 +12,7 @@
  */
 import { classifyColorFormat, isNamedColor } from '../extraction/heuristics';
 import { parseModernColor } from '../utils/cssColor';
+import { withoutBom } from './ioError';
 
 export interface Palette {
 	readonly swatches: ReadonlySet<string>;
@@ -34,7 +35,7 @@ export function parsePalette(text: string): ParsedPalette {
 	const names = new Set<string>();
 	const rejected: string[] = [];
 
-	for (const entry of entries(text)) {
+	for (const entry of entries(withoutBom(text))) {
 		const trimmed = trimQuotes(entry.trim()).trim();
 		if (!trimmed || trimmed === '#') continue;
 		if (!insert(trimmed, swatches, names)) rejected.push(trimmed);

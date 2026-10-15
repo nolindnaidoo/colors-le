@@ -43,6 +43,11 @@ impl Palette {
         let mut palette = Self::default();
         let mut rejected = Vec::new();
 
+        // A palette saved by Notepad or exported by Excel starts with a
+        // byte-order mark. Left in, it is glued to the first entry, which
+        // then reads as no colour, and it stops a JSON palette parsing at
+        // all, so a one-colour palette was refused outright.
+        let text = text.strip_prefix('\u{feff}').unwrap_or(text);
         for entry in entries(text) {
             let trimmed = entry.trim().trim_matches('"').trim();
             if trimmed.is_empty() || trimmed.starts_with('#') && trimmed.len() == 1 {
@@ -281,6 +286,16 @@ mod tests {
         assert!(!approved.contains("oklch(70% 0.1 250)"));
         let modern = palette("oklch(62.8% 0.2577 29.23)\n");
         assert!(modern.contains("#f00"));
+    }
+
+    #[test]
+    fn a_leading_byte_order_mark_is_not_part_of_the_palette() {
+        let (lines, rejected) = Palette::parse("\u{feff}#1a2b3c\n");
+        assert!(rejected.is_empty(), "{rejected:?}");
+        assert!(lines.contains("#1a2b3c"));
+        let (json, rejected) = Palette::parse("\u{feff}[\"#1a2b3c\"]");
+        assert!(rejected.is_empty(), "{rejected:?}");
+        assert!(json.contains("#1a2b3c"));
     }
 
     #[test]
