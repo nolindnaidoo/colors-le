@@ -242,8 +242,8 @@ offset after it still points where it did.
 a subprocess it carries one JSON report per line, one line per file, or
 with `--values` one colour per line. When it is a terminal it carries
 nothing, because the stderr summary already lists every colour a person
-reads there. At a terminal `--values` lists its colours on stderr instead.
-No script can tell the difference, since a script is never a terminal.
+reads there. `--values` prints its colours to stdout either way, because
+it is plain text a person asked to see. No script can tell the difference, since a script is never a terminal.
 
 ```json
 {
@@ -286,8 +286,7 @@ Options:
                        JSON object's values
   --dedupe             collapse repeated colours to their first
                        occurrence **within each file**
-  --values             print only the colours, one per line, for piping;
-                       at a terminal they are listed on stderr instead
+  --values             print only the colours, one per line, for piping
   --format <format>    force a format instead of inferring it from the
                        file name; required with --stdin
   --stdin              read one document from stdin
