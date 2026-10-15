@@ -127,6 +127,10 @@ function build(): void {
 	if (process.platform !== 'win32' && process.getuid?.() !== 0) {
 		file('repo/locked.css', '.l{color:#777777}\n');
 		chmodSync(join(tree, 'repo', 'locked.css'), 0o000);
+		dir('closed');
+		dir('closed/shut');
+		file('closed/shut/inside.css', '.s{color:#888888}\n');
+		chmodSync(join(tree, 'closed', 'shut'), 0o000);
 	}
 }
 
@@ -171,6 +175,7 @@ function cases(): readonly Case[] {
 		{ args: [join(repo, 'empty.css')] },
 		{ args: [join(repo, 'nested')] },
 		{ args: [join(tree, 'loose')] },
+		{ args: [join(tree, 'closed')] },
 		{ args: [join(tree, 'missing')] },
 		{ args: [repo, '--dedup'] },
 		{ args: [repo, '--help'] },
@@ -296,6 +301,8 @@ function compareMcp(): string[] {
 function cleanUp(): void {
 	const locked = join(tree, 'repo', 'locked.css');
 	if (existsSync(locked)) chmodSync(locked, 0o600);
+	const shut = join(tree, 'closed', 'shut');
+	if (existsSync(shut)) chmodSync(shut, 0o700);
 	for (const path of created) unlinkSync(path);
 	for (const path of [...dirs].reverse()) rmdirSync(path);
 }

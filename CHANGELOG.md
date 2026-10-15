@@ -10,6 +10,16 @@ npm command line. The Rust CLI in `crate/` keeps its own
 [CHANGELOG](crate/CHANGELOG.md). From 2.6.0 every surface carries one
 version and releases from one tag.
 
+## [2.6.1] - 2026-10-15
+
+### Fixed
+
+- The npm command line now words an unreadable directory as the Rust CLI
+  does, `IO error for operation on <dir>: Permission denied (os error 13)`.
+  2.6.0 dropped the `IO error for operation on` part, the one place the
+  two binaries printed different text. The parity check now covers an
+  unreadable directory.
+
 ## [2.6.0] - 2026-10-15
 
 ### Changed
