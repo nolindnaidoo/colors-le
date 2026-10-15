@@ -182,16 +182,18 @@ fn write_values(out: &mut impl Write, reports: &[FileReport]) -> std::io::Result
 }
 
 fn scan_stdin(options: &Cli) -> Result<FileReport, String> {
-    let mut content = String::new();
-    std::io::stdin()
-        .read_to_string(&mut content)
-        .map_err(|error| format!("could not read stdin: {error}"))?;
     // There is no filename to infer from, and no useful default: a
     // colour only means something in a format, so stdin must name one.
+    // Checked before reading, or a missing flag waits for end of input
+    // before it is refused.
     let format = options
         .scan
         .format
         .ok_or_else(|| "reading from stdin needs --format".to_string())?;
+    let mut content = String::new();
+    std::io::stdin()
+        .read_to_string(&mut content)
+        .map_err(|error| format!("could not read stdin: {error}"))?;
     Ok(scan::scan_content(
         &content,
         "<stdin>".to_string(),
@@ -456,6 +458,8 @@ mod tests {
         }
     }
 
+    /// Refused before stdin is read. Reading first made this test block
+    /// on any open stdin, and made `--stdin` alone wait for end of input.
     #[test]
     fn stdin_needs_a_format() {
         let options = parse(&["--stdin".into()]).expect("options");
