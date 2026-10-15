@@ -1,0 +1,16 @@
+{
+  "files": [
+    "theme.css"
+  ],
+  "steps": [
+    {
+      "wait": 1500
+    },
+    {
+      "command": "Colors-LE: Extract Colors"
+    },
+    {
+      "wait": 5000
+    }
+  ]
+}

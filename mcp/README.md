@@ -15,6 +15,8 @@
   </a>
 </p>
 
+![An agent in Claude Code calling the colors-le MCP server](https://raw.githubusercontent.com/nolindnaidoo/colors-le/main/assets/demos/mcp.gif)
+
 An [MCP](https://modelcontextprotocol.io) server that extracts colors from
 stylesheets and code — the extraction engine behind the
 [Colors-LE](https://letools.dev/tools/colors-le)
