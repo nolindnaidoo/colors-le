@@ -220,10 +220,12 @@ describe('walk and run', () => {
 
 	it('sorts by component, as Rust sorts a path', () => {
 		const root = tree({ 'a.css': '', 'a/b.css': '', 'z.css': '' });
+		// The walk keeps the platform's separator, as the crate's does; a
+		// report turns it into `/` later.
 		const walked = collect([root], DEFAULT_WALK).map((path) =>
 			path.slice(root.length + 1),
 		);
-		expect(walked).toEqual(['a/b.css', 'a.css', 'z.css']);
+		expect(walked).toEqual([join('a', 'b.css'), 'a.css', 'z.css']);
 	});
 
 	it('honours .gitignore only inside a repository, and .ignore anywhere', () => {
