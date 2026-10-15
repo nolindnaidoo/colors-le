@@ -226,7 +226,7 @@ The same extraction from a terminal or a CI step — a Rust CLI in
 Convert, analyze and validate are interactive and stay in the editor.
 
 ```bash
-colors-le .                              # every colour in the tree
+colors-le .                              # every colour in the tree; JSON on stdout when piped
 colors-le --palette brand.txt .          # what is not in the palette
 colors-le --values --dedupe . | sort -u  # write the palette in the first place
 colors-le mcp                            # the same extraction over MCP on stdio

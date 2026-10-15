@@ -54,6 +54,10 @@ colors-le --palette brand.txt .
 
 Exit code 1. The build stops before the design review does.
 
+The report is JSON on stdout, one object per line, one line per file,
+printed when stdout is piped or redirected and left out at a terminal.
+The listing above is stderr.
+
 ## Two jobs, one extraction
 
 **Enforcement** — here is the palette, tell me what is not in it.
@@ -179,7 +183,8 @@ shipping half of one is worse than shipping none.
                      JSON object's values
 --dedupe             collapse repeated colours to their first
                      occurrence within each file
---values             print only the colours, one per line, for piping
+--values             print only the colours, one per line, for piping;
+                     at a terminal they are listed on stderr instead
 --format <format>    force a format instead of inferring from the name;
                      required with --stdin
 --stdin              read one document from stdin
