@@ -132,10 +132,10 @@ crate/src/
   and nothing holding this code equal to the similar files in the
   sibling repos.
 - **stdout is protocol, stderr is human. There is no `--json` flag.**
-  stdout stays silent when it is a terminal, `--values` included,
-  because the stderr summary already covers a person reading it. Anything
-  that can parse gets every report. When `--values` is not printing to
-  stdout, stderr lists the colours itself so it stands alone.
+  stdout carries no JSON when it is a terminal, because the stderr
+  summary already lists every colour for a person reading it. Anything
+  that can parse gets every report. `--values` is the exception: it is
+  plain text a person asked to see, so it prints wherever stdout goes.
 - **Parity scope is extraction** — `src/extraction/**`. The palette is
   outside it; the extension has nothing to disagree with.
 

@@ -2,7 +2,8 @@
 //!
 //! stdout is protocol — one JSON report per line, one line per file —
 //! whenever something is reading it, and silent when it is a terminal.
-//! stderr is always for the human, and is a projection of the same
+//! `--values` is the exception: asking for the values is asking to see
+//! them, wherever stdout goes. stderr is always for the human, and is a projection of the same
 //! reports rather than parallel prose.
 
 use std::io::{IsTerminal, Read, Write};
@@ -38,8 +39,7 @@ Options:
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
                        file name; a name this does not know is refused
-  --values             print only the values, one per line, for piping;
-                       at a terminal they are listed on stderr instead
+  --values             print only the values, one per line, for piping
   --strict             exit 2 if a file that looked like text could not
                        be read, rather than reporting it and carrying on
   --stdin              read one document from stdin
@@ -117,19 +117,18 @@ fn execute(args: &[String]) -> Result<u8, String> {
     let terminal = stdout.is_terminal();
     let mut out = stdout.lock();
     let written = if options.values_only {
-        write_values(&mut out, &reports, terminal)
+        write_values(&mut out, &reports)
     } else {
         write_reports(&mut out, &reports, terminal)
     };
     written.map_err(|error| format!("could not write the report: {error}"))?;
     drop(out);
 
-    let values_on_stdout = options.values_only && !terminal;
     summarise(
         &mut std::io::stderr().lock(),
         &reports,
         binary,
-        values_on_stdout,
+        options.values_only,
     );
     Ok(scan::exit_code(&reports, options.strict))
 }
@@ -171,16 +170,9 @@ fn write_reports(
     Ok(())
 }
 
-/// Silent at a terminal for the same reason as the reports, which is
-/// why [`summarise`] lists the values itself when this stays quiet.
-fn write_values(
-    out: &mut impl Write,
-    reports: &[FileReport],
-    terminal: bool,
-) -> std::io::Result<()> {
-    if terminal {
-        return Ok(());
-    }
+/// Printed wherever stdout goes, unlike the reports: `--values` is plain
+/// text a person asked to see, not a report.
+fn write_values(out: &mut impl Write, reports: &[FileReport]) -> std::io::Result<()> {
     for report in reports {
         for found in &report.colors {
             writeln!(out, "{}", found.value)?;
@@ -286,9 +278,9 @@ fn parse(args: &[String]) -> Result<Cli, String> {
 /// The human half. Every line restates something already on stdout,
 /// except the binary count — the one fact stdout deliberately omits.
 ///
-/// `values_on_stdout` is true only when `--values` is actually printing
-/// them. At a terminal stdout is silent, so the colours are listed here
-/// or a `--values` run would show nothing but a count.
+/// `values_on_stdout` is true under `--values`, which prints the colours
+/// to stdout itself. Otherwise they are listed here, because at a
+/// terminal stdout is silent and a bare count would show nothing.
 fn summarise(
     stderr: &mut impl Write,
     reports: &[FileReport],
@@ -378,15 +370,12 @@ mod tests {
     }
 
     #[test]
-    fn a_pipe_gets_the_values_and_a_terminal_none() {
+    fn values_print_one_per_line() {
         let tree = TempTree::new("cli-values");
         let reports = sample_reports(&tree);
-        let mut piped = Vec::new();
-        write_values(&mut piped, &reports, false).expect("a write");
-        assert_eq!(String::from_utf8(piped).expect("utf-8"), "#2563eb\n");
-        let mut shown = Vec::new();
-        write_values(&mut shown, &reports, true).expect("a write");
-        assert!(shown.is_empty());
+        let mut out = Vec::new();
+        write_values(&mut out, &reports).expect("a write");
+        assert_eq!(String::from_utf8(out).expect("utf-8"), "#2563eb\n");
     }
 
     /// With stdout silent at a terminal, a `--values` run would show a
