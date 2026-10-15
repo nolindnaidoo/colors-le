@@ -7,6 +7,18 @@ this repository release on their own cadence.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-10-15
+
+### Fixed
+
+- **`--values` prints to stdout at a terminal again.** 0.4.3 moved it to
+  stderr there along with the JSON, but it is plain text a person asked
+  to see, not a report. This matches string-le, dates-le and
+  numbers-le.
+- **`--stdin` without `--format` is refused at once.** It read all of
+  stdin before checking for the flag, so it waited for end of input
+  before saying the flag was missing.
+
 ## [0.4.3] - 2026-10-15
 
 ### Changed
@@ -278,6 +290,7 @@ a raw scan of a README would report every `#anchor` as a three-digit hex.
   vanish from the report entirely, which reads to whoever ran it as
   "that file was clean".
 
+[0.4.4]: https://crates.io/crates/colors-le/0.4.4
 [0.4.3]: https://crates.io/crates/colors-le/0.4.3
 [0.4.2]: https://crates.io/crates/colors-le/0.4.2
 [0.4.1]: https://crates.io/crates/colors-le/0.4.1
