@@ -23,7 +23,7 @@ dependencies = [
 
 [[package]]
 name = "colors-le"
-version = "2.6.4"
+version = "2.6.5"
 dependencies = [
  "ignore",
  "regex",
