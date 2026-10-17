@@ -4,7 +4,7 @@
  */
 import { name, version } from '../mcp/info';
 import { TOOLS } from '../mcp/tools';
-import { serve } from '../mcp/transport';
+import { serve } from './mcp';
 import { crateOutput } from './output';
 import { run } from './run';
 import { SCAN_TOOL } from './scanTool';
@@ -20,7 +20,10 @@ function main(args: readonly string[]): void {
 	if (args[0] === 'mcp') {
 		// The crate's server stops at the first reply it cannot write.
 		process.stdout.once('error', () => output.exit(2, null));
-		serve({ name, version }, [...TOOLS, SCAN_TOOL]);
+		serve(process.stdin, output.stdout, { name, version }, [
+			...TOOLS,
+			SCAN_TOOL,
+		]).then((code) => output.exit(code, null));
 		return;
 	}
 	run(args, {
