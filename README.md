@@ -17,6 +17,9 @@
   <a href="https://www.npmjs.com/package/colors-le-mcp">
     <img src="https://img.shields.io/npm/v/colors-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="colors-le-mcp on npm" />
   </a>
+  <a href="https://www.npmjs.com/package/colors-le">
+    <img src="https://img.shields.io/npm/v/colors-le?style=for-the-badge&label=npm%20CLI&color=blue&logo=npm" alt="colors-le on npm" />
+  </a>
   <a href="https://crates.io/crates/colors-le">
     <img src="https://img.shields.io/crates/v/colors-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="colors-le on crates.io" />
   </a>
@@ -238,6 +241,22 @@ colors-le mcp                            # the same extraction over MCP on stdio
 <p align="center">
   <img src="assets/demos/cli.gif" alt="colors-le in a terminal" style="max-width: 100%; height: auto;" />
 </p>
+
+**Install it from npm** ([`colors-le`](https://www.npmjs.com/package/colors-le)) **or from crates.io** ([`colors-le`](https://crates.io/crates/colors-le)). Both install the same `colors-le` command.
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/colors-le">
+    <img src="https://img.shields.io/npm/v/colors-le?style=for-the-badge&label=npm%20CLI&color=blue&logo=npm" alt="colors-le on npm" />
+  </a>
+  <a href="https://crates.io/crates/colors-le">
+    <img src="https://img.shields.io/crates/v/colors-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="colors-le on crates.io" />
+  </a>
+</p>
+
+```bash
+npm install -g colors-le   # or run it once: npx colors-le
+cargo install colors-le
+```
 
 Exit codes: 0 clean, 1 none found or a colour outside the palette, 2 the
 question was malformed.
