@@ -10,6 +10,19 @@ npm command line. The Rust CLI in `crate/` keeps its own
 [CHANGELOG](crate/CHANGELOG.md). From 2.6.0 every surface carries one
 version and releases from one tag.
 
+## [Unreleased]
+
+### Changed
+
+- **The listing carries the words people search for.** Open VSX ranks a
+  match in the name five times a match in the description, and "Colors-LE"
+  holds "colors" but not "color", which Open VSX does not match to it, so a
+  search for "color" put it outside the top 300 on 2026-10-18. The name is
+  "Colors-LE: Color Palette Checker", the description opens with "Color
+  extractor and palette checker", where a card has room for about forty
+  characters, and the keywords are cut from 30 to 13 phrases someone would
+  search for.
+
 ## [2.6.5] - 2026-10-17
 
 ### Fixed
