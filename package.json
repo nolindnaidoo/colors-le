@@ -46,22 +46,7 @@
 	"l10n": "./l10n",
 	"main": "./dist/extension.js",
 	"activationEvents": [
-		"onLanguage:css",
-		"onLanguage:scss",
-		"onLanguage:less",
-		"onLanguage:stylus",
-		"onLanguage:html",
-		"onLanguage:javascript",
-		"onLanguage:javascriptreact",
-		"onLanguage:typescript",
-		"onLanguage:typescriptreact",
-		"onLanguage:xml",
-		"onLanguage:json",
-		"onLanguage:jsonc",
-		"onLanguage:yaml",
-		"onLanguage:toml",
-		"onLanguage:markdown",
-		"onLanguage:plaintext"
+		"onStartupFinished"
 	],
 	"capabilities": {
 		"virtualWorkspaces": {
