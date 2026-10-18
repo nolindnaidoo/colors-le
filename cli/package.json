@@ -1,6 +1,6 @@
 {
 	"name": "colors-le",
-	"version": "2.6.6",
+	"version": "2.6.7",
 	"description": "Extract every color in a codebase, and say which ones are not in your palette.",
 	"keywords": [
 		"color",
