@@ -10,6 +10,16 @@ npm command line. The Rust CLI in `crate/` keeps its own
 [CHANGELOG](crate/CHANGELOG.md). From 2.6.0 every surface carries one
 version and releases from one tag.
 
+## [Unreleased]
+
+### Changed
+
+- **The name carries the next words people search for.** Colors-LE ranked
+  45th for "hex color" and 43rd for "color extractor" on 2026-10-18, because
+  neither "hex" nor "extractor" was in the name. The name is now "Colors-LE:
+  Hex Color Extractor & Palette Checker". "hex colors" joins the keywords and
+  "design tokens", which ranked 76th, leaves them.
+
 ## [2.6.6] - 2026-10-18
 
 ### Changed

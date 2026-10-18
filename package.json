@@ -1,7 +1,7 @@
 {
 	"name": "colors-le",
 	"publisher": "nolindnaidoo",
-	"displayName": "Colors-LE: Color Palette Checker",
+	"displayName": "Colors-LE: Hex Color Extractor & Palette Checker",
 	"description": "Color extractor and palette checker: find every hex, rgb, hsl and named color in a codebase, and the ones not in your palette",
 	"version": "2.6.6",
 	"license": "MIT",
@@ -30,17 +30,17 @@
 	"keywords": [
 		"color",
 		"colors",
+		"hex color",
+		"hex colors",
 		"color palette",
 		"palette",
-		"hex color",
-		"css colors",
-		"extract colors",
 		"color extractor",
+		"extract colors",
 		"color checker",
-		"design tokens",
+		"css colors",
+		"color audit",
 		"wcag",
-		"contrast",
-		"color audit"
+		"contrast"
 	],
 	"icon": "src/assets/images/icon.png",
 	"l10n": "./l10n",
