@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Colors-LE: Hex Color Extractor & Palette Checker",
 	"description": "Color extractor and palette checker: find every hex, rgb, hsl and named color in a codebase, and the ones not in your palette",
-	"version": "2.6.6",
+	"version": "2.6.7",
 	"license": "MIT",
 	"author": {
 		"name": "nolindnaidoo",
