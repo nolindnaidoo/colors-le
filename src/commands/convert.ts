@@ -8,7 +8,9 @@ import {
 } from '../conversion/colorConverter';
 import { extractColors } from '../extraction/extract';
 import type { Draft } from '../types';
+import { createNotifier } from '../ui/notifier';
 import { formatDuration } from '../utils/format';
+import { guarded } from './guard';
 
 /**
  * Register the convert colors command
@@ -16,7 +18,7 @@ import { formatDuration } from '../utils/format';
 export function registerConvertCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.convert',
-		async () => {
+		guarded(createNotifier(), async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
@@ -86,7 +88,7 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 					`Conversion failed: ${errorMessage}`,
 				);
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(disposable);

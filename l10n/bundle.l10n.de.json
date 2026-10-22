@@ -129,5 +129,6 @@
 	"No colors found.": "Keine Farben gefunden.",
 	"Color": "Farbe",
 	"Written as": "Geschrieben als",
-	"{0} file(s) could not be read.": "{0} Datei(en) konnten nicht gelesen werden."
+	"{0} file(s) could not be read.": "{0} Datei(en) konnten nicht gelesen werden.",
+	"Colors-LE could not finish: {0}": "Colors-LE konnte nicht abschließen: {0}"
 }

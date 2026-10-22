@@ -4,6 +4,7 @@ import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { dedupeColors } from '../utils/dedupe';
 import { bareValue, hasPosition, onValues } from '../utils/positions';
+import { guarded } from './guard';
 
 export function registerDedupeCommand(
 	context: vscode.ExtensionContext,
@@ -15,7 +16,7 @@ export function registerDedupeCommand(
 ): void {
 	const command = vscode.commands.registerCommand(
 		'colors-le.postProcess.dedupe',
-		async () => {
+		guarded(deps.notifier, async () => {
 			deps.telemetry.event('command-dedupe-colors');
 
 			const editor = vscode.window.activeTextEditor;
@@ -107,7 +108,7 @@ export function registerDedupeCommand(
 			} finally {
 				deps.statusBar.hideProgress();
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(command);

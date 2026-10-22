@@ -8,7 +8,9 @@ import type { ColorFilterOptions, ColorFilterResult } from './filterTypes';
 // Re-exported so filter.ts stays the public face of the command.
 export type * from './filterTypes';
 
+import { createNotifier } from '../ui/notifier';
 import { formatDuration } from '../utils/format';
+import { guarded } from './guard';
 
 /**
  * Register the filter colors command
@@ -16,7 +18,7 @@ import { formatDuration } from '../utils/format';
 export function registerFilterCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.filter',
-		async () => {
+		guarded(createNotifier(), async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
@@ -73,7 +75,7 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 					`Filtering failed: ${errorMessage}`,
 				);
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(disposable);

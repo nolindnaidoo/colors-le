@@ -129,5 +129,6 @@
 	"No colors found.": "色が見つかりません。",
 	"Color": "色",
 	"Written as": "表記",
-	"{0} file(s) could not be read.": "{0} 個のファイルを読み取れませんでした。"
+	"{0} file(s) could not be read.": "{0} 個のファイルを読み取れませんでした。",
+	"Colors-LE could not finish: {0}": "Colors-LE を完了できませんでした: {0}"
 }

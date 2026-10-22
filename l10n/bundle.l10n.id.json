@@ -129,5 +129,6 @@
 	"No colors found.": "Tidak ada warna yang ditemukan.",
 	"Color": "Warna",
 	"Written as": "Ditulis sebagai",
-	"{0} file(s) could not be read.": "{0} file tidak dapat dibaca."
+	"{0} file(s) could not be read.": "{0} file tidak dapat dibaca.",
+	"Colors-LE could not finish: {0}": "Colors-LE tidak dapat menyelesaikan: {0}"
 }

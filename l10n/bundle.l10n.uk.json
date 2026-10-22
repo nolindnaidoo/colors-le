@@ -129,5 +129,6 @@
 	"No colors found.": "Кольорів не знайдено.",
 	"Color": "Колір",
 	"Written as": "Записано як",
-	"{0} file(s) could not be read.": "Не вдалося прочитати файлів: {0}."
+	"{0} file(s) could not be read.": "Не вдалося прочитати файлів: {0}.",
+	"Colors-LE could not finish: {0}": "Colors-LE не вдалося завершити: {0}"
 }

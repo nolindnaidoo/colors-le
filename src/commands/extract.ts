@@ -10,6 +10,7 @@ import { dedupeColors } from '../utils/dedupe';
 import { sanitizeErrorMessage } from '../utils/errors';
 import { onValues, positioned, withPosition } from '../utils/positions';
 import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
+import { guarded } from './guard';
 import { deliverResults } from './output';
 
 export function registerExtractCommand(
@@ -23,7 +24,7 @@ export function registerExtractCommand(
 ): void {
 	const command = vscode.commands.registerCommand(
 		'colors-le.extractColors',
-		async () => {
+		guarded(deps.notifier, async () => {
 			deps.telemetry.event('command-extract-colors');
 
 			const editor = vscode.window.activeTextEditor;
@@ -167,7 +168,7 @@ export function registerExtractCommand(
 			} finally {
 				deps.statusBar.hideProgress();
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(command);

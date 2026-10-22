@@ -129,5 +129,6 @@
 	"No colors found.": "Không tìm thấy màu nào.",
 	"Color": "Màu",
 	"Written as": "Được viết là",
-	"{0} file(s) could not be read.": "Không thể đọc {0} tệp."
+	"{0} file(s) could not be read.": "Không thể đọc {0} tệp.",
+	"Colors-LE could not finish: {0}": "Colors-LE không thể hoàn thành: {0}"
 }

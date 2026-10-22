@@ -129,5 +129,6 @@
 	"No colors found.": "未找到颜色。",
 	"Color": "颜色",
 	"Written as": "写法",
-	"{0} file(s) could not be read.": "{0} 个文件无法读取。"
+	"{0} file(s) could not be read.": "{0} 个文件无法读取。",
+	"Colors-LE could not finish: {0}": "Colors-LE 无法完成：{0}"
 }
