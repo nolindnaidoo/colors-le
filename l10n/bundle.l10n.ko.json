@@ -128,5 +128,6 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "파일 {2}개에 서로 다른 색상 {0}개, {1}회 등장",
 	"No colors found.": "색상을 찾을 수 없습니다.",
 	"Color": "색상",
-	"Written as": "표기"
+	"Written as": "표기",
+	"{0} file(s) could not be read.": "파일 {0}개를 읽을 수 없습니다."
 }

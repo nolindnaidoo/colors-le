@@ -128,5 +128,6 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "{0} colori distinti, {1} occorrenze in {2} file",
 	"No colors found.": "Nessun colore trovato.",
 	"Color": "Colore",
-	"Written as": "Scritto come"
+	"Written as": "Scritto come",
+	"{0} file(s) could not be read.": "Impossibile leggere {0} file."
 }
