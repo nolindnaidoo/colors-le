@@ -19,43 +19,48 @@
  * `scripts/check-extraction-parity.ts`. Two hand-ported copies drift silently:
  * this side accepted `typescriptreact` while the CLI answered
  * `{"colors": [], "fileType": "unknown"}` for it.
+ *
+ * A `Map`, not a plain object: on an object, `constructor`, `__proto__` and
+ * every other `Object.prototype` name is a hit, and a caller naming one got
+ * a function or the prototype back as its file type. A map has no inherited
+ * keys.
  */
-export const ALIASES: Readonly<Record<string, string>> = Object.freeze({
-	css: 'css',
-	scss: 'scss',
-	sass: 'scss',
-	less: 'less',
-	stylus: 'stylus',
-	styl: 'stylus',
-	html: 'html',
-	htm: 'html',
-	xhtml: 'html',
-	vue: 'html',
-	svelte: 'html',
-	javascript: 'javascript',
-	js: 'javascript',
-	jsx: 'javascript',
-	mjs: 'javascript',
-	cjs: 'javascript',
-	javascriptreact: 'javascript',
-	typescript: 'typescript',
-	ts: 'typescript',
-	tsx: 'typescript',
-	mts: 'typescript',
-	cts: 'typescript',
-	typescriptreact: 'typescript',
-	svg: 'svg',
-	xml: 'xml',
-	json: 'json',
-	jsonc: 'json',
-	yaml: 'yaml',
-	yml: 'yaml',
-	toml: 'toml',
-	markdown: 'markdown',
-	md: 'markdown',
-	plaintext: 'plaintext',
-	txt: 'plaintext',
-});
+export const ALIASES: ReadonlyMap<string, string> = new Map([
+	['css', 'css'],
+	['scss', 'scss'],
+	['sass', 'scss'],
+	['less', 'less'],
+	['stylus', 'stylus'],
+	['styl', 'stylus'],
+	['html', 'html'],
+	['htm', 'html'],
+	['xhtml', 'html'],
+	['vue', 'html'],
+	['svelte', 'html'],
+	['javascript', 'javascript'],
+	['js', 'javascript'],
+	['jsx', 'javascript'],
+	['mjs', 'javascript'],
+	['cjs', 'javascript'],
+	['javascriptreact', 'javascript'],
+	['typescript', 'typescript'],
+	['ts', 'typescript'],
+	['tsx', 'typescript'],
+	['mts', 'typescript'],
+	['cts', 'typescript'],
+	['typescriptreact', 'typescript'],
+	['svg', 'svg'],
+	['xml', 'xml'],
+	['json', 'json'],
+	['jsonc', 'json'],
+	['yaml', 'yaml'],
+	['yml', 'yaml'],
+	['toml', 'toml'],
+	['markdown', 'markdown'],
+	['md', 'markdown'],
+	['plaintext', 'plaintext'],
+	['txt', 'plaintext'],
+]);
 
 /**
  * The formats a caller can name, for the tool schema's enum.
@@ -106,7 +111,7 @@ export function resolveFormat(
 	filename: string | undefined,
 ): string {
 	if (format) {
-		const direct = ALIASES[normalise(format)];
+		const direct = ALIASES.get(normalise(format));
 		if (direct) return direct;
 	}
 
@@ -114,7 +119,7 @@ export function resolveFormat(
 		const extension = filename.includes('.')
 			? filename.slice(filename.lastIndexOf('.') + 1)
 			: '';
-		const inferred = ALIASES[normalise(extension)];
+		const inferred = ALIASES.get(normalise(extension));
 		if (inferred) return inferred;
 	}
 

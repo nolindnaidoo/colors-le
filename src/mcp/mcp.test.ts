@@ -121,6 +121,17 @@ describe('fileType: tolerant resolution', () => {
 		// The fallback is a real answer but not a format anyone can ask for.
 		expect(SUPPORTED_FORMATS).not.toContain(FALLBACK_FORMAT);
 	});
+
+	it('does not read a prototype key as a format', () => {
+		// The table was a plain object, so `ALIASES['constructor']` was Object's
+		// constructor and `ALIASES['__proto__']` was Object.prototype: both
+		// truthy, both returned as the file type.
+		for (const name of ['constructor', '__proto__', 'toString', 'valueOf']) {
+			expect(resolveFormat(name, undefined)).toBe(FALLBACK_FORMAT);
+			expect(resolveFormat(undefined, name)).toBe(FALLBACK_FORMAT);
+			expect(resolveFormat(undefined, `notes.${name}`)).toBe(FALLBACK_FORMAT);
+		}
+	});
 });
 
 describe('tool table', () => {
