@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "{2} 个文件中有 {0} 种不同的颜色，共出现 {1} 次",
 	"No colors found.": "未找到颜色。",
 	"Color": "颜色",
-	"Written as": "写法"
+	"Written as": "写法",
+	"{0} file(s) could not be read.": "{0} 个文件无法读取。",
+	"Colors-LE could not finish: {0}": "Colors-LE 无法完成：{0}"
 }

@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "{0} warna berbeda, {1} kemunculan dalam {2} file",
 	"No colors found.": "Tidak ada warna yang ditemukan.",
 	"Color": "Warna",
-	"Written as": "Ditulis sebagai"
+	"Written as": "Ditulis sebagai",
+	"{0} file(s) could not be read.": "{0} file tidak dapat dibaca.",
+	"Colors-LE could not finish: {0}": "Colors-LE tidak dapat menyelesaikan: {0}"
 }

@@ -15,7 +15,9 @@ import {
 } from '../analysis/colorAnalysis';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
+import { createNotifier } from '../ui/notifier';
 import { formatDuration } from '../utils/format';
+import { guarded } from './guard';
 
 /**
  * Register the analyze colors command
@@ -23,7 +25,7 @@ import { formatDuration } from '../utils/format';
 export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.analyze',
-		async () => {
+		guarded(createNotifier(), async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
@@ -89,7 +91,7 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 					`Analysis failed: ${errorMessage}`,
 				);
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(disposable);

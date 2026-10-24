@@ -219,14 +219,14 @@ function checkTheAliasTablesAgree(): void {
 	};
 
 	for (const [alias, format] of Object.entries(shared.aliases)) {
-		const ours = ALIASES[alias];
+		const ours = ALIASES.get(alias);
 		if (ours !== format) {
 			fail(
 				`alias "${alias}": the shared table says ${format}, this side says ${ours ?? 'nothing'}`,
 			);
 		}
 	}
-	for (const alias of Object.keys(ALIASES)) {
+	for (const alias of ALIASES.keys()) {
 		if (!(alias in shared.aliases)) {
 			fail(`alias "${alias}" is accepted here but is not in the shared table`);
 		}

@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "Различных цветов: {0}, вхождений: {1}, файлов: {2}",
 	"No colors found.": "Цвета не найдены.",
 	"Color": "Цвет",
-	"Written as": "Записан как"
+	"Written as": "Записан как",
+	"{0} file(s) could not be read.": "Не удалось прочитать файлов: {0}.",
+	"Colors-LE could not finish: {0}": "Colors-LE не удалось завершить: {0}"
 }

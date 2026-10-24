@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "{0} verschiedene Farbe(n), {1} Vorkommen in {2} Datei(en)",
 	"No colors found.": "Keine Farben gefunden.",
 	"Color": "Farbe",
-	"Written as": "Geschrieben als"
+	"Written as": "Geschrieben als",
+	"{0} file(s) could not be read.": "{0} Datei(en) konnten nicht gelesen werden.",
+	"Colors-LE could not finish: {0}": "Colors-LE konnte nicht abschließen: {0}"
 }

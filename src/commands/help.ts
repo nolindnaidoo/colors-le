@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
+import { guarded } from './guard';
 
 export function registerHelpCommand(
 	context: vscode.ExtensionContext,
@@ -13,7 +14,7 @@ export function registerHelpCommand(
 ): void {
 	const command = vscode.commands.registerCommand(
 		'colors-le.help',
-		async () => {
+		guarded(deps.notifier, async () => {
 			deps.telemetry.event('command-help');
 
 			const helpText = `
@@ -80,7 +81,7 @@ Built by nolindnaidoo (https://github.com/nolindnaidoo) — MIT licensed.
 				preview: false,
 				viewColumn: vscode.ViewColumn.Beside,
 			});
-		},
+		}),
 	);
 
 	context.subscriptions.push(command);

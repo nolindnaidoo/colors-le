@@ -17,6 +17,8 @@ import type {
 // into validateTypes/validatePrompts is an internal arrangement.
 export type * from './validateTypes';
 
+import { createNotifier } from '../ui/notifier';
+import { guarded } from './guard';
 import {
 	checkAccessibilityIssues,
 	checkColorBlindnessIssues,
@@ -31,7 +33,7 @@ export function registerValidateCommand(
 ): void {
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.validate',
-		async () => {
+		guarded(createNotifier(), async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
@@ -90,7 +92,7 @@ export function registerValidateCommand(
 					`Validation failed: ${errorMessage}`,
 				);
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(disposable);

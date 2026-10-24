@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "Різних кольорів: {0}, входжень: {1}, файлів: {2}",
 	"No colors found.": "Кольорів не знайдено.",
 	"Color": "Колір",
-	"Written as": "Записано як"
+	"Written as": "Записано як",
+	"{0} file(s) could not be read.": "Не вдалося прочитати файлів: {0}.",
+	"Colors-LE could not finish: {0}": "Colors-LE не вдалося завершити: {0}"
 }

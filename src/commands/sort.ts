@@ -5,6 +5,7 @@ import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { bareValue, onValues } from '../utils/positions';
 import { sortColors } from '../utils/sort';
+import { guarded } from './guard';
 
 export function registerSortCommand(
 	context: vscode.ExtensionContext,
@@ -16,7 +17,7 @@ export function registerSortCommand(
 ): void {
 	const command = vscode.commands.registerCommand(
 		'colors-le.postProcess.sort',
-		async () => {
+		guarded(deps.notifier, async () => {
 			deps.telemetry.event('command-sort-colors');
 
 			const editor = vscode.window.activeTextEditor;
@@ -101,7 +102,7 @@ export function registerSortCommand(
 			} finally {
 				deps.statusBar.hideProgress();
 			}
-		},
+		}),
 	);
 
 	context.subscriptions.push(command);

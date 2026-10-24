@@ -128,5 +128,7 @@
 	"{0} distinct color(s), {1} occurrence(s) in {2} file(s)": "{2} 個のファイルに {0} 種類の色、{1} 件の出現",
 	"No colors found.": "色が見つかりません。",
 	"Color": "色",
-	"Written as": "表記"
+	"Written as": "表記",
+	"{0} file(s) could not be read.": "{0} 個のファイルを読み取れませんでした。",
+	"Colors-LE could not finish: {0}": "Colors-LE を完了できませんでした: {0}"
 }
