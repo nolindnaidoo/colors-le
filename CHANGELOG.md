@@ -14,6 +14,13 @@ version and releases from one tag.
 
 ### Fixed
 
+- **The help document describes the extension that ships.** It listed
+  four file types after fourteen had a reader of their own, five
+  notations after fourteen were found, told a user who found no colors to
+  check that the file type is supported when every document is read, and
+  named the last command "Help" where the palette shows "Help &
+  Troubleshooting". A test holds its command list to the manifest and its
+  format list to the extractor's.
 - **`notificationsLevel` governs Analyze, Convert, Filter and Validate.**
   The four showed their "No active editor", "No colors found" and
   completion toasts directly, so `silent` and `important` silenced the
