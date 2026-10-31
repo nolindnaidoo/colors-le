@@ -14,6 +14,16 @@ version and releases from one tag.
 
 ### Fixed
 
+- **The analysis report claims only what it computed.** It printed "WCAG
+  AA Compliance: ✅ Pass" for every palette, with a contrast ratio nothing
+  had measured; contrast needs a background and the report now says it was
+  not assessed and where to check it. Any three colours were a "potential
+  gradient sequence" at 70% confidence; a gradient is now a run of shades
+  of one hue stepping one way. A hex beginning with `0` counted as blue, so
+  green and white were a "blue and white theme"; blue is read from the hue.
+  Hues were averaged on a line, so 350° and 10° had a dominant hue of 180°,
+  the opposite side of the wheel, and two reds either side of 0° were never
+  monochromatic.
 - **Sort Colors by hex orders the digits, in no locale.** It sorted by the
   host's collation: on a Danish host `#aa0000` came after `#ff0000`, and on
   an English one two spellings of one value swapped places on every sort.

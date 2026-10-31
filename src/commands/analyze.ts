@@ -180,11 +180,16 @@ function generateAnalysisReport(
 	);
 	report.push(`- **Temperature**: ${palette.temperature}`);
 	report.push(`- **Mood**: ${palette.mood}`);
+	// Contrast is measured against a background, and a palette has none; the
+	// report used to print a pass nothing had measured.
 	report.push(
-		`- **WCAG AA Compliance**: ${palette.accessibility.wcagAA ? '✅ Pass' : '❌ Fail'}`,
-	);
-	report.push(
-		`- **WCAG AAA Compliance**: ${palette.accessibility.wcagAAA ? '✅ Pass' : '❌ Fail'}`,
+		`- **WCAG contrast**: ${
+			palette.accessibility.wcagAA === undefined
+				? 'not assessed (Validate Colors checks contrast against a background you name)'
+				: palette.accessibility.wcagAA
+					? '✅ AA'
+					: '❌ fails AA'
+		}`,
 	);
 	report.push('');
 	report.push(`**Harmony Description**: ${palette.harmony.description}`);
@@ -324,7 +329,7 @@ function generateAnalysisReport(
 		);
 	}
 
-	if (!palette.accessibility.wcagAA) {
+	if (palette.accessibility.wcagAA === false) {
 		report.push(
 			'- **Accessibility**: Ensure color combinations meet WCAG contrast requirements',
 		);

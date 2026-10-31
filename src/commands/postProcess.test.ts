@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
 	_createExtensionContext,
+	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
 	_respondToQuickPick,
@@ -266,6 +267,15 @@ describe('analyze: report sections', () => {
 	it('handles a single-colour document', async () => {
 		await analyze('#ff0000\n');
 		expect(_shownMessages().length).toBeGreaterThan(0);
+	});
+
+	it('reports contrast as not assessed rather than passed', async () => {
+		// "WCAG AA Compliance: ✅ Pass" was printed for every palette.
+		await analyze('#ff0000\n#00ff00\n#0000ff\n');
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('**WCAG contrast**: not assessed');
+		expect(report).not.toContain('✅ Pass');
+		expect(report).not.toContain('Gradient Pattern');
 	});
 
 	it('handles a greyscale palette', async () => {
