@@ -14,6 +14,10 @@ version and releases from one tag.
 
 ### Fixed
 
+- **The help document reads in the host's language.** It was one English
+  template in every locale. Every sentence goes through the runtime bundle
+  now, and the command titles in it are held to the palette's, locale by
+  locale.
 - **The help document describes the extension that ships.** It listed
   four file types after fourteen had a reader of their own, five
   notations after fourteen were found, told a user who found no colors to

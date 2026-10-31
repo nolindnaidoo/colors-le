@@ -50,81 +50,120 @@ function command(title: string, does: string): string {
 }
 
 /**
- * The help document. The command titles are the manifest's, held equal by
- * the test beside this file, so a user finds in the palette what the
- * document names; the formats and notations are the extractor's own lists.
- * It used to list four file types after fourteen were read and five
- * notations after fourteen were found.
+ * The help document. Every sentence goes through the bundle, so it reads in
+ * the host's language; format names, notations and links are not words and
+ * stay as they are. The command titles are the bundle's copies of the
+ * manifest's, held equal by the test beside this file, so a user finds in
+ * the palette what the document names; the formats and notations are the
+ * extractor's own lists.
  */
 function helpDocument(): string {
 	return [
-		'# Colors-LE Help',
+		`# ${vscode.l10n.t('Colors-LE Help')}`,
 		'',
-		'## Quick Start',
-		'1. Open a file with colors (CSS, SCSS, HTML, JSON, etc.)',
-		'2. Run "Colors-LE: Extract Colors" from the command palette',
-		'3. Extracted colors open in a new document',
+		`## ${vscode.l10n.t('Quick Start')}`,
+		`1. ${vscode.l10n.t('Open a file with colors (CSS, SCSS, HTML, JSON, etc.)')}`,
+		`2. ${vscode.l10n.t('Run "Colors-LE: Extract Colors" from the command palette')}`,
+		`3. ${vscode.l10n.t('Extracted colors open in a new document')}`,
 		'',
-		'## Commands',
-		command('Extract Colors', 'Extract from the current document'),
+		`## ${vscode.l10n.t('Commands')}`,
 		command(
-			'Extract Colors from Workspace',
-			'The palette of every file in the workspace: each color once, with its spellings and where it is',
+			vscode.l10n.t('Extract Colors'),
+			vscode.l10n.t('Extract from the current document'),
 		),
 		command(
-			'Extract Colors from Folder',
-			'The same for one folder. Also on a folder in the Explorer',
+			vscode.l10n.t('Extract Colors from Workspace'),
+			vscode.l10n.t(
+				'The palette of every file in the workspace: each color once, with its spellings and where it is',
+			),
 		),
 		command(
-			'Analyze Colors',
-			'Statistics, clusters, patterns and a palette report for the current document',
+			vscode.l10n.t('Extract Colors from Folder'),
+			vscode.l10n.t(
+				'The same for one folder. Also on a folder in the Explorer',
+			),
 		),
 		command(
-			'Convert Colors',
-			"Convert the current document's colors to hex, rgb, rgba, hsl, hsla or oklch",
+			vscode.l10n.t('Analyze Colors'),
+			vscode.l10n.t(
+				'Statistics, clusters, patterns and a palette report for the current document',
+			),
 		),
 		command(
-			'Filter Colors',
-			"Filter the current document's colors by format, lightness and saturation",
+			vscode.l10n.t('Convert Colors'),
+			vscode.l10n.t(
+				"Convert the current document's colors to hex, rgb, rgba, hsl, hsla or oklch",
+			),
 		),
 		command(
-			'Validate Colors',
-			"Check each color's format, and its contrast against a background you name",
+			vscode.l10n.t('Filter Colors'),
+			vscode.l10n.t(
+				"Filter the current document's colors by format, lightness and saturation",
+			),
 		),
 		command(
-			'Deduplicate Colors',
-			'Remove duplicate lines from a list of colors',
+			vscode.l10n.t('Validate Colors'),
+			vscode.l10n.t(
+				"Check each color's format, and its contrast against a background you name",
+			),
 		),
 		command(
-			'Sort Colors',
-			'Sort a list of colors by hue, saturation, lightness or hex, as the sortMode setting says',
+			vscode.l10n.t('Deduplicate Colors'),
+			vscode.l10n.t('Remove duplicate lines from a list of colors'),
 		),
-		command('Open Settings', 'Open the Colors-LE settings'),
-		command('Help & Troubleshooting', 'Show this document'),
+		command(
+			vscode.l10n.t('Sort Colors'),
+			vscode.l10n.t(
+				'Sort a list of colors by hue, saturation, lightness or hex, as the sortMode setting says',
+			),
+		),
+		command(
+			vscode.l10n.t('Open Settings'),
+			vscode.l10n.t('Open the Colors-LE settings'),
+		),
+		command(
+			vscode.l10n.t('Help & Troubleshooting'),
+			vscode.l10n.t('Show this document'),
+		),
 		'',
-		'## Supported Formats',
-		`${FORMATS} have a format-aware extractor. Every other document is scanned as raw text.`,
+		`## ${vscode.l10n.t('Supported Formats')}`,
+		vscode.l10n.t(
+			'{0} have a format-aware extractor. Every other document is scanned as raw text.',
+			FORMATS,
+		),
 		'',
-		'## Color Notations',
-		`${NOTATIONS}, and the CSS named colors including transparent`,
+		`## ${vscode.l10n.t('Color Notations')}`,
+		vscode.l10n.t(
+			'{0}, and the CSS named colors including transparent',
+			NOTATIONS,
+		),
 		'',
-		'## Troubleshooting',
-		'- **No colors found?** Every document is scanned whatever its language, so check that each color is written in one of the notations above. A named color counts only where a value is expected: a declaration value, an attribute, a whole string',
-		'- **Large file warning?** Adjust the safety file-size threshold in settings',
-		'- **Deduplicate or Sort refused the document?** They read a list of colors, one per line, as Extract Colors writes it, and leave any other document untouched',
+		`## ${vscode.l10n.t('Troubleshooting')}`,
+		`- **${vscode.l10n.t('No colors found?')}** ${vscode.l10n.t(
+			'Every document is scanned whatever its language, so check that each color is written in one of the notations above. A named color counts only where a value is expected: a declaration value, an attribute, a whole string',
+		)}`,
+		`- **${vscode.l10n.t('Large file warning?')}** ${vscode.l10n.t(
+			'Adjust the safety file-size threshold in settings',
+		)}`,
+		`- **${vscode.l10n.t('Deduplicate or Sort refused the document?')}** ${vscode.l10n.t(
+			'They read a list of colors, one per line, as Extract Colors writes it, and leave any other document untouched',
+		)}`,
 		'',
-		'## Settings',
-		'Run "Colors-LE: Open Settings" from the command palette',
+		`## ${vscode.l10n.t('Settings')}`,
+		vscode.l10n.t('Run "Colors-LE: Open Settings" from the command palette'),
 		'',
-		'## Support',
-		`- GitHub Issues: ${ISSUES}`,
-		`- Documentation: ${README}`,
-		`- LE Tools: ${SITE}`,
+		`## ${vscode.l10n.t('Support')}`,
+		`- ${vscode.l10n.t('GitHub Issues')}: ${ISSUES}`,
+		`- ${vscode.l10n.t('Documentation')}: ${README}`,
+		`- ${vscode.l10n.t('LE Tools')}: ${SITE}`,
 		'',
-		"Enjoying it? A rating helps more than you'd think:",
-		`- Rate on VS Code Marketplace: ${MARKETPLACE_REVIEWS}`,
-		`- Rate on Open VSX: ${OPEN_VSX_REVIEWS}`,
+		vscode.l10n.t("Enjoying it? A rating helps more than you'd think:"),
+		`- ${vscode.l10n.t('Rate on VS Code Marketplace')}: ${MARKETPLACE_REVIEWS}`,
+		`- ${vscode.l10n.t('Rate on Open VSX')}: ${OPEN_VSX_REVIEWS}`,
 		'',
-		'Built by nolindnaidoo (https://github.com/nolindnaidoo) — MIT licensed.',
+		vscode.l10n.t(
+			'Built by {0} — MIT licensed.',
+			'nolindnaidoo (https://github.com/nolindnaidoo)',
+		),
 	].join('\n');
 }
