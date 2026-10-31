@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
@@ -274,24 +276,19 @@ describe('analyze: report sections', () => {
 });
 
 describe('activation', () => {
-	it('registers every declared command', () => {
+	it('registers every declared command, and no other', () => {
+		// The manifest is the list; a hand-written copy held nine of eleven.
+		const manifest = JSON.parse(
+			readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+		) as { contributes: { commands: Array<{ command: string }> } };
+		const declared = manifest.contributes.commands
+			.map((entry) => entry.command)
+			.sort();
+
 		const context = _createExtensionContext();
 		activate(context as never);
 
-		const declared = [
-			'colors-le.extractColors',
-			'colors-le.analyze',
-			'colors-le.convert',
-			'colors-le.filter',
-			'colors-le.validate',
-			'colors-le.postProcess.dedupe',
-			'colors-le.postProcess.sort',
-			'colors-le.openSettings',
-			'colors-le.help',
-		];
-		for (const command of declared) {
-			expect(_registeredCommands().has(command)).toBe(true);
-		}
+		expect([..._registeredCommands().keys()].sort()).toEqual(declared);
 	});
 
 	it('deactivate is a no-op that does not throw', () => {
