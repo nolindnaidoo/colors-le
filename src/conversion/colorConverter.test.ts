@@ -256,8 +256,12 @@ describe('getContrastRatio: edge inputs', () => {
 		expect(getContrastRatio('#777777', '#888888')).toBeGreaterThan(1);
 	});
 
-	it('handles an unparseable colour without throwing', () => {
-		expect(() => getContrastRatio('notacolour', '#ffffff')).not.toThrow();
+	it('answers null for a colour it cannot read, never a ratio of 1', () => {
+		// A ratio of 1 is a real answer, "the same colour", and Validate
+		// printed "Contrast ratio 1.00:1 fails WCAG AA" for a value it had
+		// not read at all.
+		expect(getContrastRatio('notacolour', '#ffffff')).toBeNull();
+		expect(getContrastRatio('#000000', 'notacolour')).toBeNull();
 	});
 });
 

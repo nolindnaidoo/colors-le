@@ -14,6 +14,10 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Validate reports a contrast it could not compute as that.** A value
+  the converter could not read had a contrast ratio of 1, so the report
+  said "Contrast ratio 1.00:1 fails WCAG AA" about a colour nothing had
+  measured.
 - **The analysis report claims only what it computed.** It printed "WCAG
   AA Compliance: ✅ Pass" for every palette, with a contrast ratio nothing
   had measured; contrast needs a background and the report now says it was

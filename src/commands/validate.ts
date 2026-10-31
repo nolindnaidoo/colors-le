@@ -178,11 +178,20 @@ export function validateColors(
 
 		// Contrast validation
 		if (options.checkContrast && options.contrastBackground) {
-			try {
-				contrastRatio = getContrastRatio(
-					color.value,
-					options.contrastBackground,
-				);
+			const ratio = getContrastRatio(color.value, options.contrastBackground);
+			// A ratio nothing computed is reported as that, never as a failing
+			// number; the `catch` this replaces was unreachable, since the
+			// converter throws on nothing.
+			if (ratio === null) {
+				issues.push({
+					type: 'contrast',
+					severity: 'error',
+					message: `Contrast ratio could not be computed: ${color.value} is not a color this reads`,
+					suggestion: 'Ensure both colors are in valid formats',
+				});
+			}
+			if (ratio !== null) {
+				contrastRatio = ratio;
 
 				if (options.minContrastAA && contrastRatio < options.minContrastAA) {
 					issues.push({
@@ -216,13 +225,6 @@ export function validateColors(
 				if (options.minContrastAAA && contrastRatio >= options.minContrastAAA) {
 					accessibilityLevel = 'AAA';
 				}
-			} catch {
-				issues.push({
-					type: 'contrast',
-					severity: 'error',
-					message: 'Unable to calculate contrast ratio',
-					suggestion: 'Ensure both colors are in valid formats',
-				});
 			}
 		}
 

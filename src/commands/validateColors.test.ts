@@ -35,6 +35,26 @@ describe('validateColors: format', () => {
 		});
 	});
 
+	it('reports a contrast it could not compute as that, not as a failing ratio', () => {
+		const report = validateColors([color('notacolour', 'unknown')], {
+			checkContrast: true,
+			contrastBackground: '#ffffff',
+			minContrastAA: 4.5,
+		});
+		const result = report.colors[0];
+		expect(result?.contrastRatio).toBeUndefined();
+		expect(result?.accessibilityLevel).toBeUndefined();
+		expect(result?.issues).toEqual([
+			{
+				type: 'contrast',
+				severity: 'error',
+				message:
+					'Contrast ratio could not be computed: notacolour is not a color this reads',
+				suggestion: 'Ensure both colors are in valid formats',
+			},
+		]);
+	});
+
 	it('still names a value that is not a colour', () => {
 		const report = validateColors([color('notacolour', 'unknown')], {
 			checkFormat: true,

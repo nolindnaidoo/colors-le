@@ -422,13 +422,19 @@ export function validateColorFormat(color: string, format: string): boolean {
 }
 
 /**
- * Get contrast ratio between two colors
+ * The WCAG contrast ratio between two colours, or null when either cannot
+ * be read. It answered 1 for an unreadable colour, and 1 is a real answer,
+ * "the same colour", so Validate printed "Contrast ratio 1.00:1 fails WCAG
+ * AA" for a value it had never read.
  */
-export function getContrastRatio(color1: string, color2: string): number {
+export function getContrastRatio(
+	color1: string,
+	color2: string,
+): number | null {
 	const rgb1 = parseColorToRGB(color1);
 	const rgb2 = parseColorToRGB(color2);
 
-	if (!rgb1 || !rgb2) return 1;
+	if (!rgb1 || !rgb2) return null;
 
 	const luminance1 = getRelativeLuminance(rgb1);
 	const luminance2 = getRelativeLuminance(rgb2);
