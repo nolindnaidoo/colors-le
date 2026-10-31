@@ -190,37 +190,47 @@ export async function promptForValidationOptions(): Promise<
 				options.allowedFormats = ['hsl', 'hsla'];
 				break;
 			case 'custom': {
+				// Each item carries the format it stands for. The choice was read
+				// off the label in lower case, and the Named item's label is
+				// translated, so a named colour was never allowed outside
+				// English. A colour literal is not a word and is not translated.
 				const selectedFormats = await vscode.window.showQuickPick(
 					[
 						{
 							label: 'HEX',
-							description: vscode.l10n.t('#ff0000'),
+							description: '#ff0000',
 							picked: true,
+							value: 'hex',
 						},
 						{
 							label: 'RGB',
-							description: vscode.l10n.t('rgb(255, 0, 0)'),
+							description: 'rgb(255, 0, 0)',
 							picked: true,
+							value: 'rgb',
 						},
 						{
 							label: 'RGBA',
-							description: vscode.l10n.t('rgba(255, 0, 0, 1)'),
+							description: 'rgba(255, 0, 0, 1)',
 							picked: true,
+							value: 'rgba',
 						},
 						{
 							label: 'HSL',
-							description: vscode.l10n.t('hsl(0, 100%, 50%)'),
+							description: 'hsl(0, 100%, 50%)',
 							picked: true,
+							value: 'hsl',
 						},
 						{
 							label: 'HSLA',
-							description: vscode.l10n.t('hsla(0, 100%, 50%, 1)'),
+							description: 'hsla(0, 100%, 50%, 1)',
 							picked: true,
+							value: 'hsla',
 						},
 						{
 							label: vscode.l10n.t('Named'),
 							description: vscode.l10n.t('red, blue, etc.'),
 							picked: true,
+							value: 'named',
 						},
 					],
 					{
@@ -230,9 +240,7 @@ export async function promptForValidationOptions(): Promise<
 				);
 
 				if (selectedFormats === undefined) return undefined;
-				options.allowedFormats = selectedFormats.map((f) =>
-					f.label.toLowerCase(),
-				);
+				options.allowedFormats = selectedFormats.map((f) => f.value);
 				break;
 			}
 		}
