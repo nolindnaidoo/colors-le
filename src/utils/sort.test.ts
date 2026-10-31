@@ -65,6 +65,28 @@ describe('sortColors', () => {
 		]);
 	});
 
+	it('orders hex by its digits, in no locale', () => {
+		// `localeCompare` sorted by the host's collation: Danish reads `aa`
+		// as a letter after `z`, so `#aa0000` came after `#ff0000`, and
+		// English puts a lowercase letter before the same letter in upper
+		// case, so one value in two spellings swapped places. The order is
+		// the digits' own, case folded, and two spellings of one value keep
+		// the order they came in.
+		expect(sortColors(['#ff0000', '#AA0000', '#0a0a0a'], 'hex-asc')).toEqual([
+			'#0a0a0a',
+			'#AA0000',
+			'#ff0000',
+		]);
+		expect(sortColors(['#FF0000', '#ff0000'], 'hex-asc')).toEqual([
+			'#FF0000',
+			'#ff0000',
+		]);
+		expect(sortColors(['#FF0000', '#ff0000'], 'hex-desc')).toEqual([
+			'#FF0000',
+			'#ff0000',
+		]);
+	});
+
 	it('keeps unparseable values stable', () => {
 		const withJunk = ['#ff0000', 'not-a-color', '#0000ff'];
 		const sorted = sortColors(withJunk, 'hue-asc');

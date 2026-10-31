@@ -4,7 +4,7 @@
 <h1 align="center">Colors-LE: Zero Hassle Color Extraction</h1>
 <p align="center">
   <b>Pull every color out of the current file in one keystroke</b><br/>
-  <i>CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, and SVG</i>
+  <i>CSS, SCSS, LESS, Stylus, HTML, JavaScript, TypeScript, SVG, XML, JSON, YAML, TOML, Markdown, and any text</i>
 </p>
 
 <p align="center">
@@ -126,7 +126,7 @@ That prints the tool list and exits — if you see `extract_colors`, the server 
 |---|---|---|
 | CSS | `css` | Hex/functional literals anywhere outside comments; named colors in declaration values |
 | SCSS / LESS / Stylus | `scss`, `less`, `stylus` | Same as CSS, plus `//` line comments respected; Stylus `=` assignments count as values |
-| HTML | `html` | `style="…"` attributes, `<style>` blocks, `color`/`bgcolor` attributes |
+| HTML | `html` | `style="…"` attributes, `<style>` blocks, and the `fill`, `stroke`, `stop-color`, `flood-color`, `lighting-color`, `color` and `bgcolor` attributes |
 | JavaScript / TypeScript | `javascript`, `javascriptreact`, `typescript`, `typescriptreact` | Inside string and template literals (theme objects, styled-components); named colors only when the whole string is the color |
 | SVG / XML | `xml`, `svg` | `fill`, `stroke`, `stop-color`, `flood-color`, `lighting-color`, `color`, `bgcolor` attributes, plus style attributes/blocks |
 | JSON / YAML / TOML | `json`, `jsonc`, `yaml`, `toml` | Design tokens: literals anywhere, named colors where the value **is** the color |
@@ -278,10 +278,10 @@ pixel and not the same decision.
 | `Colors-LE: Convert Colors` | Convert extracted colors to hex/rgb/hsl |
 | `Colors-LE: Filter Colors` | Filter by format, lightness, saturation |
 | `Colors-LE: Validate Colors` | Format validation and WCAG contrast checks |
-| `Colors-LE: Deduplicate Colors` | Remove duplicate lines from the results |
-| `Colors-LE: Sort Colors` | Sort results by the configured `sortMode` |
+| `Colors-LE: Deduplicate Colors` | Remove duplicate lines from a results list; any other document is refused untouched |
+| `Colors-LE: Sort Colors` | Sort a results list by the configured `sortMode`; any other document is refused untouched |
 | `Colors-LE: Open Settings` | Open Colors-LE settings |
-| `Colors-LE: Help` | Built-in documentation |
+| `Colors-LE: Help & Troubleshooting` | Built-in documentation |
 
 No command is bound to a key by default. Give any of them one under **Keyboard Shortcuts** in the editor.
 
@@ -362,12 +362,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 87.99% |
-| Branches | 78.79% |
-| Functions | 90.45% |
-| Lines | 90.43% |
+| Statements | 89.56% |
+| Branches | 81.15% |
+| Functions | 91.63% |
+| Lines | 91.81% |
 
-528 test cases across 37 files, plus an integration suite that runs
+593 test cases across 41 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 

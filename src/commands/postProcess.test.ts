@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
 	_createExtensionContext,
+	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
 	_respondToQuickPick,
@@ -9,6 +12,7 @@ import {
 	_setApplyEditResult,
 	_setConfig,
 	_shownMessages,
+	appliedEdits,
 } from '../__mocks__/vscode';
 import { activate, deactivate } from '../extension';
 import type { Telemetry } from '../telemetry/telemetry';
@@ -22,9 +26,8 @@ import { registerSortCommand } from './sort';
  * The post-process commands, the analysis report, and the activation entry
  * point.
  *
- * Dedupe and sort both branch on whether the document is a bare colour list or
- * a source file to pull colours out of, and only the source-file arm was
- * exercised. The analysis report is built section by section behind
+ * Dedupe and sort read a list of colours as Extract writes it and refuse
+ * anything else untouched. The analysis report is built section by section behind
  * "did we find any" checks, so a document producing none of them leaves most
  * of the file unread.
  */
@@ -91,19 +94,119 @@ describe('dedupe: colour-list documents', () => {
 		expect(_shownMessages().length).toBeGreaterThan(0);
 	});
 
-	it('falls back to filtering when the document is source', async () => {
-		registerDedupeCommand(makeContext(), makeDeps());
-		_setActiveEditor(
-			_createDocument({ content: 'a { color: #ff0000; }\np { top: 0; }\n' }),
-		);
-		await runCommand('colors-le.postProcess.dedupe');
-		expect(_shownMessages().length).toBeGreaterThan(0);
-	});
-
 	it('warns without an active editor', async () => {
 		registerDedupeCommand(makeContext(), makeDeps());
 		await runCommand('colors-le.postProcess.dedupe');
 		expect(_shownMessages()[0]?.kind).not.toBe('info');
+	});
+});
+
+describe('a line command reads what Extract writes, and nothing else', () => {
+	// Both commands kept only the lines that were a six-digit hex, an rgb()
+	// or an hsl(), and wrote those back over the whole document. A results
+	// list carrying a short hex, an rgba(), an hwb() or a keyword lost those
+	// lines, and a stylesheet, which has no bare colour line at all, was
+	// replaced with nothing and reported as "Removed 0 duplicate colors (0
+	// remaining)". A document that is not a list of colours is now refused
+	// untouched, and every notation Extract reports is a colour.
+	async function dedupe(content: string): Promise<string | undefined> {
+		registerDedupeCommand(makeContext(), makeDeps());
+		_setActiveEditor(_createDocument({ content }));
+		await runCommand('colors-le.postProcess.dedupe');
+		return appliedEdits[0]?.replacements[0]?.newText;
+	}
+
+	async function sort(content: string): Promise<string | undefined> {
+		_setConfig('colors-le.sortMode', 'lightness-asc');
+		registerSortCommand(makeContext(), makeDeps());
+		_setActiveEditor(_createDocument({ content }));
+		await runCommand('colors-le.postProcess.sort');
+		return appliedEdits[0]?.replacements[0]?.newText;
+	}
+
+	it('dedupe keeps every notation Extract reports', async () => {
+		expect(
+			await dedupe(
+				'#fff\nred\nrgba(0, 0, 0, 0.5)\nhwb(90 10% 10%)\n#f0a8\n#fff\nRed\n',
+			),
+		).toBe('#fff\nred\nrgba(0, 0, 0, 0.5)\nhwb(90 10% 10%)\n#f0a8\nRed\n');
+		expect(_shownMessages()[0]?.message).toBe(
+			'Removed 1 duplicate color(s) (6 remaining)',
+		);
+	});
+
+	it('dedupe keeps the positions Extract wrote', async () => {
+		expect(await dedupe('1:3\t#fff\n2:9\tred\n3:3\t#fff\n')).toBe(
+			'1:3\t#fff\n2:9\tred\n',
+		);
+	});
+
+	it('dedupe refuses a stylesheet and leaves it untouched', async () => {
+		expect(
+			await dedupe('a { color: #ff0000; }\np { top: 0; }\n'),
+		).toBeUndefined();
+		expect(appliedEdits).toHaveLength(0);
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+			[
+				'warning',
+				'Deduplicate Colors reads a list of colors, one per line, as Extract Colors writes it. Line 1 is not a color: a { color: #ff0000; }',
+			],
+		]);
+	});
+
+	it('dedupe names the first line that is not a colour, by its number', async () => {
+		expect(await dedupe('#fff\n\n#000\nnot a colour\n')).toBeUndefined();
+		expect(_shownMessages()[0]?.message).toContain('Line 4 is not a color');
+	});
+
+	it('dedupe keeps a trailing newline, and adds none where there was none', async () => {
+		expect(await dedupe('#fff\n#fff\n#000\n')).toBe('#fff\n#000\n');
+		_resetMockState();
+		_setConfig('colors-le.notificationsLevel', 'all');
+		expect(await dedupe('#fff\n#fff\n#000')).toBe('#fff\n#000');
+	});
+
+	it('dedupe writes CRLF back to a CRLF document', async () => {
+		expect(await dedupe('#fff\r\n#fff\r\n#000\r\n')).toBe('#fff\r\n#000\r\n');
+	});
+
+	it('dedupe drops a blank line inside and does not count it, and leaves an empty document empty', async () => {
+		expect(await dedupe('#fff\n\n#000\n')).toBe('#fff\n#000\n');
+		expect(_shownMessages()[0]?.message).toBe(
+			'Removed 0 duplicate color(s) (2 remaining)',
+		);
+		_resetMockState();
+		_setConfig('colors-le.notificationsLevel', 'all');
+		expect(await dedupe('')).toBe('');
+	});
+
+	it('sort keeps every notation Extract reports, in the configured order', async () => {
+		expect(await sort('white\n#000\nrgba(128, 128, 128, 0.5)\n')).toBe(
+			'#000\nrgba(128, 128, 128, 0.5)\nwhite\n',
+		);
+		expect(_shownMessages()[0]?.message).toBe(
+			'Sorted 3 color(s) by lightness-asc',
+		);
+	});
+
+	it('sort refuses a stylesheet and leaves it untouched', async () => {
+		expect(
+			await sort('a { color: #ff0000; }\nb { color: #00ff00; }\n'),
+		).toBeUndefined();
+		expect(appliedEdits).toHaveLength(0);
+		expect(_shownMessages()[0]?.message).toBe(
+			'Sort Colors reads a list of colors, one per line, as Extract Colors writes it. Line 1 is not a color: a { color: #ff0000; }',
+		);
+	});
+
+	it('sort writes CRLF back to a CRLF document, keeps the terminator, and never puts a blank line first', async () => {
+		expect(await sort('white\r\n\r\n#000\r\n')).toBe('#000\r\nwhite\r\n');
+		_resetMockState();
+		_setConfig('colors-le.notificationsLevel', 'all');
+		expect(await sort('white\n#000')).toBe('#000\nwhite');
+		_resetMockState();
+		_setConfig('colors-le.notificationsLevel', 'all');
+		expect(await sort('')).toBe('');
 	});
 });
 
@@ -122,18 +225,6 @@ describe('sort: colour-list documents', () => {
 		registerSortCommand(makeContext(), makeDeps());
 		_setActiveEditor(
 			_createDocument({ content: 'rgb(0, 255, 0)\nhsl(0, 100%, 50%)\n' }),
-		);
-		_respondToQuickPick((items) => items[0]);
-		await runCommand('colors-le.postProcess.sort');
-		expect(_shownMessages().length).toBeGreaterThan(0);
-	});
-
-	it('falls back to filtering when the document is source', async () => {
-		registerSortCommand(makeContext(), makeDeps());
-		_setActiveEditor(
-			_createDocument({
-				content: 'a { color: #ff0000; }\nb { color: #00ff00; }\n',
-			}),
 		);
 		_respondToQuickPick((items) => items[0]);
 		await runCommand('colors-le.postProcess.sort');
@@ -161,7 +252,10 @@ describe('analyze: report sections', () => {
 
 	it('reports a document with no colours', async () => {
 		await analyze('nothing to see here');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+			['info', 'No colors found to analyze'],
+		]);
+		expect(_openedDocuments()).toHaveLength(0);
 	});
 
 	it('includes the statistics sections for a varied palette', async () => {
@@ -170,40 +264,56 @@ describe('analyze: report sections', () => {
 		await analyze(
 			'#ff0000\n#ff3333\n#00ff00\nrgb(0, 0, 255)\nhsl(60, 100%, 50%)\n#ff0000\n',
 		);
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Total Colors**: 6');
+		expect(report).toContain('- **Unique Colors**: 5');
+		expect(report).toContain('- **Dominant Hue**:');
+		expect(report).toContain('- **Average Saturation**: 100%');
+		expect(report).toContain('- **Average Lightness**: 52%');
+		expect(report).toContain('## Format Distribution');
+		expect(report).toContain('## Most Common Colors');
+		expect(report).toContain('| `#ff0000` | 2 | 33.3% |');
 	});
 
 	it('handles a single-colour document', async () => {
 		await analyze('#ff0000\n');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Total Colors**: 1');
+		expect(report).toContain('- **Color Harmony**: none (0% confidence)');
+	});
+
+	it('reports contrast as not assessed rather than passed', async () => {
+		// "WCAG AA Compliance: ✅ Pass" was printed for every palette.
+		await analyze('#ff0000\n#00ff00\n#0000ff\n');
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('**WCAG contrast**: not assessed');
+		expect(report).not.toContain('✅ Pass');
+		expect(report).not.toContain('Gradient Pattern');
 	});
 
 	it('handles a greyscale palette', async () => {
 		// Saturation zero exercises the hue branch differently.
 		await analyze('#000000\n#777777\n#ffffff\n');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Average Saturation**: 0%');
+		expect(report).toContain('- **Mood**: muted');
 	});
 });
 
 describe('activation', () => {
-	it('registers every declared command', () => {
+	it('registers every declared command, and no other', () => {
+		// The manifest is the list; a hand-written copy held nine of eleven.
+		const manifest = JSON.parse(
+			readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+		) as { contributes: { commands: Array<{ command: string }> } };
+		const declared = manifest.contributes.commands
+			.map((entry) => entry.command)
+			.sort();
+
 		const context = _createExtensionContext();
 		activate(context as never);
 
-		const declared = [
-			'colors-le.extractColors',
-			'colors-le.analyze',
-			'colors-le.convert',
-			'colors-le.filter',
-			'colors-le.validate',
-			'colors-le.postProcess.dedupe',
-			'colors-le.postProcess.sort',
-			'colors-le.openSettings',
-			'colors-le.help',
-		];
-		for (const command of declared) {
-			expect(_registeredCommands().has(command)).toBe(true);
-		}
+		expect([..._registeredCommands().keys()].sort()).toEqual(declared);
 	});
 
 	it('deactivate is a no-op that does not throw', () => {

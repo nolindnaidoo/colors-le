@@ -135,11 +135,16 @@ export interface MockDocumentInit {
 	readonly fileName?: string;
 }
 
+/** `vscode.EndOfLine`: what `TextDocument.eol` reports. */
+export const EndOfLine = { LF: 1, CRLF: 2 } as const;
+
 export function _createDocument(init: MockDocumentInit) {
 	const content = init.content;
 	const lines = content.split('\n');
 	return {
 		getText: () => content,
+		// The host reads the ending from the first line break it finds.
+		eol: content.includes('\r\n') ? EndOfLine.CRLF : EndOfLine.LF,
 		languageId: init.languageId ?? 'plaintext',
 		fileName: init.fileName ?? '/mock/document.txt',
 		uri: Uri.file(init.fileName ?? '/mock/document.txt'),
@@ -344,6 +349,30 @@ export const workspace = {
 export const appliedEdits: WorkspaceEdit[] = [];
 let applyEditResult = true;
 
+/**
+ * A token that flips partway through, the way a real one does when the user
+ * clicks Cancel on the progress notification. Counting checks rather than
+ * progress reports is what makes each checkpoint individually reachable:
+ * `_cancelAfterProgress(1)` cancels between the first and second check.
+ */
+let cancelAfterChecks: number | undefined;
+let checksSeen = 0;
+
+const progressToken = {
+	get isCancellationRequested(): boolean {
+		if (cancelAfterChecks === undefined) return false;
+		if (checksSeen >= cancelAfterChecks) return true;
+		checksSeen += 1;
+		return false;
+	},
+};
+
+/** Cancel once the operation has checked the token `n` times (0 = immediately). */
+export function _cancelAfterProgress(n: number | undefined): void {
+	cancelAfterChecks = n;
+	checksSeen = 0;
+}
+
 let openDocumentError: Error | undefined;
 
 /** Make the next openTextDocument reject, as it does when there is no window. */
@@ -365,6 +394,22 @@ export interface ShownMessage {
 }
 
 const shownMessages: ShownMessage[] = [];
+
+const statusBarItems: Array<{ disposed: boolean }> = [];
+const outputChannels: Array<{ disposed: boolean }> = [];
+
+export function _statusBarItems(): ReadonlyArray<{ disposed: boolean }> {
+	return statusBarItems;
+}
+
+export function _outputChannels(): ReadonlyArray<{ disposed: boolean }> {
+	return outputChannels;
+}
+
+/** How many configuration listeners are registered right now. */
+export function _configListenerCount(): number {
+	return configListeners.length;
+}
 let activeTextEditor: { document: MockDocument } | undefined;
 let quickPickResponder: ((items: unknown[]) => unknown) | undefined;
 let warningResponder: ((items: unknown[]) => unknown) | undefined;
@@ -463,33 +508,44 @@ export const window = {
 	showTextDocument: async (_document: unknown, _column?: unknown) => undefined,
 	createOutputChannel: (_name: string) => {
 		const linesOut: string[] = [];
-		return {
+		const channel = {
+			disposed: false,
 			appendLine: (line: string) => linesOut.push(line),
-			dispose: () => {},
+			dispose(): void {
+				channel.disposed = true;
+			},
 			_lines: linesOut,
 		};
+		outputChannels.push(channel);
+		return channel;
 	},
-	createStatusBarItem: (_alignment?: unknown, _priority?: number) => ({
-		text: '',
-		tooltip: '',
-		command: undefined as unknown,
-		visible: false,
-		show(): void {
-			(this as { visible: boolean }).visible = true;
-		},
-		hide(): void {
-			(this as { visible: boolean }).visible = false;
-		},
-		dispose: () => {},
-	}),
+	createStatusBarItem: (_alignment?: unknown, _priority?: number) => {
+		const item = {
+			text: '',
+			tooltip: '',
+			command: undefined as unknown,
+			visible: false,
+			disposed: false,
+			show(): void {
+				item.visible = true;
+			},
+			hide(): void {
+				item.visible = false;
+			},
+			dispose(): void {
+				item.disposed = true;
+			},
+		};
+		statusBarItems.push(item);
+		return item;
+	},
 	withProgress: async <T>(
 		_options: unknown,
 		task: (
 			progress: { report: (_value: unknown) => void },
 			token: { isCancellationRequested: boolean },
 		) => Promise<T>,
-	): Promise<T> =>
-		task({ report: () => {} }, { isCancellationRequested: false }),
+	): Promise<T> => task({ report: () => {} }, progressToken),
 	createWebviewPanel: (
 		_viewType: string,
 		_title: string,
@@ -621,6 +677,8 @@ export const FileType = {
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
 	env.appName = 'Visual Studio Code';
+	cancelAfterChecks = undefined;
+	checksSeen = 0;
 	clipboardError = undefined;
 	applyEditResult = true;
 	openDocumentError = undefined;
@@ -629,6 +687,8 @@ export function _resetMockState(): void {
 	configUpdates.length = 0;
 	configListeners.length = 0;
 	shownMessages.length = 0;
+	statusBarItems.length = 0;
+	outputChannels.length = 0;
 	appliedEdits.length = 0;
 	executedBuiltins.length = 0;
 	registeredCommands.clear();

@@ -192,6 +192,15 @@ pixelactions and scrape-le:
   Every tool here returns that envelope — `{ ok, data, diagnostics,
   meta }` — where `ok` means the check ran, never that the answer was
   yes.
+- **A schema violation is `-32602`; a tool failure is `isError`.** An
+  argument that does not fit a tool's schema — missing, wrong-typed,
+  undeclared, a cap that is not a whole number — is a `Refusal::InvalidParams`
+  and comes back as a JSON-RPC error, in the same words the npm server
+  and the npm command line use. A tool that fails on what it was given at
+  run time is a `Refusal::Failure` and comes back as a result carrying
+  `isError`. `additionalProperties: false` is enforced, not just declared.
+  `scripts/check-cli-parity.ts` sends both servers the malformed
+  arguments and fails on any difference.
 
 ## The corpus contract
 

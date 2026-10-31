@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	_cancelAfterProgress,
 	_clipboardText,
 	_createDocument,
+	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
 	_setActiveEditor,
@@ -69,9 +71,12 @@ describe('colors-le.postProcess.dedupe', () => {
 		await runCommand('colors-le.postProcess.dedupe');
 
 		expect(appliedEdits).toHaveLength(1);
-		expect(appliedEdits[0]?.replacements[0]?.newText).toBe('#aabbcc\n#ddeeff');
+		// The document ended in a newline, so the result does.
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'#aabbcc\n#ddeeff\n',
+		);
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 1 duplicate colors (2 remaining)',
+			'Removed 1 duplicate color(s) (2 remaining)',
 		);
 	});
 
@@ -88,10 +93,10 @@ describe('colors-le.postProcess.dedupe', () => {
 		// A line that leads with a position is still a color line, and whole
 		// lines all differ here: only by color is there a duplicate at all.
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
-			'1:1\t#aabbcc\n2:1\t#ddeeff',
+			'1:1\t#aabbcc\n2:1\t#ddeeff\n',
 		);
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 1 duplicate colors (2 remaining). Each color shows its first position only.',
+			'Removed 1 duplicate color(s) (2 remaining). Each color shows its first position only.',
 		);
 	});
 
@@ -116,7 +121,7 @@ describe('colors-le.postProcess.sort', () => {
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
 			'#aabbcc\n#ccddee\n#ddeeff',
 		);
-		expect(_shownMessages()[0]?.message).toBe('Sorted 3 colors by hex-asc');
+		expect(_shownMessages()[0]?.message).toBe('Sorted 3 color(s) by hex-asc');
 	});
 
 	it('sorts by color when positions are shown, and each keeps its own', async () => {
@@ -163,7 +168,7 @@ describe('colors-le.extractColors', () => {
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(
 			_shownMessages().some((m) =>
-				m.message.includes('Extracted 2 colors and copied to clipboard'),
+				m.message.includes('Extracted 2 color(s) and copied to the clipboard'),
 			),
 		).toBe(true);
 	});
@@ -225,6 +230,23 @@ describe('colors-le.extractColors edge paths', () => {
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe('#123456');
 	});
 
+	it('writes the document’s own line ending and terminator when replacing in place', async () => {
+		// The results were joined with bare newlines and nothing after the
+		// last, whatever the document had.
+		registerExtractCommand(makeContext(), makeDeps());
+		_setConfig('colors-le.openResultsSideBySide', false);
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #123456; }\r\nb { color: #fff; }\r\n',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'#123456\r\n#fff\r\n',
+		);
+	});
+
 	it('shows and copies positions only as each setting says', async () => {
 		registerExtractCommand(makeContext(), makeDeps());
 		_setConfig('colors-le.openResultsSideBySide', false);
@@ -279,7 +301,7 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
 		expect(
-			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+			_shownMessages().some((m) => m.message.includes('Extracted 2 color(s)')),
 		).toBe(false);
 		expect(events).not.toContain('extract-success');
 	});
@@ -300,7 +322,7 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
 		expect(
-			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+			_shownMessages().some((m) => m.message.includes('Extracted 2 color(s)')),
 		).toBe(false);
 		expect(events).not.toContain('extract-success');
 	});
@@ -323,6 +345,69 @@ describe('colors-le.extractColors: undelivered results', () => {
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(events).toContain('extract-success');
 	});
+});
+
+describe('two invocations at once', () => {
+	// Nothing serialises the commands: a second one can start while the first
+	// is awaiting the host. Each reaches its own result.
+	it('two extracts started together each open their own results', async () => {
+		registerExtractCommand(makeContext(), makeDeps());
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setActiveEditor(
+			_createDocument({ content: 'a { color: #123456; }', languageId: 'css' }),
+		);
+		const handler = _registeredCommands().get('colors-le.extractColors');
+		if (!handler) throw new Error('extract command not registered');
+		await Promise.all([handler(), handler()]);
+		expect(_openedDocuments().map((d) => d.getText())).toEqual([
+			'#123456',
+			'#123456',
+		]);
+		expect(_shownMessages().filter((m) => m.kind === 'error')).toEqual([]);
+	});
+
+	it('a dedupe and a sort started together each write their own document', async () => {
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.sortMode', 'hex-asc');
+		registerDedupeCommand(makeContext(), makeDeps());
+		registerSortCommand(makeContext(), makeDeps());
+		_setActiveEditor(_createDocument({ content: '#bbb\n#aaa\n#bbb\n' }));
+		const dedupe = _registeredCommands().get('colors-le.postProcess.dedupe');
+		const sort = _registeredCommands().get('colors-le.postProcess.sort');
+		if (!dedupe || !sort) throw new Error('commands not registered');
+		await Promise.all([dedupe(), sort()]);
+		expect(
+			appliedEdits.map((edit) => edit.replacements[0]?.newText).sort(),
+		).toEqual(['#aaa\n#bbb\n#bbb\n', '#bbb\n#aaa\n']);
+	});
+});
+
+describe('colors-le.extractColors: cancelled', () => {
+	// A click on Cancel threw an Error that the catch reported as "Color
+	// extraction failed: Operation cancelled by user", an error toast and an
+	// `extract-error` telemetry event for something the user asked for.
+	for (const checkpoint of [0, 1]) {
+		it(`reports a cancel at check ${checkpoint} as a cancel, not a failure`, async () => {
+			const events: string[] = [];
+			registerExtractCommand(makeContext(), makeDeps(events));
+			_setConfig('colors-le.notificationsLevel', 'all');
+			_cancelAfterProgress(checkpoint);
+			_setActiveEditor(
+				_createDocument({
+					content: 'a { color: #ff0000; }',
+					languageId: 'css',
+				}),
+			);
+			await runCommand('colors-le.extractColors');
+			expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+				['info', 'Extraction cancelled.'],
+			]);
+			expect(appliedEdits).toHaveLength(0);
+			expect(events).toContain('extract-cancelled');
+			expect(events).not.toContain('extract-error');
+			expect(events).not.toContain('extract-success');
+		});
+	}
 });
 
 describe('colors-le.extractColors: clipboard failure', () => {

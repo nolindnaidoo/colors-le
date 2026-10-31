@@ -1,9 +1,12 @@
 export function formatDuration(milliseconds: number): string {
-	if (milliseconds < 1000) {
-		return `${milliseconds}ms`;
+	// `performance.now()` hands over a fraction of a millisecond; the reports
+	// printed it as "2.8999999999999986ms".
+	const whole = Math.round(milliseconds);
+	if (whole < 1000) {
+		return `${whole}ms`;
 	}
 
-	const seconds = Math.floor(milliseconds / 1000);
+	const seconds = Math.floor(whole / 1000);
 	const minutes = Math.floor(seconds / 60);
 	const hours = Math.floor(minutes / 60);
 

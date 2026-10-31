@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { Notifier } from '../ui/notifier';
+import { describeError } from './errors';
 
 /** Above this the copy is abandoned rather than attempted. */
 const MAX_CLIPBOARD_CHARS = 1_000_000;
@@ -18,21 +19,28 @@ export async function copyResults(
 ): Promise<boolean> {
 	if (text.length > MAX_CLIPBOARD_CHARS) {
 		notifier.showWarning(
-			`Results too large for clipboard (${text.length} characters), skipping clipboard copy`,
+			vscode.l10n.t(
+				'Results too large for the clipboard ({0} characters); skipping the copy',
+				text.length,
+			),
 		);
 		return false;
 	}
 
 	try {
 		await vscode.env.clipboard.writeText(text);
-		notifier.showInfo(`Extracted ${count} colors and copied to clipboard`);
+		notifier.showInfo(
+			vscode.l10n.t(
+				'Extracted {0} color(s) and copied to the clipboard',
+				count,
+			),
+		);
 		return true;
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Unknown error';
 		notifier.showWarning(
 			vscode.l10n.t(
 				'Extracted the colors, but could not copy them to the clipboard: {0}',
-				message,
+				describeError(error),
 			),
 		);
 		return false;

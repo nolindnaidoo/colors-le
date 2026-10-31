@@ -1,6 +1,21 @@
 import type { SortMode } from '../types';
 import { parseColor, rgbToHsl } from './colorConversion';
 
+/**
+ * The digits' own order, case folded, in no locale. `localeCompare` sorted
+ * by the host's collation: Danish reads `aa` as a letter after `z`, so
+ * `#aa0000` came after `#ff0000`, and English puts a lowercase letter before
+ * the same letter in upper case, so one value in two spellings swapped
+ * places on every sort.
+ */
+function byDigits(a: string, b: string): number {
+	const left = a.toLowerCase();
+	const right = b.toLowerCase();
+	if (left < right) return -1;
+	if (left > right) return 1;
+	return 0;
+}
+
 export function sortColors(
 	lines: readonly string[],
 	sortMode: SortMode,
@@ -11,9 +26,9 @@ export function sortColors(
 		case 'off':
 			return Object.freeze([...lines]);
 		case 'hex-asc':
-			return Object.freeze(filteredLines.sort((a, b) => a.localeCompare(b)));
+			return Object.freeze(filteredLines.sort(byDigits));
 		case 'hex-desc':
-			return Object.freeze(filteredLines.sort((a, b) => b.localeCompare(a)));
+			return Object.freeze(filteredLines.sort((a, b) => byDigits(b, a)));
 		case 'hue-asc':
 			return sortByHue(filteredLines, 'asc');
 		case 'hue-desc':

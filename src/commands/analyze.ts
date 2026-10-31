@@ -16,6 +16,7 @@ import {
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { formatDuration } from '../utils/format';
 import { guarded } from './guard';
 
@@ -23,13 +24,16 @@ import { guarded } from './guard';
  * Register the analyze colors command
  */
 export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
+	// One notifier for the guard and the body, so notificationsLevel governs
+	// what the command says and not only the guard's failure toast.
+	const notifier = createNotifier();
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.analyze',
-		guarded(createNotifier(), async () => {
+		guarded(notifier, async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -42,9 +46,7 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					await vscode.window.showInformationMessage(
-						'No colors found to analyze',
-					);
+					notifier.showInfo(vscode.l10n.t('No colors found to analyze'));
 					return;
 				}
 
@@ -81,14 +83,16 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 					preview: false,
 				});
 
-				await vscode.window.showInformationMessage(
-					`Color analysis completed. Found ${statistics.total.toString()} colors with ${statistics.unique.toString()} unique values.`,
+				notifier.showInfo(
+					vscode.l10n.t(
+						'Color analysis completed. Found {0} colors with {1} unique values.',
+						statistics.total,
+						statistics.unique,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				await vscode.window.showErrorMessage(
-					`Analysis failed: ${errorMessage}`,
+				notifier.showError(
+					vscode.l10n.t('Analysis failed: {0}', describeError(error)),
 				);
 			}
 		}),
@@ -180,11 +184,16 @@ function generateAnalysisReport(
 	);
 	report.push(`- **Temperature**: ${palette.temperature}`);
 	report.push(`- **Mood**: ${palette.mood}`);
+	// Contrast is measured against a background, and a palette has none; the
+	// report used to print a pass nothing had measured.
 	report.push(
-		`- **WCAG AA Compliance**: ${palette.accessibility.wcagAA ? '✅ Pass' : '❌ Fail'}`,
-	);
-	report.push(
-		`- **WCAG AAA Compliance**: ${palette.accessibility.wcagAAA ? '✅ Pass' : '❌ Fail'}`,
+		`- **WCAG contrast**: ${
+			palette.accessibility.wcagAA === undefined
+				? 'not assessed (Validate Colors checks contrast against a background you name)'
+				: palette.accessibility.wcagAA
+					? '✅ AA'
+					: '❌ fails AA'
+		}`,
 	);
 	report.push('');
 	report.push(`**Harmony Description**: ${palette.harmony.description}`);
@@ -324,7 +333,7 @@ function generateAnalysisReport(
 		);
 	}
 
-	if (!palette.accessibility.wcagAA) {
+	if (palette.accessibility.wcagAA === false) {
 		report.push(
 			'- **Accessibility**: Ensure color combinations meet WCAG contrast requirements',
 		);

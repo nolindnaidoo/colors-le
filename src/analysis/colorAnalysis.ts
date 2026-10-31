@@ -34,10 +34,15 @@ export interface ColorHarmony {
 	readonly description: string;
 }
 
+/**
+ * Contrast needs a background, and a palette has none: the verdicts and the
+ * ratio are undefined here, never a value nothing measured. The report said
+ * "WCAG AA Compliance: Pass" at 4.5:1 for every palette.
+ */
 export interface ColorAccessibility {
-	readonly wcagAA: boolean;
-	readonly wcagAAA: boolean;
-	readonly contrastRatio: number;
+	readonly wcagAA: boolean | undefined;
+	readonly wcagAAA: boolean | undefined;
+	readonly contrastRatio: number | undefined;
 	readonly recommendations: readonly string[];
 	readonly issues: readonly {
 		readonly type: 'contrast' | 'color-blindness' | 'readability';
@@ -160,9 +165,11 @@ export function calculateColorStatistics(
 		.map((c) => parseColorToHSL(c.value))
 		.filter((hsl): hsl is { h: number; s: number; l: number } => hsl !== null);
 
+	// Around the wheel, not along a line: 350° and 10° are both red, and
+	// their mean is 0°, not 180°.
 	const dominantHue =
 		hslValues.length > 0
-			? hslValues.reduce((sum, hsl) => sum + hsl.h, 0) / hslValues.length
+			? circularMeanHue(hslValues.map((hsl) => hsl.h))
 			: undefined;
 
 	const averageSaturation =
@@ -454,12 +461,14 @@ export function analyzePalette(colors: readonly Color[]): PaletteAnalysis {
 	// Determine harmony
 	const harmony = detectColorHarmony(uniqueColors);
 
-	// Analyze accessibility (simplified)
+	// Contrast is measured against a background, and a palette has none.
 	const accessibility: ColorAccessibility = Object.freeze({
-		wcagAA: true, // Simplified - would need proper contrast checking
-		wcagAAA: false,
-		contrastRatio: 4.5, // Simplified
-		recommendations: ['Test color combinations for sufficient contrast'],
+		wcagAA: undefined,
+		wcagAAA: undefined,
+		contrastRatio: undefined,
+		recommendations: [
+			'Validate Colors checks contrast against a background you name',
+		],
 		issues: [],
 	});
 
@@ -500,41 +509,106 @@ export function analyzePalette(colors: readonly Color[]): PaletteAnalysis {
 
 // Helper functions
 
-function detectGradientPattern(colors: readonly string[]): ColorPattern | null {
-	if (colors.length < 3) return null;
+/** The shorter way round the wheel between two hues, in degrees. */
+function hueDistance(a: number, b: number): number {
+	const direct = Math.abs(a - b) % 360;
+	return Math.min(direct, 360 - direct);
+}
 
-	// Simplified gradient detection
+/** The mean direction of a set of hues, in [0, 360). */
+function circularMeanHue(hues: readonly number[]): number {
+	let x = 0;
+	let y = 0;
+	for (const hue of hues) {
+		x += Math.cos((hue * Math.PI) / 180);
+		y += Math.sin((hue * Math.PI) / 180);
+	}
+	const degrees = (Math.atan2(y, x) * 180) / Math.PI;
+	return (Math.round(degrees) + 360) % 360;
+}
+
+/** The smallest arc of the wheel that holds every hue, in degrees. */
+function hueSpan(hues: readonly number[]): number {
+	if (hues.length < 2) return 0;
+	const sorted = [...hues]
+		.map((h) => ((h % 360) + 360) % 360)
+		.sort((a, b) => a - b);
+	let largestGap = 0;
+	for (let i = 1; i < sorted.length; i++) {
+		largestGap = Math.max(largestGap, (sorted[i] ?? 0) - (sorted[i - 1] ?? 0));
+	}
+	const wrapGap = 360 - (sorted[sorted.length - 1] ?? 0) + (sorted[0] ?? 0);
+	return 360 - Math.max(largestGap, wrapGap);
+}
+
+/**
+ * A gradient is a run of three or more consecutive colours of one hue whose
+ * lightness steps one way in small steps. Any three colours used to be a
+ * "potential gradient sequence" at 70% confidence.
+ */
+function detectGradientPattern(colors: readonly string[]): ColorPattern | null {
+	const parsed = colors.map((color) => ({
+		color,
+		hsl: parseColorToHSL(color),
+	}));
+	let best: string[] = [];
+	let run: string[] = [];
+	let direction = 0;
+	for (let i = 0; i < parsed.length; i++) {
+		const here = parsed[i];
+		const before = parsed[i - 1];
+		const step =
+			here?.hsl && before?.hsl ? Math.sign(here.hsl.l - before.hsl.l) : 0;
+		const continues =
+			here?.hsl !== null &&
+			here?.hsl !== undefined &&
+			before?.hsl !== null &&
+			before?.hsl !== undefined &&
+			hueDistance(here.hsl.h, before.hsl.h) <= 15 &&
+			step !== 0 &&
+			(direction === 0 || step === direction) &&
+			Math.abs(here.hsl.l - before.hsl.l) <= 40;
+		if (continues && here) {
+			run.push(here.color);
+			direction = step;
+		} else {
+			run = here?.hsl ? [here.color] : [];
+			direction = 0;
+		}
+		if (run.length > best.length) best = [...run];
+	}
+	if (best.length < 3) return null;
 	return Object.freeze({
 		type: 'gradient',
-		colors: Object.freeze(colors.slice(0, 3)),
-		confidence: 0.7,
-		description: 'Potential gradient sequence detected',
-		examples: Object.freeze(colors.slice(0, 3)),
+		colors: Object.freeze(best),
+		confidence: Math.min(0.9, 0.5 + 0.1 * (best.length - 3)),
+		description: `${best.length} consecutive shades of one hue, lightness stepping one way`,
+		examples: Object.freeze(best.slice(0, 3)),
 	});
 }
 
+/**
+ * Blue is a hue, read from the colour: a hex starting with `0` used to
+ * count, so green and white were a "blue and white theme".
+ */
 function detectThemePattern(colors: readonly string[]): ColorPattern | null {
-	// Simplified theme detection
-	const hasBlue = colors.some((c) => c.includes('blue') || c.includes('#0'));
-	const hasWhite = colors.some(
-		(c) => c.includes('white') || c.includes('#fff'),
-	);
+	const isBlue = (hsl: { h: number; s: number; l: number }) =>
+		hsl.h >= 200 && hsl.h <= 260 && hsl.s >= 30 && hsl.l > 10 && hsl.l < 90;
+	const isWhite = (hsl: { h: number; s: number; l: number }) => hsl.l >= 95;
+	const parsed = colors.map((color) => ({
+		color,
+		hsl: parseColorToHSL(color),
+	}));
+	const blues = parsed.filter((c) => c.hsl && isBlue(c.hsl));
+	const whites = parsed.filter((c) => c.hsl && isWhite(c.hsl));
 
-	if (hasBlue && hasWhite) {
+	if (blues.length > 0 && whites.length > 0) {
 		return Object.freeze({
 			type: 'theme',
-			colors: Object.freeze(
-				colors.filter(
-					(c) =>
-						c.includes('blue') ||
-						c.includes('white') ||
-						c.includes('#0') ||
-						c.includes('#fff'),
-				),
-			),
+			colors: Object.freeze([...blues, ...whites].map((c) => c.color)),
 			confidence: 0.6,
 			description: 'Blue and white theme pattern detected',
-			examples: Object.freeze(['#0066cc', '#ffffff']),
+			examples: Object.freeze([blues[0]?.color ?? '', whites[0]?.color ?? '']),
 		});
 	}
 
@@ -580,9 +654,10 @@ function detectColorHarmony(colors: readonly string[]): ColorHarmony {
 		});
 	}
 
-	// Check for monochromatic (same hue, different saturation/lightness)
+	// Check for monochromatic (same hue, different saturation/lightness).
+	// Measured around the wheel: 350° and 10° are 20° apart, not 340°.
 	const hues = hslColors.map((hsl) => hsl.h);
-	const hueRange = Math.max(...hues) - Math.min(...hues);
+	const hueRange = hueSpan(hues);
 
 	if (hueRange < 30) {
 		return Object.freeze({
@@ -600,7 +675,7 @@ function detectColorHarmony(colors: readonly string[]): ColorHarmony {
 		hues[0] !== undefined &&
 		hues[1] !== undefined
 	) {
-		const hueDiff = Math.abs(hues[0] - hues[1]);
+		const hueDiff = hueDistance(hues[0], hues[1]);
 		if (Math.abs(hueDiff - 180) < 30) {
 			return Object.freeze({
 				type: 'complementary',

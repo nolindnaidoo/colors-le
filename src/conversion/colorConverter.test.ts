@@ -205,8 +205,16 @@ describe('convertColor: input parsing', () => {
 		expect(r.success).toBe(false);
 	});
 
+	it('parses a four-digit hex and keeps its alpha', () => {
+		// Extract reports `#rgba`; Convert answered "Unable to parse color".
+		const r = convertColor(color('#f0a8'), { targetFormat: 'rgba' });
+		expect(r.success).toBe(true);
+		expect(r.converted).toMatch(/^rgba\(255, 0, 170, 0\.53/);
+	});
+
 	it('rejects a malformed hex length', () => {
-		const r = convertColor(color('#ff00'), { targetFormat: 'rgb' });
+		// Five digits is the one length CSS does not spell; four is #rgba.
+		const r = convertColor(color('#ff000'), { targetFormat: 'rgb' });
 		expect(r.success).toBe(false);
 	});
 });
@@ -248,8 +256,12 @@ describe('getContrastRatio: edge inputs', () => {
 		expect(getContrastRatio('#777777', '#888888')).toBeGreaterThan(1);
 	});
 
-	it('handles an unparseable colour without throwing', () => {
-		expect(() => getContrastRatio('notacolour', '#ffffff')).not.toThrow();
+	it('answers null for a colour it cannot read, never a ratio of 1', () => {
+		// A ratio of 1 is a real answer, "the same colour", and Validate
+		// printed "Contrast ratio 1.00:1 fails WCAG AA" for a value it had
+		// not read at all.
+		expect(getContrastRatio('notacolour', '#ffffff')).toBeNull();
+		expect(getContrastRatio('#000000', 'notacolour')).toBeNull();
 	});
 });
 

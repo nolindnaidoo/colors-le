@@ -5,7 +5,10 @@ import {
 	envelope,
 	MAX_MAX_RESULTS,
 	readMaxResults,
+	readOptionalBoolean,
+	readOptionalString,
 	readString,
+	refuseUnknown,
 	toDiagnostics,
 } from './envelope';
 import { resolveFormat, SUPPORTED_FORMATS } from './fileType';
@@ -41,13 +44,25 @@ const MAX_RESULTS_SCHEMA = {
 	description: `Cap on returned colors (default ${DEFAULT_MAX_RESULTS}). meta.truncated reports whether any were dropped.`,
 };
 
+/** The schema's properties, which `additionalProperties: false` closes. */
+const EXTRACT_ARGUMENTS = [
+	'content',
+	'format',
+	'filename',
+	'dedupe',
+	'maxResults',
+] as const;
+
 async function extract(args: Record<string, unknown>): Promise<unknown> {
+	refuseUnknown(args, EXTRACT_ARGUMENTS);
 	const content = readString(args, 'content');
 	const maxResults = readMaxResults(args);
 
-	const format = typeof args.format === 'string' ? args.format : undefined;
-	const filename =
-		typeof args.filename === 'string' ? args.filename : undefined;
+	// Read as the schema types them. A `format: 7` was read as absent and a
+	// `dedupe: "yes"` as false, silences the schema never allowed.
+	const format = readOptionalString(args, 'format');
+	const filename = readOptionalString(args, 'filename');
+	const dedupe = readOptionalBoolean(args, 'dedupe') === true;
 
 	// Never a refusal. An agent that knows nothing about a document still gets
 	// the colors in it, which is the whole reason a format is optional — and
@@ -62,13 +77,12 @@ async function extract(args: Record<string, unknown>): Promise<unknown> {
 		column: color.position?.column,
 	}));
 
-	const deduped =
-		args.dedupe === true
-			? values.filter(
-					(color, i, all) =>
-						all.findIndex((other) => other.value === color.value) === i,
-				)
-			: values;
+	const deduped = dedupe
+		? values.filter(
+				(color, i, all) =>
+					all.findIndex((other) => other.value === color.value) === i,
+			)
+		: values;
 
 	const { items, truncated } = capped(deduped, maxResults);
 

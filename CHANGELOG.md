@@ -14,6 +14,86 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Every message, button, progress title and tooltip goes through the runtime bundle.** Analyze, Convert, Filter, Validate, Deduplicate, Sort, the clipboard, the safety dialog and the status bar spoke English in every locale, and four strings already wrapped for translation were missing from the bundles. A test now reads the source for all of it.
+- **The Named format can be allowed in Validate in every language.** The choice was read off the translated label, so outside English a named color was never allowed.
+- **The German settings text keeps the product name.** It read "Farben-LE".
+- **The help document reads in the host's language.** It was one English
+  template in every locale. Every sentence goes through the runtime bundle
+  now, and the command titles in it are held to the palette's, locale by
+  locale.
+- **The help document describes the extension that ships.** It listed
+  four file types after fourteen had a reader of their own, five
+  notations after fourteen were found, told a user who found no colors to
+  check that the file type is supported when every document is read, and
+  named the last command "Help" where the palette shows "Help &
+  Troubleshooting". A test holds its command list to the manifest and its
+  format list to the extractor's.
+- **`notificationsLevel` governs Analyze, Convert, Filter and Validate.**
+  The four showed their "No active editor", "No colors found" and
+  completion toasts directly, so `silent` and `important` silenced the
+  other commands and not these.
+- **Cancelling an extraction is reported as a cancel.** Clicking Cancel on
+  the progress notification produced the error toast "Color extraction
+  failed: Operation cancelled by user" and an error event in the telemetry
+  log.
+- **Validate reports a contrast it could not compute as that.** A value
+  the converter could not read had a contrast ratio of 1, so the report
+  said "Contrast ratio 1.00:1 fails WCAG AA" about a colour nothing had
+  measured.
+- **The analysis report claims only what it computed.** It printed "WCAG
+  AA Compliance: ✅ Pass" for every palette, with a contrast ratio nothing
+  had measured; contrast needs a background and the report now says it was
+  not assessed and where to check it. Any three colours were a "potential
+  gradient sequence" at 70% confidence; a gradient is now a run of shades
+  of one hue stepping one way. A hex beginning with `0` counted as blue, so
+  green and white were a "blue and white theme"; blue is read from the hue.
+  Hues were averaged on a line, so 350° and 10° had a dominant hue of 180°,
+  the opposite side of the wheel, and two reds either side of 0° were never
+  monochromatic.
+- **Sort Colors by hex orders the digits, in no locale.** It sorted by the
+  host's collation: on a Danish host `#aa0000` came after `#ff0000`, and on
+  an English one two spellings of one value swapped places on every sort.
+- **The reports' timings are whole milliseconds.** "Analysis Time:
+  2.8999999999999986ms" was the raw difference of two timestamps.
+- **Deduplicate Colors and Sort Colors no longer wipe a document that is
+  not a six-digit-hex, `rgb()` or `hsl()` list.** Both kept only the lines
+  that matched those three shapes and wrote them back over the whole
+  document: a results list carrying a short hex, an `rgba()`, an `hwb()`
+  or a keyword lost those lines, and a stylesheet, which has no bare
+  colour line at all, became an empty file reported as "Removed 0
+  duplicate colors (0 remaining)". Every notation Extract reports is a
+  colour now, and a document with any other line is refused untouched,
+  naming the line. Both commands, and Extract writing in place, keep the
+  document's own line ending and its trailing newline; a CRLF document was
+  written back with bare newlines and a terminator was dropped every time.
+- **Validate, Filter, Analyze and Convert read every notation Extract
+  reports.** A keyword such as `red` or `transparent` and a four-digit hex
+  such as `#f0a8` were found by Extract and then called "Invalid color
+  format" by Validate and Analyze and dropped by Filter's invalid-colour
+  option, and Convert answered "Unable to parse color" for the four-digit
+  hex. Only a six-digit hex, a legacy `hsl()` and the CSS Color 4 syntax
+  had a hue, saturation or lightness at all, so an `rgb()`, an `rgba()`,
+  an `hsla()`, a short hex or a keyword passed every lightness and
+  saturation filter untested and sat out the harmony, temperature, mood
+  and cluster analysis. A functional call in capitals could not be read. A
+  hue just under 360 rounded to 360, which no range on the wheel includes.
+- **Every MCP server this repository ships refuses an argument that does
+  not fit the tool's schema as a protocol error, `-32602`, in the same
+  words.** A `format: 7` was read as absent, a `dedupe: "yes"` or
+  `hidden: "yes"` as false, an argument the schema does not declare was
+  accepted, an entry of `paths` that was not a string vanished and the list
+  was then called empty, and a schema violation came back as the tool's own
+  failure, which a host shows to the agent as a broken tool. The crate's
+  server refused a cap written as `5.0` or `1e3` that the other two read.
+  `additionalProperties: false` is enforced on both tools.
+- **`grey`, `darkgrey`, `darkslategrey`, `dimgrey`, `lightgrey`,
+  `lightslategrey` and `slategrey` are extracted.** CSS spells those seven
+  keywords both ways and the extractor knew the `gray` spellings alone, so
+  `color: grey` was found by nothing: not Extract, not the workspace scan, not
+  the MCP server, not the command line. The converter's table carried all
+  seven, and 2.4.0's "all 148 CSS keywords" was true of it and not of the
+  extractor. The shared corpus pins one now, and a test holds the extractor's
+  list to the converter's table.
 - The extension's MCP server, the one `colors-le-mcp` and the editor run, died
   on an unhandled EPIPE with a Node stack trace when the client closed the
   pipe, which a host logs as the server crashing. It exits 2 quietly at the

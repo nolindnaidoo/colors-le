@@ -7,7 +7,7 @@ import type { RatingPrompt } from '../ui/ratingPrompt';
 import type { StatusBar } from '../ui/statusBar';
 import { copyResults } from '../utils/clipboard';
 import { dedupeColors } from '../utils/dedupe';
-import { sanitizeErrorMessage } from '../utils/errors';
+import { describeError, sanitizeErrorMessage } from '../utils/errors';
 import { onValues, positioned, withPosition } from '../utils/positions';
 import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
 import { guarded } from './guard';
@@ -30,7 +30,9 @@ export function registerExtractCommand(
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
 				deps.notifier.showError(
-					'No active editor found. Open a file to extract colors from.',
+					vscode.l10n.t(
+						'No active editor found. Open a file to extract colors from.',
+					),
 				);
 				return;
 			}
@@ -58,12 +60,13 @@ export function registerExtractCommand(
 			}
 
 			try {
+				// A cancel is what the user asked for, not a failure: it used to
+				// be thrown, and the catch below reported it as "Color extraction
+				// failed" with an error event.
 				const result = await deps.notifier.showProgress(
-					'Extracting colors...',
+					vscode.l10n.t('Extracting colors...'),
 					async (progress, token) => {
-						if (token.isCancellationRequested) {
-							throw new Error('Operation cancelled by user');
-						}
+						if (token.isCancellationRequested) return undefined;
 						progress.report({ message: vscode.l10n.t('Analyzing file...') });
 
 						const extractionResult = await extractColors(
@@ -76,9 +79,7 @@ export function registerExtractCommand(
 							},
 						);
 
-						if (token.isCancellationRequested) {
-							throw new Error('Operation cancelled by user');
-						}
+						if (token.isCancellationRequested) return undefined;
 						progress.report({
 							message: vscode.l10n.t('Formatting results...'),
 							increment: 50,
@@ -87,6 +88,12 @@ export function registerExtractCommand(
 						return extractionResult;
 					},
 				);
+
+				if (result === undefined) {
+					deps.notifier.showInfo(vscode.l10n.t('Extraction cancelled.'));
+					deps.telemetry.event('extract-cancelled');
+					return;
+				}
 
 				if (!result.success && result.errors.length > 0) {
 					const messages = result.errors
@@ -121,9 +128,8 @@ export function registerExtractCommand(
 				}
 
 				const all = formattedColors.join('\n');
-				const content = positioned(all, config.showPositions);
 				const delivered = await deliverResults(
-					content,
+					positioned(all, config.showPositions).split('\n'),
 					document,
 					config,
 					deps.notifier,
@@ -139,7 +145,7 @@ export function registerExtractCommand(
 
 				if (!config.copyToClipboardEnabled && delivered) {
 					deps.notifier.showInfo(
-						vscode.l10n.t('Extracted {0} colors', result.colors.length),
+						vscode.l10n.t('Extracted {0} color(s)', result.colors.length),
 					);
 				}
 
@@ -159,10 +165,12 @@ export function registerExtractCommand(
 				// waited on that would stay pending for as long as the toast is ignored.
 				void deps.ratingPrompt.recordSuccess();
 			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown error occurred';
+				const message = describeError(error);
 				deps.notifier.showError(
-					`Color extraction failed: ${sanitizeErrorMessage(message)}`,
+					vscode.l10n.t(
+						'Color extraction failed: {0}',
+						sanitizeErrorMessage(message),
+					),
 				);
 				deps.telemetry.event('extract-error', { error: message });
 			} finally {

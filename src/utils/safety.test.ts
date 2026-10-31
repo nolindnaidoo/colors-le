@@ -38,7 +38,7 @@ describe('handleSafetyChecks', () => {
 		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
 		const result = handleSafetyChecks(doc('x'.repeat(2000)), config);
 		expect(result.proceed).toBe(false);
-		expect(result.message).toContain('exceeds safety threshold');
+		expect(result.message).toContain('exceeds the safety threshold');
 	});
 
 	it('warns on many lines without blocking', () => {

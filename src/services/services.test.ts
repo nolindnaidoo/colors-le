@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createExtensionContext,
@@ -20,24 +22,22 @@ beforeEach(() => {
 });
 
 describe('createServices / activate', () => {
-	it('activate registers every declared command', () => {
+	it('activate registers every declared command, and no other', () => {
+		// The list is the manifest's, not a copy of it: the hand-written copy
+		// held nine commands while the manifest declared eleven, so a command
+		// the palette offered could have no handler and this would pass.
+		const manifest = JSON.parse(
+			readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+		) as { contributes: { commands: Array<{ command: string }> } };
+		const declared = manifest.contributes.commands
+			.map((entry) => entry.command)
+			.sort();
+		expect(declared.length).toBeGreaterThanOrEqual(11);
+
 		const context = _createExtensionContext();
 		activate(context as never);
 
-		const declared = [
-			'colors-le.extractColors',
-			'colors-le.analyze',
-			'colors-le.convert',
-			'colors-le.filter',
-			'colors-le.validate',
-			'colors-le.postProcess.dedupe',
-			'colors-le.postProcess.sort',
-			'colors-le.openSettings',
-			'colors-le.help',
-		];
-		for (const id of declared) {
-			expect(_registeredCommands().has(id), id).toBe(true);
-		}
+		expect([..._registeredCommands().keys()].sort()).toEqual(declared);
 	});
 
 	it('createServices returns frozen bag and registers disposables', () => {

@@ -7,6 +7,13 @@ describe('formatDuration', () => {
 		expect(formatDuration(999)).toBe('999ms');
 	});
 
+	it('rounds what performance.now() hands it', () => {
+		// The reports printed the raw difference of two high-resolution
+		// timestamps: "Analysis Time: 2.8999999999999986ms".
+		expect(formatDuration(2.8999999999999986)).toBe('3ms');
+		expect(formatDuration(999.6)).toBe('1s');
+	});
+
 	it('formats seconds', () => {
 		expect(formatDuration(1000)).toBe('1s');
 		expect(formatDuration(59_000)).toBe('59s');

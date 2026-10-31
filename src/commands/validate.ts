@@ -18,6 +18,7 @@ import type {
 export type * from './validateTypes';
 
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { guarded } from './guard';
 import {
 	checkAccessibilityIssues,
@@ -31,13 +32,16 @@ import {
 export function registerValidateCommand(
 	context: vscode.ExtensionContext,
 ): void {
+	// One notifier for the guard and the body, so notificationsLevel governs
+	// what the command says and not only the guard's failure toast.
+	const notifier = createNotifier();
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.validate',
-		guarded(createNotifier(), async () => {
+		guarded(notifier, async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -50,9 +54,7 @@ export function registerValidateCommand(
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					await vscode.window.showInformationMessage(
-						'No colors found to validate',
-					);
+					notifier.showInfo(vscode.l10n.t('No colors found to validate'));
 					return;
 				}
 
@@ -82,14 +84,18 @@ export function registerValidateCommand(
 
 				const { valid, invalid, errors, warnings } = validationReport.summary;
 
-				await vscode.window.showInformationMessage(
-					`Color validation completed. ${valid.toString()} valid, ${invalid.toString()} invalid, ${errors.toString()} errors, ${warnings.toString()} warnings.`,
+				notifier.showInfo(
+					vscode.l10n.t(
+						'Color validation completed. {0} valid, {1} invalid, {2} errors, {3} warnings.',
+						valid,
+						invalid,
+						errors,
+						warnings,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				await vscode.window.showErrorMessage(
-					`Validation failed: ${errorMessage}`,
+				notifier.showError(
+					vscode.l10n.t('Validation failed: {0}', describeError(error)),
 				);
 			}
 		}),
@@ -178,11 +184,20 @@ export function validateColors(
 
 		// Contrast validation
 		if (options.checkContrast && options.contrastBackground) {
-			try {
-				contrastRatio = getContrastRatio(
-					color.value,
-					options.contrastBackground,
-				);
+			const ratio = getContrastRatio(color.value, options.contrastBackground);
+			// A ratio nothing computed is reported as that, never as a failing
+			// number; the `catch` this replaces was unreachable, since the
+			// converter throws on nothing.
+			if (ratio === null) {
+				issues.push({
+					type: 'contrast',
+					severity: 'error',
+					message: `Contrast ratio could not be computed: ${color.value} is not a color this reads`,
+					suggestion: 'Ensure both colors are in valid formats',
+				});
+			}
+			if (ratio !== null) {
+				contrastRatio = ratio;
 
 				if (options.minContrastAA && contrastRatio < options.minContrastAA) {
 					issues.push({
@@ -216,13 +231,6 @@ export function validateColors(
 				if (options.minContrastAAA && contrastRatio >= options.minContrastAAA) {
 					accessibilityLevel = 'AAA';
 				}
-			} catch {
-				issues.push({
-					type: 'contrast',
-					severity: 'error',
-					message: 'Unable to calculate contrast ratio',
-					suggestion: 'Ensure both colors are in valid formats',
-				});
 			}
 		}
 

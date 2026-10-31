@@ -9,12 +9,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it } from 'vitest';
+import { TOOLS } from '../mcp/tools';
 import { parse } from './args';
 import { rustIoMessage } from './ioError';
 import { serve } from './mcp';
 import { isEmptyPalette, paletteContains, parsePalette } from './palette';
 import { run } from './run';
 import { exitCode, scanContent } from './scan';
+import { SCAN_TOOL } from './scanTool';
 import { FLAGS, USAGE } from './usage';
 import { collect, DEFAULT_WALK } from './walk';
 
@@ -486,5 +488,108 @@ describe('mcp: the crate framing', () => {
 		await serve(input, write, { name: 'colors-le', version: '9.9.9' }, []);
 		expect(lines).toHaveLength(2);
 		expect(drained).toBe(2);
+	});
+});
+
+describe('mcp: the tools over the crate framing', () => {
+	// The same loop as above, with the two tools `colors-le mcp` serves.
+	async function session(
+		lines: readonly string[],
+	): Promise<{ status: number; written: string[] }> {
+		const written: string[] = [];
+		const input = Readable.from(lines.map((item) => Buffer.from(item)));
+		const status = await serve(
+			input,
+			(line) => {
+				written.push(line);
+				return undefined;
+			},
+			{ name: 'colors-le', version: '9.9.9' },
+			[...TOOLS, SCAN_TOOL],
+		);
+		return { status, written };
+	}
+
+	const call = (name: string, args: string) =>
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"${name}","arguments":${args}}}\n`;
+	const refusal = (reply: string) => JSON.parse(reply).error;
+
+	it('refuses a wrong-typed or undeclared argument as a protocol error, and a path that is not there as a tool failure', async () => {
+		// A `hidden: "yes"` was read as false and a `format: 7` as absent, and
+		// an argument the schema does not declare was accepted, on this
+		// server and the crate's alike. A path that is not there is a fact
+		// about the filesystem, not the schema: a result carrying isError.
+		const { written } = await session([
+			call('extract_colors', '{"content":"x","format":7}'),
+			call('extract_colors', '{"content":"x","format":"css","dedupe":"yes"}'),
+			call('extract_colors', '{"content":"x","format":"css","filename":7}'),
+			call(
+				'extract_colors',
+				'{"content":"x","format":"css","bogus":1,"another":2}',
+			),
+			call('colors_le_scan', '{"path":"x","hidden":"yes"}'),
+			call('colors_le_scan', '{"path":"x","bogus":1}'),
+			call('colors_le_scan', '{"path":"x","format":"klingon"}'),
+			call('colors_le_scan', '{"path":"/no/such/place-xyz"}'),
+		]);
+		expect(written.slice(0, 7).map(refusal)).toEqual([
+			{ code: -32602, message: 'format must be a string' },
+			{ code: -32602, message: 'dedupe must be a boolean' },
+			{ code: -32602, message: 'filename must be a string' },
+			{ code: -32602, message: 'unknown arguments: another, bogus' },
+			{ code: -32602, message: 'hidden must be a boolean' },
+			{ code: -32602, message: 'unknown argument: bogus' },
+			{
+				code: -32602,
+				message:
+					'klingon is not a format this names; one of: css, scss, less, stylus, html, javascript, typescript, svg, xml, json, yaml, toml, markdown, plaintext',
+			},
+		]);
+		const failure = JSON.parse(written[7] as string).result;
+		expect(failure.isError).toBe(true);
+		expect(failure.content[0].text).toContain('/no/such/place-xyz');
+	});
+
+	it('names a path entry that is not a string rather than dropping it, and refuses a scan that names nothing', async () => {
+		// `["dir", 7]` was answered for `dir` alone and the 7 vanished without
+		// a word, on this server and the crate's alike.
+		const { written } = await session([
+			call('colors_le_scan', '{"paths":["a",7]}'),
+			call('colors_le_scan', '{"paths":[null]}'),
+			call('colors_le_scan', '{"path":7}'),
+			call('colors_le_scan', '{"paths":[]}'),
+			call('colors_le_scan', '{}'),
+		]);
+		expect(written.map(refusal)).toEqual([
+			{ code: -32602, message: 'entry 1 of paths is not a string' },
+			{ code: -32602, message: 'entry 0 of paths is not a string' },
+			{ code: -32602, message: 'path must be a string' },
+			{ code: -32602, message: 'the list of paths was empty' },
+			{ code: -32602, message: 'no file or directory was supplied to read' },
+		]);
+	});
+
+	it('reads a cap written as an exponent or an integer-valued float as the crate does', async () => {
+		// JSON Schema's `integer` is any number with a zero fractional part;
+		// the crate refused `5.0` and `1e3` where this server and the
+		// extension's accepted them.
+		const content = '.a{color:#1a2b3c}\\n.b{color:#ffffff}';
+		const { written } = await session([
+			call(
+				'extract_colors',
+				`{"content":"${content}","format":"css","maxResults":1E20}`,
+			),
+			call(
+				'extract_colors',
+				`{"content":"${content}","format":"css","maxResults":1.0}`,
+			),
+		]);
+		const metas = written.map(
+			(reply) => JSON.parse(reply).result.structuredContent.meta,
+		);
+		expect(metas).toEqual([
+			{ tool: 'extract_colors', count: 2, truncated: false },
+			{ tool: 'extract_colors', count: 1, truncated: true },
+		]);
 	});
 });

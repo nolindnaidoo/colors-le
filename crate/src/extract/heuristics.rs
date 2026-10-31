@@ -37,8 +37,9 @@ pub(crate) enum Notation {
 /// The CSS named-colour keywords, plus `transparent`. Ported as a list
 /// rather than re-derived: a second implementation guessing at which
 /// keywords count is how two frontends start disagreeing about what is
-/// even a colour.
-pub(crate) const NAMED_COLORS: [&str; 142] = [
+/// even a colour. Both spellings of the seven greys are here; the list
+/// carried `gray` alone for its first year, on both frontends.
+pub(crate) const NAMED_COLORS: [&str; 149] = [
     "aliceblue",
     "antiquewhite",
     "aqua",
@@ -64,6 +65,7 @@ pub(crate) const NAMED_COLORS: [&str; 142] = [
     "darkcyan",
     "darkgoldenrod",
     "darkgray",
+    "darkgrey",
     "darkgreen",
     "darkkhaki",
     "darkmagenta",
@@ -75,11 +77,13 @@ pub(crate) const NAMED_COLORS: [&str; 142] = [
     "darkseagreen",
     "darkslateblue",
     "darkslategray",
+    "darkslategrey",
     "darkturquoise",
     "darkviolet",
     "deeppink",
     "deepskyblue",
     "dimgray",
+    "dimgrey",
     "dodgerblue",
     "firebrick",
     "floralwhite",
@@ -90,6 +94,7 @@ pub(crate) const NAMED_COLORS: [&str; 142] = [
     "gold",
     "goldenrod",
     "gray",
+    "grey",
     "green",
     "greenyellow",
     "honeydew",
@@ -107,12 +112,14 @@ pub(crate) const NAMED_COLORS: [&str; 142] = [
     "lightcyan",
     "lightgoldenrodyellow",
     "lightgray",
+    "lightgrey",
     "lightgreen",
     "lightpink",
     "lightsalmon",
     "lightseagreen",
     "lightskyblue",
     "lightslategray",
+    "lightslategrey",
     "lightsteelblue",
     "lightyellow",
     "lime",
@@ -166,6 +173,7 @@ pub(crate) const NAMED_COLORS: [&str; 142] = [
     "skyblue",
     "slateblue",
     "slategray",
+    "slategrey",
     "snow",
     "springgreen",
     "steelblue",
@@ -651,6 +659,39 @@ pub(crate) fn find_string_literals(content: &str) -> Vec<Segment> {
 /// The four ways Rust's regex defaults answered differently from the
 /// reference implementation's, each found by the `differential` job
 /// generating a document nobody had thought to write down.
+#[cfg(test)]
+mod named_colours {
+    use super::*;
+
+    /// CSS spells seven keywords twice. The `gray` spellings were in the
+    /// list and the `grey` ones never were, on either frontend, while the
+    /// extension's converter table carried all seven: `color: grey` was a
+    /// colour nothing found.
+    #[test]
+    fn both_spellings_of_every_grey_are_named_colours() {
+        for grey in [
+            "grey",
+            "darkgrey",
+            "darkslategrey",
+            "dimgrey",
+            "lightgrey",
+            "lightslategrey",
+            "slategrey",
+        ] {
+            assert!(is_named_color(grey), "{grey}");
+            assert!(is_named_color(&grey.replace("grey", "gray")), "{grey}");
+        }
+        assert_eq!(
+            NAMED_COLORS.len(),
+            149,
+            "the 148 CSS keywords and transparent"
+        );
+        let found = find_named(".a { color: grey; border-color: lightgrey }", None);
+        let values: Vec<&str> = found.iter().map(|m| m.value.as_str()).collect();
+        assert_eq!(values, ["grey", "lightgrey"]);
+    }
+}
+
 #[cfg(test)]
 mod javascript_semantics {
     use super::*;

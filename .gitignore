@@ -138,3 +138,8 @@ crate/target/
 # checked in so a run is reproducible, and one of them is an `.svg`.
 !crate/tests/seeds/
 !crate/tests/seeds/**
+
+# Written by the crate coverage gate (`cargo llvm-cov --json`) beside the
+# source, and read by nothing after the run: `cargo publish --dry-run` refused
+# the tree while it sat there untracked.
+crate/coverage.json

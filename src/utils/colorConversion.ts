@@ -1,5 +1,6 @@
 import type { ColorFormat } from '../types';
 import { parseModernColor } from './cssColor';
+import { NAMED_COLOR_RGB } from './namedColors';
 
 /**
  * Which of (c, x, 0) lands in r, g and b, per 60-degree hue sector.
@@ -27,8 +28,15 @@ export interface HslColor {
 	readonly a?: number | undefined;
 }
 
+/**
+ * Read any notation the extractor reports: hex in 3, 4, 6 or 8 digits, the
+ * legacy comma syntax of rgb()/rgba()/hsl()/hsla() in either case, the CSS
+ * keywords with `transparent`, and the CSS Color 4 syntax `cssColor.ts`
+ * reads. Validate, Filter, Analyze and Convert all read through here, so
+ * what Extract finds, each of them can judge.
+ */
 export function parseColor(colorValue: string): RgbColor | null {
-	const trimmed = colorValue.trim();
+	const trimmed = colorValue.trim().toLowerCase();
 
 	// Hex colors
 	if (trimmed.startsWith('#')) {
@@ -45,38 +53,40 @@ export function parseColor(colorValue: string): RgbColor | null {
 		return parseHsl(trimmed) ?? parseModernColor(trimmed);
 	}
 
-	return parseModernColor(trimmed);
+	return parseNamed(trimmed) ?? parseModernColor(trimmed);
+}
+
+/**
+ * `transparent` is the one keyword with alpha. The table is a frozen plain
+ * object, so a prototype name is looked up with `hasOwn` rather than read
+ * off it: `constructor` is not a colour.
+ */
+function parseNamed(name: string): RgbColor | null {
+	if (name === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+	if (!Object.hasOwn(NAMED_COLOR_RGB, name)) return null;
+	const rgb = NAMED_COLOR_RGB[name];
+	return rgb ? { r: rgb[0], g: rgb[1], b: rgb[2] } : null;
 }
 
 function parseHex(hex: string): RgbColor | null {
-	const cleanHex = hex.replace('#', '');
+	const digits = hex.slice(1);
+	if (!/^[0-9a-f]+$/.test(digits)) return null;
 
-	if (cleanHex.length === 3) {
-		// Short hex format (#RGB)
-		const r = parseInt((cleanHex[0] ?? '0') + (cleanHex[0] ?? '0'), 16);
-		const g = parseInt((cleanHex[1] ?? '0') + (cleanHex[1] ?? '0'), 16);
-		const b = parseInt((cleanHex[2] ?? '0') + (cleanHex[2] ?? '0'), 16);
-		return { r, g, b };
+	// A 3- or 4-digit hex doubles each digit: #rgb[a] is #rrggbb[aa].
+	const full =
+		digits.length === 3 || digits.length === 4
+			? digits.replace(/./g, (digit) => digit + digit)
+			: digits;
+
+	if (full.length !== 6 && full.length !== 8) return null;
+
+	const r = parseInt(full.substring(0, 2), 16);
+	const g = parseInt(full.substring(2, 4), 16);
+	const b = parseInt(full.substring(4, 6), 16);
+	if (full.length === 8) {
+		return { r, g, b, a: parseInt(full.substring(6, 8), 16) / 255 };
 	}
-
-	if (cleanHex.length === 6) {
-		// Full hex format (#RRGGBB)
-		const r = parseInt(cleanHex.substring(0, 2), 16);
-		const g = parseInt(cleanHex.substring(2, 4), 16);
-		const b = parseInt(cleanHex.substring(4, 6), 16);
-		return { r, g, b };
-	}
-
-	if (cleanHex.length === 8) {
-		// Hex with alpha (#RRGGBBAA)
-		const r = parseInt(cleanHex.substring(0, 2), 16);
-		const g = parseInt(cleanHex.substring(2, 4), 16);
-		const b = parseInt(cleanHex.substring(4, 6), 16);
-		const a = parseInt(cleanHex.substring(6, 8), 16) / 255;
-		return { r, g, b, a };
-	}
-
-	return null;
+	return { r, g, b };
 }
 
 function parseRgb(rgb: string): RgbColor | null {
@@ -179,7 +189,9 @@ export function rgbToHsl(rgb: RgbColor): HslColor {
 	}
 
 	return {
-		h: Math.round(h * 360),
+		// A hue just under 360 rounds to 360, which no sector of the wheel
+		// includes; it is 0.
+		h: Math.round(h * 360) % 360,
 		s: Math.round(s * 100),
 		l: Math.round(l * 100),
 		a: rgb.a,
@@ -239,73 +251,31 @@ export function detectColorFormat(colorValue: string): ColorFormat {
 }
 
 /**
- * Whether a string is a syntactically valid CSS colour in a format this
- * extension understands. Used by the validate command and by the input-box
- * validators, which is why it lives here rather than inside either of them.
+ * Whether a string is a colour this extension can read: exactly the
+ * notations `parseColor` reads, so Validate cannot call a keyword or a
+ * 4-digit hex invalid after Extract reported it. Used by the validate
+ * command and by the input-box validators, which is why it lives here
+ * rather than inside either of them.
  */
 export function isValidColorFormat(color: string): boolean {
-	const patterns = [
-		/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
-		/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i,
-		/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i,
-		/^hsl\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/i,
-		/^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i,
-	];
-
-	return (
-		patterns.some((pattern) => pattern.test(color)) ||
-		parseModernColor(color) !== null
-	);
+	return parseColor(color) !== null;
 }
 
 /**
- * Parse a hex colour to HSL. Returns null for anything that is not a 6-digit
- * hex value.
- */
-export function hexToHSL(
-	hex: string,
-): { h: number; s: number; l: number } | null {
-	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	if (!result?.[1] || !result[2] || !result[3]) return null;
-
-	const rgb: RgbColor = {
-		r: Number.parseInt(result[1], 16),
-		g: Number.parseInt(result[2], 16),
-		b: Number.parseInt(result[3], 16),
-	};
-	const { h, s, l } = rgbToHsl(rgb);
-	return { h, s, l };
-}
-
-/**
- * Parse a hex or hsl() colour to HSL components.
+ * Parse any colour this reads to HSL components.
  *
  * The analyse, filter and validate commands each carried their own copy of
  * this; they were behaviourally identical but had already drifted in their
  * comments, and a lightness threshold that disagreed between filtering and
- * reporting would have been very hard to spot.
+ * reporting would have been very hard to spot. It then read a 6-digit hex,
+ * a legacy hsl() and modern syntax alone, so an rgb(), an hsla(), a short
+ * hex or a keyword had no lightness and passed every filter untested.
  */
 export function parseColorToHSL(
 	color: string,
 ): { h: number; s: number; l: number } | null {
-	const modern = parseModernColor(color);
-	if (modern) {
-		const { h, s, l } = rgbToHsl(modern);
-		return { h, s, l };
-	}
-
-	if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) {
-		return hexToHSL(color);
-	}
-
-	const hsl = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/i);
-	if (hsl?.[1] && hsl[2] && hsl[3]) {
-		return {
-			h: Number.parseInt(hsl[1], 10),
-			s: Number.parseInt(hsl[2], 10),
-			l: Number.parseInt(hsl[3], 10),
-		};
-	}
-
-	return null;
+	const rgb = parseColor(color);
+	if (!rgb) return null;
+	const { h, s, l } = rgbToHsl(rgb);
+	return { h, s, l };
 }

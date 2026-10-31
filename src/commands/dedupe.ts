@@ -2,8 +2,11 @@ import * as vscode from 'vscode';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
+import { readColorList } from '../utils/colorList';
 import { dedupeColors } from '../utils/dedupe';
-import { bareValue, hasPosition, onValues } from '../utils/positions';
+import { replaceDocumentContent } from '../utils/document';
+import { describeError } from '../utils/errors';
+import { hasPosition, onValues } from '../utils/positions';
 import { guarded } from './guard';
 
 export function registerDedupeCommand(
@@ -26,56 +29,29 @@ export function registerDedupeCommand(
 			}
 
 			try {
-				deps.statusBar.showProgress('Deduplicating colors...');
+				deps.statusBar.showProgress(vscode.l10n.t('Deduplicating colors...'));
 
 				const document = editor.document;
-				const text = document.getText();
-				const lines = text
-					.split('\n')
-					.filter((line) => line.trim().length > 0)
-					.map((line) => line.trim());
+				const list = readColorList(document.getText());
+				if ('other' in list) {
+					deps.notifier.showWarning(
+						vscode.l10n.t(
+							'Deduplicate Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}',
+							list.other.line,
+							list.other.text,
+						),
+					);
+					return;
+				}
+				const colorsToDedupe = list.lines;
 
-				// Check if this looks like a colors file (simple heuristic)
-				const isColorFile =
-					lines.length > 0 &&
-					lines.every((line) => {
-						const trimmed = line.trim();
-						return (
-							trimmed === '' ||
-							/^#[0-9a-f]{6}$/i.test(bareValue(trimmed)) ||
-							/^rgb\(/.test(bareValue(trimmed)) ||
-							/^hsl\(/.test(bareValue(trimmed))
-						);
-					});
-
-				// A bare colour list is used as-is; a source file keeps only the
-				// lines that look like colours.
-				const colorsToDedupe = isColorFile
-					? lines
-					: lines.filter(
-							(line) =>
-								/^#[0-9a-f]{6}$/i.test(bareValue(line)) ||
-								/^rgb\(/.test(bareValue(line)) ||
-								/^hsl\(/.test(bareValue(line)),
-						);
-
-				// Extract colors from each line and dedupe
+				// By colour, keeping the first: with positions every line differs.
 				const dedupedLines = onValues(colorsToDedupe, dedupeColors);
 
-				// Replace document content
-				const edit = new vscode.WorkspaceEdit();
-				edit.replace(
-					document.uri,
-					new vscode.Range(
-						document.positionAt(0),
-						document.lineAt(document.lineCount - 1).range.end,
-					),
-					dedupedLines.join('\n'),
-				);
 				// applyEdit resolves false when the edit is rejected — a read-only
 				// document, or one that changed underneath the command. Discarding
 				// it announced a result over a document that was never touched.
-				const applied = await vscode.workspace.applyEdit(edit);
+				const applied = await replaceDocumentContent(document, dedupedLines);
 				if (!applied) {
 					deps.notifier.showError(
 						vscode.l10n.t('Could not deduplicate: the edit was rejected.'),
@@ -87,20 +63,23 @@ export function registerDedupeCommand(
 				const dedupedCount = dedupedLines.length;
 				const removedCount = originalCount - dedupedCount;
 
+				const summary = vscode.l10n.t(
+					'Removed {0} duplicate color(s) ({1} remaining)',
+					removedCount,
+					dedupedCount,
+				);
 				// A color found five times has five positions, and only one can stay.
-				const firstOnly = colorsToDedupe.some(hasPosition)
-					? '. Each color shows its first position only.'
-					: '';
 				deps.notifier.showInfo(
-					`Removed ${removedCount} duplicate colors (${dedupedCount} remaining)${firstOnly}`,
+					colorsToDedupe.some(hasPosition)
+						? `${summary}. ${vscode.l10n.t('Each color shows its first position only.')}`
+						: summary,
 				);
 				deps.telemetry.event('dedupe-success', {
 					original: originalCount,
 					deduped: dedupedCount,
 				});
 			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown error occurred';
+				const message = describeError(error);
 				deps.notifier.showError(
 					vscode.l10n.t('Deduplication failed: {0}', message),
 				);
