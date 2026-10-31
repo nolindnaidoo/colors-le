@@ -14,6 +14,11 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Sort Colors by hex orders the digits, in no locale.** It sorted by the
+  host's collation: on a Danish host `#aa0000` came after `#ff0000`, and on
+  an English one two spellings of one value swapped places on every sort.
+- **The reports' timings are whole milliseconds.** "Analysis Time:
+  2.8999999999999986ms" was the raw difference of two timestamps.
 - **Deduplicate Colors and Sort Colors no longer wipe a document that is
   not a six-digit-hex, `rgb()` or `hsl()` list.** Both kept only the lines
   that matched those three shapes and wrote them back over the whole
