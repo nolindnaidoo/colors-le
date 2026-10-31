@@ -3,7 +3,9 @@ import { getConfiguration } from '../config/config';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
-import { bareValue, onValues } from '../utils/positions';
+import { readColorList } from '../utils/colorList';
+import { replaceDocumentContent } from '../utils/document';
+import { onValues } from '../utils/positions';
 import { sortColors } from '../utils/sort';
 import { guarded } from './guard';
 
@@ -30,56 +32,28 @@ export function registerSortCommand(
 				deps.statusBar.showProgress('Sorting colors...');
 
 				const document = editor.document;
-				const text = document.getText();
-				const lines = text
-					.split('\n')
-					.filter((line) => line.trim().length > 0)
-					.map((line) => line.trim());
+				const list = readColorList(document.getText());
+				if ('other' in list) {
+					deps.notifier.showWarning(
+						vscode.l10n.t(
+							'Sort Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}',
+							list.other.line,
+							list.other.text,
+						),
+					);
+					return;
+				}
 				const config = getConfiguration();
 
-				// Check if this looks like a colors file (simple heuristic)
-				const isColorFile =
-					lines.length > 0 &&
-					lines.every((line) => {
-						const trimmed = line.trim();
-						return (
-							trimmed === '' ||
-							/^#[0-9a-f]{6}$/i.test(bareValue(trimmed)) ||
-							/^rgb\(/.test(bareValue(trimmed)) ||
-							/^hsl\(/.test(bareValue(trimmed))
-						);
-					});
-
-				// A bare colour list is used as-is; a source file keeps only the
-				// lines that look like colours.
-				const colorsToSort = isColorFile
-					? lines
-					: lines.filter(
-							(line) =>
-								/^#[0-9a-f]{6}$/i.test(bareValue(line)) ||
-								/^rgb\(/.test(bareValue(line)) ||
-								/^hsl\(/.test(bareValue(line)),
-						);
-
 				// Sort colors based on configuration
-				const sortedLines = onValues(colorsToSort, (values) =>
+				const sortedLines = onValues(list.lines, (values) =>
 					sortColors(values, config.sortMode),
 				);
 
-				// Replace document content
-				const edit = new vscode.WorkspaceEdit();
-				edit.replace(
-					document.uri,
-					new vscode.Range(
-						document.positionAt(0),
-						document.lineAt(document.lineCount - 1).range.end,
-					),
-					sortedLines.join('\n'),
-				);
 				// applyEdit resolves false when the edit is rejected — a read-only
 				// document, or one that changed underneath the command. Discarding
 				// it announced a result over a document that was never touched.
-				const applied = await vscode.workspace.applyEdit(edit);
+				const applied = await replaceDocumentContent(document, sortedLines);
 				if (!applied) {
 					deps.notifier.showError(
 						vscode.l10n.t('Could not sort: the edit was rejected.'),

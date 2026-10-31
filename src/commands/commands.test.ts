@@ -69,7 +69,10 @@ describe('colors-le.postProcess.dedupe', () => {
 		await runCommand('colors-le.postProcess.dedupe');
 
 		expect(appliedEdits).toHaveLength(1);
-		expect(appliedEdits[0]?.replacements[0]?.newText).toBe('#aabbcc\n#ddeeff');
+		// The document ended in a newline, so the result does.
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'#aabbcc\n#ddeeff\n',
+		);
 		expect(_shownMessages()[0]?.message).toBe(
 			'Removed 1 duplicate colors (2 remaining)',
 		);
@@ -88,7 +91,7 @@ describe('colors-le.postProcess.dedupe', () => {
 		// A line that leads with a position is still a color line, and whole
 		// lines all differ here: only by color is there a duplicate at all.
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
-			'1:1\t#aabbcc\n2:1\t#ddeeff',
+			'1:1\t#aabbcc\n2:1\t#ddeeff\n',
 		);
 		expect(_shownMessages()[0]?.message).toBe(
 			'Removed 1 duplicate colors (2 remaining). Each color shows its first position only.',
@@ -223,6 +226,23 @@ describe('colors-le.extractColors edge paths', () => {
 		await runCommand('colors-le.extractColors');
 		expect(appliedEdits).toHaveLength(1);
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe('#123456');
+	});
+
+	it('writes the document’s own line ending and terminator when replacing in place', async () => {
+		// The results were joined with bare newlines and nothing after the
+		// last, whatever the document had.
+		registerExtractCommand(makeContext(), makeDeps());
+		_setConfig('colors-le.openResultsSideBySide', false);
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #123456; }\r\nb { color: #fff; }\r\n',
+				languageId: 'css',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
+			'#123456\r\n#fff\r\n',
+		);
 	});
 
 	it('shows and copies positions only as each setting says', async () => {

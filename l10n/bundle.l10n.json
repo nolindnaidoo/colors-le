@@ -130,5 +130,7 @@
   "Color": "Color",
   "Written as": "Written as",
   "{0} file(s) could not be read.": "{0} file(s) could not be read.",
-  "Colors-LE could not finish: {0}": "Colors-LE could not finish: {0}"
+  "Colors-LE could not finish: {0}": "Colors-LE could not finish: {0}",
+  "Deduplicate Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}": "Deduplicate Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}",
+  "Sort Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}": "Sort Colors reads a list of colors, one per line, as Extract Colors writes it. Line {0} is not a color: {1}"
 }

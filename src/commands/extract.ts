@@ -121,9 +121,8 @@ export function registerExtractCommand(
 				}
 
 				const all = formattedColors.join('\n');
-				const content = positioned(all, config.showPositions);
 				const delivered = await deliverResults(
-					content,
+					positioned(all, config.showPositions).split('\n'),
 					document,
 					config,
 					deps.notifier,

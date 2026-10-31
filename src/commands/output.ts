@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import type { Configuration } from '../types';
 import type { Notifier } from '../ui/notifier';
+import { replaceDocumentContent } from '../utils/document';
 import { sanitizeErrorMessage } from '../utils/errors';
 
 /**
@@ -11,7 +12,7 @@ import { sanitizeErrorMessage } from '../utils/errors';
  * "Extracted N colors" — a failure and a success for one action.
  */
 export async function deliverResults(
-	content: string,
+	lines: readonly string[],
 	document: vscode.TextDocument,
 	config: Configuration,
 	notifier: Notifier,
@@ -19,25 +20,17 @@ export async function deliverResults(
 	try {
 		if (config.openResultsSideBySide) {
 			const doc = await vscode.workspace.openTextDocument({
-				content,
+				content: lines.join('\n'),
 				language: 'plaintext',
 			});
 			await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
 			return true;
 		}
 
-		const edit = new vscode.WorkspaceEdit();
-		edit.replace(
-			document.uri,
-			new vscode.Range(
-				document.positionAt(0),
-				document.lineAt(document.lineCount - 1).range.end,
-			),
-			content,
-		);
-		// applyEdit resolves false for a read-only document, or one that changed
-		// underneath the command.
-		const applied = await vscode.workspace.applyEdit(edit);
+		// The shared helper owns the full-document range, the document's line
+		// ending and whether the edit landed. applyEdit resolves false for a
+		// read-only document, or one that changed underneath the command.
+		const applied = await replaceDocumentContent(document, lines);
 		if (!applied) {
 			notifier.showError(
 				vscode.l10n.t(

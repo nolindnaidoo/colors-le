@@ -14,6 +14,17 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Deduplicate Colors and Sort Colors no longer wipe a document that is
+  not a six-digit-hex, `rgb()` or `hsl()` list.** Both kept only the lines
+  that matched those three shapes and wrote them back over the whole
+  document: a results list carrying a short hex, an `rgba()`, an `hwb()`
+  or a keyword lost those lines, and a stylesheet, which has no bare
+  colour line at all, became an empty file reported as "Removed 0
+  duplicate colors (0 remaining)". Every notation Extract reports is a
+  colour now, and a document with any other line is refused untouched,
+  naming the line. Both commands, and Extract writing in place, keep the
+  document's own line ending and its trailing newline; a CRLF document was
+  written back with bare newlines and a terminator was dropped every time.
 - **Validate, Filter, Analyze and Convert read every notation Extract
   reports.** A keyword such as `red` or `transparent` and a four-digit hex
   such as `#f0a8` were found by Extract and then called "Invalid color
