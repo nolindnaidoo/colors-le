@@ -115,6 +115,7 @@ const VALUES: readonly string[] = [
 	'white',
 	'transparent',
 	'rebeccapurple',
+	'lightgrey',
 	'orange juice',
 	'currentColor',
 	// The rest are why this file exists. JavaScript's regexes run without

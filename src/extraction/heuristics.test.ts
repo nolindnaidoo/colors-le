@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { NAMED_COLOR_RGB } from '../utils/namedColors';
 import {
 	blankComments,
 	classifyColorFormat,
@@ -7,6 +8,7 @@ import {
 	findNamedColors,
 	findStringLiteralSpans,
 	isNamedColor,
+	NAMED_COLORS,
 } from './heuristics';
 
 describe('findColorLiterals', () => {
@@ -63,6 +65,39 @@ describe('named colors', () => {
 		const segments = findDeclarationValueSegments(content);
 		const values = findNamedColors(content, segments).map((m) => m.value);
 		expect(values).toEqual(['navy']);
+	});
+
+	it('names both spellings of every grey, as CSS does', () => {
+		// CSS spells seven keywords twice. The `gray` spellings were in the
+		// list and the `grey` ones never were, so `color: grey` was found by
+		// neither frontend while the converter's table carried all seven.
+		for (const grey of [
+			'grey',
+			'darkgrey',
+			'darkslategrey',
+			'dimgrey',
+			'lightgrey',
+			'lightslategrey',
+			'slategrey',
+		]) {
+			expect(isNamedColor(grey), grey).toBe(true);
+			expect(isNamedColor(grey.replace('grey', 'gray')), grey).toBe(true);
+		}
+		const content = '.a { color: grey; border-color: lightgrey }';
+		expect(
+			findNamedColors(content, findDeclarationValueSegments(content)).map(
+				(m) => m.value,
+			),
+		).toEqual(['grey', 'lightgrey']);
+	});
+
+	it('finds every name the converter can read, and transparent', () => {
+		// Two tables of one list: the extractor's keywords and the converter's
+		// sRGB values. A name in one and not the other is a colour that is
+		// found and cannot be converted, or converted and never found.
+		expect([...NAMED_COLORS].sort()).toEqual(
+			[...Object.keys(NAMED_COLOR_RGB), 'transparent'].sort(),
+		);
 	});
 });
 

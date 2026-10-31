@@ -14,6 +14,14 @@ version and releases from one tag.
 
 ### Fixed
 
+- **`grey`, `darkgrey`, `darkslategrey`, `dimgrey`, `lightgrey`,
+  `lightslategrey` and `slategrey` are extracted.** CSS spells those seven
+  keywords both ways and the extractor knew the `gray` spellings alone, so
+  `color: grey` was found by nothing: not Extract, not the workspace scan, not
+  the MCP server, not the command line. The converter's table carried all
+  seven, and 2.4.0's "all 148 CSS keywords" was true of it and not of the
+  extractor. The shared corpus pins one now, and a test holds the extractor's
+  list to the converter's table.
 - The extension's MCP server, the one `colors-le-mcp` and the editor run, died
   on an unhandled EPIPE with a Node stack trace when the client closed the
   pipe, which a host logs as the server crashing. It exits 2 quietly at the

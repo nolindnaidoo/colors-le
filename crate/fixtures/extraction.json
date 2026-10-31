@@ -379,6 +379,12 @@
 					"format": "hex",
 					"line": 2,
 					"column": 13
+				},
+				{
+					"value": "grey",
+					"format": "named",
+					"line": 3,
+					"column": 13
 				}
 			]
 		},

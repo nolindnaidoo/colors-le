@@ -12,6 +12,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The `grey` spellings are named colours.** `grey`, `darkgrey`,
+  `darkslategrey`, `dimgrey`, `lightgrey`, `lightslategrey` and `slategrey`
+  were not in the keyword list, on this side or the extension's, so a
+  `color: grey` was never a finding and never a palette violation. The
+  corpus pins one.
 - The MCP server dropped a frame that was not JSON, not UTF-8 or not a
   JSON-RPC 2.0 request without a word, where the npm servers answer a
   parse error; it answered a request with a null id, which they read as a
