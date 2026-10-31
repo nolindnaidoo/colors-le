@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import type { Configuration } from '../types';
 import type { Notifier } from '../ui/notifier';
 import { replaceDocumentContent } from '../utils/document';
-import { sanitizeErrorMessage } from '../utils/errors';
+import { describeError, sanitizeErrorMessage } from '../utils/errors';
 
 /**
  * Delivering extraction results: beside the source, or over the document.
@@ -41,10 +41,11 @@ export async function deliverResults(
 		}
 		return true;
 	} catch (error) {
-		const message =
-			error instanceof Error ? error.message : 'Failed to open results';
 		notifier.showError(
-			`Failed to open results: ${sanitizeErrorMessage(message)}. Try copying results to clipboard instead.`,
+			vscode.l10n.t(
+				'Failed to open the results: {0}. Try copying the results to the clipboard instead.',
+				sanitizeErrorMessage(describeError(error)),
+			),
 		);
 		return false;
 	}

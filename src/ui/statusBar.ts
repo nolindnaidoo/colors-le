@@ -15,7 +15,9 @@ export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
 		100,
 	);
 	statusBarItem.text = IDLE_TEXT;
-	statusBarItem.tooltip = 'Colors-LE: Color extraction and analysis';
+	statusBarItem.tooltip = vscode.l10n.t(
+		'Colors-LE: Color extraction and analysis',
+	);
 	statusBarItem.command = 'colors-le.extractColors';
 	context.subscriptions.push(statusBarItem);
 

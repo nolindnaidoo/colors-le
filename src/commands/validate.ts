@@ -18,6 +18,7 @@ import type {
 export type * from './validateTypes';
 
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { guarded } from './guard';
 import {
 	checkAccessibilityIssues,
@@ -40,7 +41,7 @@ export function registerValidateCommand(
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					notifier.showWarning('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -53,7 +54,7 @@ export function registerValidateCommand(
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					notifier.showInfo('No colors found to validate');
+					notifier.showInfo(vscode.l10n.t('No colors found to validate'));
 					return;
 				}
 
@@ -84,12 +85,18 @@ export function registerValidateCommand(
 				const { valid, invalid, errors, warnings } = validationReport.summary;
 
 				notifier.showInfo(
-					`Color validation completed. ${valid.toString()} valid, ${invalid.toString()} invalid, ${errors.toString()} errors, ${warnings.toString()} warnings.`,
+					vscode.l10n.t(
+						'Color validation completed. {0} valid, {1} invalid, {2} errors, {3} warnings.',
+						valid,
+						invalid,
+						errors,
+						warnings,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				notifier.showError(`Validation failed: ${errorMessage}`);
+				notifier.showError(
+					vscode.l10n.t('Validation failed: {0}', describeError(error)),
+				);
 			}
 		}),
 	);

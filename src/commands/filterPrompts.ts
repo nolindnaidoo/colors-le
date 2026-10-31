@@ -39,13 +39,22 @@ export async function promptForFilterOptions(
 
 	if (formatAction === undefined) return undefined;
 
+	// Each item carries the format it stands for, rather than the choice
+	// being read back off its label.
+	const formatItems = (picked: boolean) =>
+		availableFormats.map((format) => ({
+			label: format.toUpperCase(),
+			description: vscode.l10n.t(
+				'{0} color(s)',
+				colors.filter((c) => c.format === format).length,
+			),
+			picked,
+			value: format,
+		}));
+
 	if (formatAction.value === 'include') {
 		const selectedFormats = await vscode.window.showQuickPick(
-			availableFormats.map((format) => ({
-				label: format.toUpperCase(),
-				description: `${colors.filter((c) => c.format === format).length} colors`,
-				picked: true,
-			})),
+			formatItems(true),
 			{
 				placeHolder: vscode.l10n.t('Select formats to include'),
 				canPickMany: true,
@@ -53,16 +62,12 @@ export async function promptForFilterOptions(
 		);
 
 		if (selectedFormats === undefined) return undefined;
-		options.formats = selectedFormats.map((f) => f.label.toLowerCase());
+		options.formats = selectedFormats.map((f) => f.value);
 	}
 
 	if (formatAction.value === 'exclude') {
 		const selectedFormats = await vscode.window.showQuickPick(
-			availableFormats.map((format) => ({
-				label: format.toUpperCase(),
-				description: `${colors.filter((c) => c.format === format).length} colors`,
-				picked: false,
-			})),
+			formatItems(false),
 			{
 				placeHolder: vscode.l10n.t('Select formats to exclude'),
 				canPickMany: true,
@@ -70,7 +75,7 @@ export async function promptForFilterOptions(
 		);
 
 		if (selectedFormats === undefined) return undefined;
-		options.excludeFormats = selectedFormats.map((f) => f.label.toLowerCase());
+		options.excludeFormats = selectedFormats.map((f) => f.value);
 	}
 
 	// Lightness filtering

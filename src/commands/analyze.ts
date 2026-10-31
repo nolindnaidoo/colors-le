@@ -16,6 +16,7 @@ import {
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { formatDuration } from '../utils/format';
 import { guarded } from './guard';
 
@@ -32,7 +33,7 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					notifier.showWarning('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -45,7 +46,7 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					notifier.showInfo('No colors found to analyze');
+					notifier.showInfo(vscode.l10n.t('No colors found to analyze'));
 					return;
 				}
 
@@ -83,12 +84,16 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 				});
 
 				notifier.showInfo(
-					`Color analysis completed. Found ${statistics.total.toString()} colors with ${statistics.unique.toString()} unique values.`,
+					vscode.l10n.t(
+						'Color analysis completed. Found {0} colors with {1} unique values.',
+						statistics.total,
+						statistics.unique,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				notifier.showError(`Analysis failed: ${errorMessage}`);
+				notifier.showError(
+					vscode.l10n.t('Analysis failed: {0}', describeError(error)),
+				);
 			}
 		}),
 	);

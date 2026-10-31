@@ -14,6 +14,9 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Every message, button, progress title and tooltip goes through the runtime bundle.** Analyze, Convert, Filter, Validate, Deduplicate, Sort, the clipboard, the safety dialog and the status bar spoke English in every locale, and four strings already wrapped for translation were missing from the bundles. A test now reads the source for all of it.
+- **The Named format can be allowed in Validate in every language.** The choice was read off the translated label, so outside English a named color was never allowed.
+- **The German settings text keeps the product name.** It read "Farben-LE".
 - **The help document reads in the host's language.** It was one English
   template in every locale. Every sentence goes through the runtime bundle
   now, and the command titles in it are held to the palette's, locale by

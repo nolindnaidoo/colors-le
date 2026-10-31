@@ -5,6 +5,7 @@ import type { Notifier } from '../ui/notifier';
 import type { StatusBar } from '../ui/statusBar';
 import { readColorList } from '../utils/colorList';
 import { replaceDocumentContent } from '../utils/document';
+import { describeError } from '../utils/errors';
 import { onValues } from '../utils/positions';
 import { sortColors } from '../utils/sort';
 import { guarded } from './guard';
@@ -29,7 +30,7 @@ export function registerSortCommand(
 			}
 
 			try {
-				deps.statusBar.showProgress('Sorting colors...');
+				deps.statusBar.showProgress(vscode.l10n.t('Sorting colors...'));
 
 				const document = editor.document;
 				const list = readColorList(document.getText());
@@ -62,15 +63,18 @@ export function registerSortCommand(
 				}
 
 				deps.notifier.showInfo(
-					`Sorted ${sortedLines.length} colors by ${config.sortMode}`,
+					vscode.l10n.t(
+						'Sorted {0} color(s) by {1}',
+						sortedLines.length,
+						config.sortMode,
+					),
 				);
 				deps.telemetry.event('sort-success', {
 					mode: config.sortMode,
 					count: sortedLines.length,
 				});
 			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown error occurred';
+				const message = describeError(error);
 				deps.notifier.showError(vscode.l10n.t('Sorting failed: {0}', message));
 				deps.telemetry.event('sort-error', { error: message });
 			} finally {

@@ -75,7 +75,7 @@ describe('colors-le.postProcess.dedupe', () => {
 			'#aabbcc\n#ddeeff\n',
 		);
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 1 duplicate colors (2 remaining)',
+			'Removed 1 duplicate color(s) (2 remaining)',
 		);
 	});
 
@@ -95,7 +95,7 @@ describe('colors-le.postProcess.dedupe', () => {
 			'1:1\t#aabbcc\n2:1\t#ddeeff\n',
 		);
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 1 duplicate colors (2 remaining). Each color shows its first position only.',
+			'Removed 1 duplicate color(s) (2 remaining). Each color shows its first position only.',
 		);
 	});
 
@@ -120,7 +120,7 @@ describe('colors-le.postProcess.sort', () => {
 		expect(appliedEdits[0]?.replacements[0]?.newText).toBe(
 			'#aabbcc\n#ccddee\n#ddeeff',
 		);
-		expect(_shownMessages()[0]?.message).toBe('Sorted 3 colors by hex-asc');
+		expect(_shownMessages()[0]?.message).toBe('Sorted 3 color(s) by hex-asc');
 	});
 
 	it('sorts by color when positions are shown, and each keeps its own', async () => {
@@ -167,7 +167,7 @@ describe('colors-le.extractColors', () => {
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(
 			_shownMessages().some((m) =>
-				m.message.includes('Extracted 2 colors and copied to clipboard'),
+				m.message.includes('Extracted 2 color(s) and copied to the clipboard'),
 			),
 		).toBe(true);
 	});
@@ -300,7 +300,7 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
 		expect(
-			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+			_shownMessages().some((m) => m.message.includes('Extracted 2 color(s)')),
 		).toBe(false);
 		expect(events).not.toContain('extract-success');
 	});
@@ -321,7 +321,7 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_shownMessages().some((m) => m.kind === 'error')).toBe(true);
 		expect(
-			_shownMessages().some((m) => m.message.includes('Extracted 2 colors')),
+			_shownMessages().some((m) => m.message.includes('Extracted 2 color(s)')),
 		).toBe(false);
 		expect(events).not.toContain('extract-success');
 	});

@@ -9,6 +9,7 @@ import type { ColorFilterOptions, ColorFilterResult } from './filterTypes';
 export type * from './filterTypes';
 
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { formatDuration } from '../utils/format';
 import { guarded } from './guard';
 
@@ -25,7 +26,7 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					notifier.showWarning('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -38,7 +39,7 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					notifier.showInfo('No colors found to filter');
+					notifier.showInfo(vscode.l10n.t('No colors found to filter'));
 					return;
 				}
 
@@ -67,12 +68,16 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 				});
 
 				notifier.showInfo(
-					`Color filtering completed. ${filterResult.summary.kept.toString()} colors kept, ${filterResult.summary.excluded.toString()} excluded.`,
+					vscode.l10n.t(
+						'Color filtering completed. {0} colors kept, {1} excluded.',
+						filterResult.summary.kept,
+						filterResult.summary.excluded,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				notifier.showError(`Filtering failed: ${errorMessage}`);
+				notifier.showError(
+					vscode.l10n.t('Filtering failed: {0}', describeError(error)),
+				);
 			}
 		}),
 	);

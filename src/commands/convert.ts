@@ -9,6 +9,7 @@ import {
 import { extractColors } from '../extraction/extract';
 import type { Draft } from '../types';
 import { createNotifier } from '../ui/notifier';
+import { describeError } from '../utils/errors';
 import { formatDuration } from '../utils/format';
 import { guarded } from './guard';
 
@@ -25,7 +26,7 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					notifier.showWarning('No active editor found');
+					notifier.showWarning(vscode.l10n.t('No active editor found'));
 					return;
 				}
 
@@ -38,7 +39,7 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					notifier.showInfo('No colors found to convert');
+					notifier.showInfo(vscode.l10n.t('No colors found to convert'));
 					return;
 				}
 
@@ -80,12 +81,16 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 				const failureCount = conversions.length - successCount;
 
 				notifier.showInfo(
-					`Color conversion completed. ${successCount.toString()} successful, ${failureCount.toString()} failed.`,
+					vscode.l10n.t(
+						'Color conversion completed. {0} successful, {1} failed.',
+						successCount,
+						failureCount,
+					),
 				);
 			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error';
-				notifier.showError(`Conversion failed: ${errorMessage}`);
+				notifier.showError(
+					vscode.l10n.t('Conversion failed: {0}', describeError(error)),
+				);
 			}
 		}),
 	);
@@ -174,12 +179,13 @@ async function promptForConversionOptions(
 			[
 				{
 					label: vscode.l10n.t('Lowercase'),
-					description: vscode.l10n.t('#ff0000'),
+					// A colour is not a word; it reads the same in every locale.
+					description: '#ff0000',
 					value: false,
 				},
 				{
 					label: vscode.l10n.t('Uppercase'),
-					description: vscode.l10n.t('#FF0000'),
+					description: '#FF0000',
 					value: true,
 				},
 			],
@@ -349,18 +355,18 @@ function generateConversionReport(
 function getFormatDescription(format: string): string {
 	switch (format) {
 		case 'hex':
-			return 'Hexadecimal notation (#ff0000)';
+			return vscode.l10n.t('Hexadecimal notation (#ff0000)');
 		case 'rgb':
-			return 'RGB functional notation (rgb(255, 0, 0))';
+			return vscode.l10n.t('RGB functional notation (rgb(255, 0, 0))');
 		case 'rgba':
-			return 'RGBA with alpha channel (rgba(255, 0, 0, 1))';
+			return vscode.l10n.t('RGBA with alpha channel (rgba(255, 0, 0, 1))');
 		case 'hsl':
-			return 'HSL functional notation (hsl(0, 100%, 50%))';
+			return vscode.l10n.t('HSL functional notation (hsl(0, 100%, 50%))');
 		case 'hsla':
-			return 'HSLA with alpha channel (hsla(0, 100%, 50%, 1))';
+			return vscode.l10n.t('HSLA with alpha channel (hsla(0, 100%, 50%, 1))');
 		case 'oklch':
-			return 'OKLCH color space (oklch(0.6 0.15 29))';
+			return vscode.l10n.t('OKLCH color space (oklch(0.6 0.15 29))');
 		default:
-			return 'Unknown format';
+			return vscode.l10n.t('Unknown format');
 	}
 }

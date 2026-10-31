@@ -35,7 +35,11 @@ export function handleSafetyChecks(
 	if (content.length > fileSizeThreshold) {
 		return Object.freeze({
 			proceed: false,
-			message: `File size (${content.length} bytes) exceeds safety threshold (${fileSizeThreshold} bytes)`,
+			message: vscode.l10n.t(
+				'File size ({0} bytes) exceeds the safety threshold ({1} bytes)',
+				content.length,
+				fileSizeThreshold,
+			),
 			warnings: Object.freeze([]),
 		});
 	}
@@ -43,8 +47,11 @@ export function handleSafetyChecks(
 	const warnings = collectSafetyWarnings(content, config, options);
 	const message =
 		warnings.length > 0
-			? `Safety checks passed with ${warnings.length} warnings`
-			: 'Safety checks passed';
+			? vscode.l10n.t(
+					'Safety checks passed with {0} warning(s)',
+					warnings.length,
+				)
+			: vscode.l10n.t('Safety checks passed');
 
 	return Object.freeze({
 		proceed: true,
@@ -66,14 +73,21 @@ function collectSafetyWarnings(
 
 	if (lines.length > lineCountThreshold) {
 		warnings.push(
-			`Large file detected: ${lines.length} lines (threshold: ${lineCountThreshold})`,
+			vscode.l10n.t(
+				'Large file detected: {0} lines (threshold: {1})',
+				lines.length,
+				lineCountThreshold,
+			),
 		);
 	}
 
 	const estimatedColors = estimateColorCount(content);
 	if (estimatedColors > 1000) {
 		warnings.push(
-			`Large number of colors detected: estimated ${estimatedColors} colors`,
+			vscode.l10n.t(
+				'Large number of colors detected: an estimated {0}',
+				estimatedColors,
+			),
 		);
 	}
 
@@ -91,16 +105,19 @@ export async function handleSafetyChecksWithUserConfirmation(
 		return result;
 	}
 
-	const continueLabel = 'Continue Anyway';
+	// Bound once and compared below: the dialog returns the clicked label,
+	// so an English literal would read every translated click as Cancel.
+	const continueLabel = vscode.l10n.t('Continue Anyway');
 	const userChoice = await vscode.window.showWarningMessage(
 		result.message,
 		{
 			modal: true,
-			detail:
+			detail: vscode.l10n.t(
 				'This operation may take a long time or consume significant resources. Do you want to continue?',
+			),
 		},
 		continueLabel,
-		'Cancel',
+		vscode.l10n.t('Cancel'),
 	);
 
 	if (userChoice !== continueLabel) {
@@ -110,7 +127,7 @@ export async function handleSafetyChecksWithUserConfirmation(
 	return Object.freeze({
 		...result,
 		proceed: true,
-		message: 'Safety override approved by user',
+		message: vscode.l10n.t('Safety override approved by user'),
 	});
 }
 

@@ -131,7 +131,7 @@ describe('a line command reads what Extract writes, and nothing else', () => {
 			),
 		).toBe('#fff\nred\nrgba(0, 0, 0, 0.5)\nhwb(90 10% 10%)\n#f0a8\nRed\n');
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 1 duplicate colors (6 remaining)',
+			'Removed 1 duplicate color(s) (6 remaining)',
 		);
 	});
 
@@ -173,7 +173,7 @@ describe('a line command reads what Extract writes, and nothing else', () => {
 	it('dedupe drops a blank line inside and does not count it, and leaves an empty document empty', async () => {
 		expect(await dedupe('#fff\n\n#000\n')).toBe('#fff\n#000\n');
 		expect(_shownMessages()[0]?.message).toBe(
-			'Removed 0 duplicate colors (2 remaining)',
+			'Removed 0 duplicate color(s) (2 remaining)',
 		);
 		_resetMockState();
 		_setConfig('colors-le.notificationsLevel', 'all');
@@ -185,7 +185,7 @@ describe('a line command reads what Extract writes, and nothing else', () => {
 			'#000\nrgba(128, 128, 128, 0.5)\nwhite\n',
 		);
 		expect(_shownMessages()[0]?.message).toBe(
-			'Sorted 3 colors by lightness-asc',
+			'Sorted 3 color(s) by lightness-asc',
 		);
 	});
 

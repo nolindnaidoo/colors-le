@@ -5,6 +5,7 @@ import type { StatusBar } from '../ui/statusBar';
 import { readColorList } from '../utils/colorList';
 import { dedupeColors } from '../utils/dedupe';
 import { replaceDocumentContent } from '../utils/document';
+import { describeError } from '../utils/errors';
 import { hasPosition, onValues } from '../utils/positions';
 import { guarded } from './guard';
 
@@ -28,7 +29,7 @@ export function registerDedupeCommand(
 			}
 
 			try {
-				deps.statusBar.showProgress('Deduplicating colors...');
+				deps.statusBar.showProgress(vscode.l10n.t('Deduplicating colors...'));
 
 				const document = editor.document;
 				const list = readColorList(document.getText());
@@ -62,20 +63,23 @@ export function registerDedupeCommand(
 				const dedupedCount = dedupedLines.length;
 				const removedCount = originalCount - dedupedCount;
 
+				const summary = vscode.l10n.t(
+					'Removed {0} duplicate color(s) ({1} remaining)',
+					removedCount,
+					dedupedCount,
+				);
 				// A color found five times has five positions, and only one can stay.
-				const firstOnly = colorsToDedupe.some(hasPosition)
-					? '. Each color shows its first position only.'
-					: '';
 				deps.notifier.showInfo(
-					`Removed ${removedCount} duplicate colors (${dedupedCount} remaining)${firstOnly}`,
+					colorsToDedupe.some(hasPosition)
+						? `${summary}. ${vscode.l10n.t('Each color shows its first position only.')}`
+						: summary,
 				);
 				deps.telemetry.event('dedupe-success', {
 					original: originalCount,
 					deduped: dedupedCount,
 				});
 			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown error occurred';
+				const message = describeError(error);
 				deps.notifier.showError(
 					vscode.l10n.t('Deduplication failed: {0}', message),
 				);
