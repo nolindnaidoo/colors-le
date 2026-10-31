@@ -14,6 +14,15 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Every MCP server this repository ships refuses an argument that does
+  not fit the tool's schema as a protocol error, `-32602`, in the same
+  words.** A `format: 7` was read as absent, a `dedupe: "yes"` or
+  `hidden: "yes"` as false, an argument the schema does not declare was
+  accepted, an entry of `paths` that was not a string vanished and the list
+  was then called empty, and a schema violation came back as the tool's own
+  failure, which a host shows to the agent as a broken tool. The crate's
+  server refused a cap written as `5.0` or `1e3` that the other two read.
+  `additionalProperties: false` is enforced on both tools.
 - **`grey`, `darkgrey`, `darkslategrey`, `dimgrey`, `lightgrey`,
   `lightslategrey` and `slategrey` are extracted.** CSS spells those seven
   keywords both ways and the extractor knew the `gray` spellings alone, so

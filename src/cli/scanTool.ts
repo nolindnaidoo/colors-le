@@ -4,7 +4,13 @@
  * writes. `colors-le mcp` serves both, as the crate's `colors-le mcp` does, so
  * an agent configured with either binary sees the same two tools.
  */
-import { envelope } from '../mcp/envelope';
+import {
+	envelope,
+	invalidParams,
+	readOptionalBoolean,
+	readOptionalString,
+	refuseUnknown,
+} from '../mcp/envelope';
 import {
 	FALLBACK_FORMAT,
 	resolveFormat,
@@ -20,14 +26,30 @@ const DESCRIPTION =
 	'TOML and Markdown by name, anything else as raw text. Reads the filesystem; never ' +
 	'writes to it, and never judges a color.';
 
+/** The schema's properties, which `additionalProperties: false` closes. */
+const SCAN_ARGUMENTS = [
+	'path',
+	'paths',
+	'format',
+	'dedupe',
+	'hidden',
+	'ignored',
+] as const;
+
 async function scan(args: Record<string, unknown>): Promise<unknown> {
+	refuseUnknown(args, SCAN_ARGUMENTS);
 	const inputs = requestedPaths(args);
-	const flag = (name: string): boolean => args[name] === true;
+	// Read as the schema types them: a `hidden: "yes"` was read as false, a
+	// silence the schema never allowed.
+	const flag = (name: string): boolean =>
+		readOptionalBoolean(args, name) === true;
 	const options = {
 		dedupe: flag('dedupe'),
 		palette: null,
 		format: forcedFormat(args),
 	};
+	// A path that is not there is a fact about the filesystem, not the
+	// schema: `collect` throws a plain Error, which is a tool failure.
 	const targets = collect(inputs, {
 		hidden: flag('hidden'),
 		respectIgnore: !flag('ignored'),
@@ -72,27 +94,35 @@ async function scan(args: Record<string, unknown>): Promise<unknown> {
 /**
  * A name that resolves to nothing is refused, not fallen back on: a caller who
  * mistyped `scss` would otherwise get the tree scanned as raw text with no sign
- * the format they named was never used.
+ * the format they named was never used. The schema lists the names it takes,
+ * so one outside the list is a schema violation, not the tool's own failure.
  */
 function forcedFormat(args: Record<string, unknown>): string | null {
-	const name = args.format;
-	if (typeof name !== 'string') return null;
+	const name = readOptionalString(args, 'format');
+	if (name === undefined) return null;
 	const resolved = resolveFormat(name, undefined);
 	if (resolved !== FALLBACK_FORMAT) return resolved;
-	throw new Error(
+	throw invalidParams(
 		`${name} is not a format this names; one of: ${SUPPORTED_FORMATS.join(', ')}`,
 	);
 }
 
 function requestedPaths(args: Record<string, unknown>): readonly string[] {
-	if (typeof args.path === 'string') return [args.path];
-	if (!Array.isArray(args.paths))
-		throw new Error('no file or directory was supplied to read');
-	const paths = args.paths.filter(
-		(item): item is string => typeof item === 'string',
-	);
-	if (paths.length === 0) throw new Error('the list of paths was empty');
-	return paths;
+	const path = args.path;
+	if (typeof path === 'string') return [path];
+	if (path !== undefined) throw invalidParams('path must be a string');
+	const paths = args.paths;
+	if (!Array.isArray(paths)) {
+		throw invalidParams('no file or directory was supplied to read');
+	}
+	// An entry that is not a string is named rather than dropped: `["dir", 7]`
+	// was answered for `dir` alone and the 7 vanished without a word.
+	const index = paths.findIndex((item) => typeof item !== 'string');
+	if (index !== -1) {
+		throw invalidParams(`entry ${index} of paths is not a string`);
+	}
+	if (paths.length === 0) throw invalidParams('the list of paths was empty');
+	return paths as readonly string[];
 }
 
 export const SCAN_TOOL: ToolDefinition = Object.freeze({
@@ -129,6 +159,7 @@ export const SCAN_TOOL: ToolDefinition = Object.freeze({
 				description: 'Walk files excluded by .gitignore too.',
 			},
 		},
+		additionalProperties: false,
 	},
 	handler: scan,
 });

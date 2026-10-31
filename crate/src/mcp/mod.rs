@@ -46,6 +46,75 @@ const PARSE_ERROR: i64 = -32700;
 const INVALID_PARAMS: i64 = -32602;
 const METHOD_NOT_FOUND: i64 = -32601;
 
+/// Why a tool did not answer.
+///
+/// An argument that does not fit the schema is a protocol error,
+/// `-32602`: a host counts it against the server, and the schema is what
+/// the agent read before sending. A tool that fails on what it was given
+/// at run time, a path that is not there, is a result carrying `isError`,
+/// so a model reads the reason and reacts rather than concluding the
+/// server is broken. The same split, in the same words, as the npm server
+/// and the npm command line.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Refusal {
+    InvalidParams(String),
+    Failure(String),
+}
+
+impl Refusal {
+    #[cfg(test)]
+    pub(crate) fn message(&self) -> &str {
+        match self {
+            Self::InvalidParams(message) | Self::Failure(message) => message,
+        }
+    }
+}
+
+/// `additionalProperties: false`, enforced: an argument the schema does
+/// not declare is refused by name, the names sorted as serde sorts keys.
+pub(crate) fn refuse_unknown(arguments: &Value, known: &[&str]) -> Result<(), Refusal> {
+    let Some(object) = arguments.as_object() else {
+        return Ok(());
+    };
+    let unknown: Vec<&str> = object
+        .keys()
+        .map(String::as_str)
+        .filter(|key| !known.contains(key))
+        .collect();
+    match unknown.as_slice() {
+        [] => Ok(()),
+        [one] => Err(Refusal::InvalidParams(format!("unknown argument: {one}"))),
+        many => Err(Refusal::InvalidParams(format!(
+            "unknown arguments: {}",
+            many.join(", ")
+        ))),
+    }
+}
+
+/// An optional argument that must be a string when present.
+pub(crate) fn optional_str<'a>(
+    arguments: &'a Value,
+    name: &str,
+) -> Result<Option<&'a str>, Refusal> {
+    match arguments.get(name) {
+        None => Ok(None),
+        Some(value) => value
+            .as_str()
+            .map(Some)
+            .ok_or_else(|| Refusal::InvalidParams(format!("{name} must be a string"))),
+    }
+}
+
+/// An optional argument that must be a boolean when present; absent is false.
+pub(crate) fn optional_bool(arguments: &Value, name: &str) -> Result<bool, Refusal> {
+    match arguments.get(name) {
+        None => Ok(false),
+        Some(value) => value
+            .as_bool()
+            .ok_or_else(|| Refusal::InvalidParams(format!("{name} must be a boolean"))),
+    }
+}
+
 pub(crate) fn serve() -> ExitCode {
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
@@ -227,15 +296,17 @@ fn tool_definitions() -> Value {
                         "description": "Walk files excluded by .gitignore too.",
                     },
                 },
+                "additionalProperties": false,
             },
         },
     ])
 }
 
-/// Protocol failures (no tool named, an unknown tool) are JSON-RPC
-/// errors; a tool that fails on its arguments returns a result carrying
-/// `isError`, so a model reads the reason and reacts rather than
-/// concluding the server is broken. Same rule as the npm server.
+/// Protocol failures (no tool named, an unknown tool, an argument that
+/// does not fit the schema) are JSON-RPC errors; a tool that fails on
+/// what it was given at run time returns a result carrying `isError`, so
+/// a model reads the reason and reacts rather than concluding the server
+/// is broken. Same rule, same words, as the npm server.
 fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
     let no_name = || {
         (
@@ -254,37 +325,41 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
         .unwrap_or_else(|| json!({}));
 
     match name {
-        "extract_colors" => Ok(match extract::run(&arguments) {
-            Ok(result) => tool_result(&result),
-            Err(message) => tool_failure(&message),
-        }),
-        "colors_le_scan" => Ok(match scan_tool(&arguments) {
-            Ok(result) => tool_result(&result),
-            Err(message) => tool_failure(&message),
-        }),
+        "extract_colors" => answer(extract::run(&arguments)),
+        "colors_le_scan" => answer(scan_tool(&arguments)),
         other => Err((INVALID_PARAMS, format!("Unknown tool: {other}"))),
     }
 }
 
-fn scan_tool(arguments: &Value) -> Result<Value, String> {
+fn answer(outcome: Result<Value, Refusal>) -> Result<Value, (i64, String)> {
+    match outcome {
+        Ok(result) => Ok(tool_result(&result)),
+        Err(Refusal::InvalidParams(message)) => Err((INVALID_PARAMS, message)),
+        Err(Refusal::Failure(message)) => Ok(tool_failure(&message)),
+    }
+}
+
+fn scan_tool(arguments: &Value) -> Result<Value, Refusal> {
+    refuse_unknown(
+        arguments,
+        &["path", "paths", "format", "dedupe", "hidden", "ignored"],
+    )?;
     let inputs = requested_paths(arguments)?;
-    let flag = |name: &str| {
-        arguments
-            .get(name)
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
-    };
+    // Read as the schema types them. A `hidden: "yes"` was read as false,
+    // a silence the schema never allowed.
     let walk_options = WalkOptions {
-        hidden: flag("hidden"),
-        respect_ignore: !flag("ignored"),
+        hidden: optional_bool(arguments, "hidden")?,
+        respect_ignore: !optional_bool(arguments, "ignored")?,
     };
     let options = ScanOptions {
-        dedupe: flag("dedupe"),
+        dedupe: optional_bool(arguments, "dedupe")?,
         palette: None,
         format: forced_format(arguments)?,
     };
 
-    let targets = walk::collect(&inputs, &walk_options)?;
+    // A path that is not there is a fact about the filesystem, not the
+    // schema: a tool failure the model reads, not a protocol error.
+    let targets = walk::collect(&inputs, &walk_options).map_err(Refusal::Failure)?;
     // A binary file gets no report — it was never a text candidate — but
     // it is counted, because an agent comparing this to a file listing
     // would otherwise have to guess why the numbers differ.
@@ -337,36 +412,48 @@ fn scan_tool(arguments: &Value) -> Result<Value, String> {
 /// A name that resolves to nothing is refused rather than fallen back
 /// on: a caller who asked for `scss` and mistyped it would otherwise get
 /// every file in the tree scanned as raw text and no sign that the
-/// format they named was never used.
-fn forced_format(arguments: &Value) -> Result<Option<&'static str>, String> {
-    let Some(name) = arguments.get("format").and_then(Value::as_str) else {
+/// format they named was never used. The schema lists the names it
+/// takes, so one outside the list is a schema violation, not the tool's
+/// own failure.
+fn forced_format(arguments: &Value) -> Result<Option<&'static str>, Refusal> {
+    let Some(name) = optional_str(arguments, "format")? else {
         return Ok(None);
     };
     let resolved = resolve_format(Some(name), None);
     if resolved == crate::extract::FALLBACK_FORMAT {
-        return Err(format!(
+        return Err(Refusal::InvalidParams(format!(
             "{name} is not a format this names; one of: {}",
             crate::extract::SUPPORTED_FORMATS.join(", ")
-        ));
+        )));
     }
     Ok(Some(resolved))
 }
 
-fn requested_paths(arguments: &Value) -> Result<Vec<PathBuf>, String> {
-    if let Some(path) = arguments.get("path").and_then(Value::as_str) {
+fn requested_paths(arguments: &Value) -> Result<Vec<PathBuf>, Refusal> {
+    let invalid = |message: &str| Refusal::InvalidParams(message.to_string());
+    if let Some(path) = arguments.get("path") {
+        let path = path
+            .as_str()
+            .ok_or_else(|| invalid("path must be a string"))?;
         return Ok(vec![PathBuf::from(path)]);
     }
     if let Some(items) = arguments.get("paths").and_then(Value::as_array) {
-        let paths: Vec<PathBuf> = items
-            .iter()
-            .filter_map(|item| item.as_str().map(PathBuf::from))
-            .collect();
+        // An entry that is not a string is named rather than dropped:
+        // `["dir", 7]` was answered for `dir` alone and the 7 vanished
+        // without a word.
+        let mut paths = Vec::with_capacity(items.len());
+        for (index, item) in items.iter().enumerate() {
+            let Some(path) = item.as_str() else {
+                return Err(invalid(&format!("entry {index} of paths is not a string")));
+            };
+            paths.push(PathBuf::from(path));
+        }
         if paths.is_empty() {
-            return Err("the list of paths was empty".to_string());
+            return Err(invalid("the list of paths was empty"));
         }
         return Ok(paths);
     }
-    Err("no file or directory was supplied to read".to_string())
+    Err(invalid("no file or directory was supplied to read"))
 }
 
 /// The one result shape every tool returns, matching the npm server's
@@ -641,19 +728,132 @@ mod tests {
         assert_eq!(response["error"]["code"], INVALID_PARAMS);
     }
 
-    /// A bad argument is the tool failing on what it was given, not the
-    /// server breaking — so it comes back as a result carrying isError.
+    /// A path that is not there is a fact about the filesystem, not the
+    /// schema: the tool failing on what it was given, not the server
+    /// breaking — so it comes back as a result carrying isError.
     #[test]
-    fn a_missing_argument_is_a_tool_failure_not_a_protocol_error() {
-        let response = call("colors_le_scan", &json!({}));
+    fn a_path_that_is_not_there_is_a_tool_failure_not_a_protocol_error() {
+        let response = call("colors_le_scan", &json!({ "path": "/no/such/place-xyz" }));
         assert!(response.get("error").is_none(), "{response}");
         assert_eq!(response["result"]["isError"], true);
         assert!(
             response["result"]["content"][0]["text"]
                 .as_str()
                 .expect("a message")
-                .contains("no file or directory")
+                .contains("/no/such/place-xyz")
         );
+    }
+
+    /// Every server this repository ships answered a schema violation as
+    /// the tool's own failure, read a wrong-typed optional argument as
+    /// absent or false, dropped an entry of `paths` that was not a
+    /// string, and accepted an argument the schema does not declare. The
+    /// schema is what the agent read before sending: a violation is
+    /// `-32602`, in these words on all three.
+    #[test]
+    fn a_wrong_typed_or_undeclared_argument_is_a_protocol_error() {
+        for (tool, arguments, message) in [
+            (
+                "colors_le_scan",
+                json!({}),
+                "no file or directory was supplied to read",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "paths": [] }),
+                "the list of paths was empty",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "paths": ["a", 7] }),
+                "entry 1 of paths is not a string",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "path": 7 }),
+                "path must be a string",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "path": "x", "hidden": "yes" }),
+                "hidden must be a boolean",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "path": "x", "format": 7 }),
+                "format must be a string",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "path": "x", "format": "klingon" }),
+                "klingon is not a format this names; one of: css, scss, less, stylus, html, \
+                 javascript, typescript, svg, xml, json, yaml, toml, markdown, plaintext",
+            ),
+            (
+                "colors_le_scan",
+                json!({ "path": "x", "bogus": 1 }),
+                "unknown argument: bogus",
+            ),
+            (
+                "extract_colors",
+                json!({ "content": "x", "format": 7 }),
+                "format must be a string",
+            ),
+            (
+                "extract_colors",
+                json!({ "content": "x", "format": "css", "filename": 7 }),
+                "filename must be a string",
+            ),
+            (
+                "extract_colors",
+                json!({ "content": "x", "format": "css", "dedupe": "yes" }),
+                "dedupe must be a boolean",
+            ),
+            (
+                "extract_colors",
+                json!({ "content": "x", "format": "css", "extra": true, "another": 1 }),
+                "unknown arguments: another, extra",
+            ),
+            (
+                "extract_colors",
+                json!({ "format": "css" }),
+                "content is required and must be a string",
+            ),
+            (
+                "extract_colors",
+                json!({ "content": "x", "format": "css", "maxResults": 0 }),
+                "maxResults must be a positive integer",
+            ),
+        ] {
+            let response = call(tool, &arguments);
+            assert_eq!(
+                response["error"]["code"], INVALID_PARAMS,
+                "{arguments}: {response}"
+            );
+            assert_eq!(response["error"]["message"], message, "{arguments}");
+        }
+    }
+
+    /// `5.0` and `1e3` were refused here and read as caps by the other
+    /// two servers: JSON Schema's `integer` is any number with a zero
+    /// fractional part.
+    #[test]
+    fn a_cap_written_as_an_exponent_or_an_integer_valued_float_is_a_cap() {
+        let content = ".a{color:#1a2b3c}\n.b{color:#ffffff}";
+        for (cap, count, truncated) in [
+            (json!(1e20), 2, false),
+            (json!(1.0), 1, true),
+            (json!(1e3), 2, false),
+        ] {
+            let response = call(
+                "extract_colors",
+                &json!({ "content": content, "format": "css", "maxResults": cap }),
+            );
+            assert!(response.get("error").is_none(), "{cap}: {response}");
+            let meta = &response["result"]["structuredContent"]["meta"];
+            assert_eq!(meta["count"], count, "{cap}");
+            assert_eq!(meta["truncated"], truncated, "{cap}");
+        }
     }
 
     #[test]
@@ -756,7 +956,9 @@ mod tests {
     }
 
     /// A format the caller named and this cannot resolve is refused,
-    /// rather than quietly scanning the whole tree as raw text.
+    /// rather than quietly scanning the whole tree as raw text. The
+    /// schema lists the names it takes, so one outside the list is a
+    /// schema violation and not the tool's own failure.
     #[test]
     fn the_scan_tool_refuses_a_format_it_does_not_name() {
         let tree = TempTree::new("mcp-badformat");
@@ -765,7 +967,14 @@ mod tests {
             "colors_le_scan",
             &json!({ "path": tree.path().to_string_lossy(), "format": "klingon" }),
         );
-        assert_eq!(response["result"]["isError"], true);
+        assert_eq!(response["error"]["code"], INVALID_PARAMS, "{response}");
+        assert!(
+            response["error"]["message"]
+                .as_str()
+                .expect("a message")
+                .starts_with("klingon is not a format this names"),
+            "{response}"
+        );
     }
 
     #[test]

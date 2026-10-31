@@ -70,10 +70,23 @@ describe('envelope: result cap', () => {
 		expect(truncated).toBe(false);
 	});
 
-	it('rejects a maxResults a tool cannot honour', () => {
-		expect(() => readMaxResults({ maxResults: 0 })).toThrow(/positive integer/);
-		expect(() => readMaxResults({ maxResults: 1.5 })).toThrow();
-		expect(() => readMaxResults({ maxResults: 'ten' })).toThrow();
+	it('rejects a maxResults a tool cannot honour, as a schema violation', () => {
+		// A value the schema's `integer` does not admit is -32602, so the
+		// transport answers it as a protocol error and not as the tool's own
+		// failure; the message names the argument because a model reads it.
+		for (const raw of [0, 1.5, 'ten', true]) {
+			let thrown: unknown;
+			try {
+				readMaxResults({ maxResults: raw });
+			} catch (error) {
+				thrown = error;
+			}
+			expect(thrown, String(raw)).toBeInstanceOf(Error);
+			expect((thrown as Error).message).toBe(
+				'maxResults must be a positive integer',
+			);
+			expect((thrown as { code?: unknown }).code, String(raw)).toBe(-32602);
+		}
 	});
 
 	it('clamps an oversized request rather than refusing it', () => {
@@ -315,19 +328,95 @@ describe('protocol', () => {
 		expect(reply?.error?.code).toBe(-32602);
 	});
 
-	it('returns a tool failure as a result, not a protocol error', async () => {
-		// A model can read an isError result and correct itself; a JSON-RPC error
-		// reads as "the server is broken". Missing content is the failure used
-		// here because an unresolved format is no longer one: it is read as raw
-		// text.
+	it('refuses an argument that does not fit the schema as a protocol error, in the words the other two servers use', async () => {
+		// It was an isError result, which a host shows to the agent as the
+		// tool's own failure; a wrong type on an optional argument was read as
+		// absent, and an argument the schema does not declare was accepted.
+		// The schema is what the agent read before sending, so a violation
+		// is -32602, and `additionalProperties: false` is enforced.
+		for (const [args, message] of [
+			[{}, 'content is required and must be a string'],
+			[
+				{ content: 'x', format: 'css', maxResults: 2.5 },
+				'maxResults must be a positive integer',
+			],
+			[{ content: 'x', format: 7 }, 'format must be a string'],
+			[
+				{ content: 'x', format: 'css', filename: 7 },
+				'filename must be a string',
+			],
+			[
+				{ content: 'x', format: 'css', dedupe: 'yes' },
+				'dedupe must be a boolean',
+			],
+			[{ content: 'x', format: 'css', extra: true }, 'unknown argument: extra'],
+			[
+				{ content: 'x', format: 'css', extra: true, another: 1 },
+				'unknown arguments: another, extra',
+			],
+		] as const) {
+			const reply = await respond({
+				jsonrpc: '2.0',
+				id: 4,
+				method: 'tools/call',
+				params: { name: 'extract_colors', arguments: args },
+			});
+			expect(reply?.result, JSON.stringify(args)).toBeUndefined();
+			expect(reply?.error, JSON.stringify(args)).toEqual({
+				code: -32602,
+				message,
+			});
+		}
+	});
+
+	it('reads a cap written as an integer-valued float or exponent as the crate does', async () => {
+		// JSON Schema's `integer` is any number with a zero fractional part.
 		const reply = await respond({
+			jsonrpc: '2.0',
+			id: 5,
+			method: 'tools/call',
+			params: {
+				name: 'extract_colors',
+				arguments: {
+					content: '.a{color:#1a2b3c}\n.b{color:#ffffff}',
+					format: 'css',
+					maxResults: 1e20,
+				},
+			},
+		});
+		expect(reply?.error).toBeUndefined();
+		const structured = reply?.result?.structuredContent as
+			| { meta: { count: number } }
+			| undefined;
+		expect(structured?.meta.count).toBe(2);
+	});
+
+	it('returns a tool failure as a result, not a protocol error', async () => {
+		// A model can read an isError result and correct itself; a JSON-RPC
+		// error reads as "the server is broken". The shared tool refuses
+		// nothing at run time, since every format is read, so the failing
+		// tool here is a stub: what is under test is the transport's rule.
+		const failing = createResponder({ name: 'colors-le', version: '1.0.0' }, [
+			{
+				name: 'fails',
+				description: 'a tool that fails on what it was given',
+				inputSchema: { type: 'object' },
+				handler: async () => {
+					throw new Error('the document could not be read');
+				},
+			},
+		]);
+		const reply = await failing({
 			jsonrpc: '2.0',
 			id: 4,
 			method: 'tools/call',
-			params: { name: 'extract_colors', arguments: {} },
+			params: { name: 'fails', arguments: {} },
 		});
 		expect(reply?.error).toBeUndefined();
 		expect(reply?.result?.isError).toBe(true);
+		expect(reply?.result?.content).toEqual([
+			{ type: 'text', text: 'the document could not be read' },
+		]);
 	});
 });
 

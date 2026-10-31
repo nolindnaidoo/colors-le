@@ -147,7 +147,13 @@ async function callTool(
 	try {
 		envelope = await tool.handler(args);
 	} catch (error) {
+		// An argument that does not fit the schema is thrown with its code
+		// and answered as `-32602`, as the extension's server and the
+		// crate's answer it; it was an isError result here alone.
 		const message = error instanceof Error ? error.message : String(error);
+		if ((error as { code?: unknown })?.code === INVALID_PARAMS) {
+			return { error: { code: INVALID_PARAMS, message } };
+		}
 		return {
 			result: { content: [{ type: 'text', text: message }], isError: true },
 		};

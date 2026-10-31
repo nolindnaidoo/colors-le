@@ -12,6 +12,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The MCP server refuses an argument that does not fit the tool's schema
+  as a protocol error, `-32602`, in the npm servers' words.** A `format: 7`
+  was read as absent, a `hidden: "yes"` as false, an argument the schema
+  does not declare was accepted, an entry of `paths` that was not a string
+  vanished and the list was then called empty, and a schema violation came
+  back as the tool's own failure. A cap written as `5.0` or `1e3` is a cap,
+  as the other two servers read it. A path that is not there is still the
+  tool's failure, carried as `isError`.
 - **The `grey` spellings are named colours.** `grey`, `darkgrey`,
   `darkslategrey`, `dimgrey`, `lightgrey`, `lightslategrey` and `slategrey`
   were not in the keyword list, on this side or the extension's, so a

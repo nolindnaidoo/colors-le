@@ -11,6 +11,7 @@
 
 use serde_json::{Value, json};
 
+use super::{Refusal, optional_bool, optional_str, refuse_unknown};
 use crate::extract::{self, SUPPORTED_FORMATS, resolve_format};
 
 const DEFAULT_MAX_RESULTS: usize = 500;
@@ -62,20 +63,29 @@ pub(crate) fn definition() -> Value {
     })
 }
 
-pub(crate) fn run(arguments: &Value) -> Result<Value, String> {
+pub(crate) fn run(arguments: &Value) -> Result<Value, Refusal> {
+    refuse_unknown(
+        arguments,
+        &["content", "format", "filename", "dedupe", "maxResults"],
+    )?;
     let content = arguments
         .get("content")
         .and_then(Value::as_str)
-        .ok_or_else(|| "content is required and must be a string".to_string())?;
+        .ok_or_else(|| {
+            Refusal::InvalidParams("content is required and must be a string".to_string())
+        })?;
     let max_results = read_max_results(arguments)?;
 
-    // Never a refusal. An agent that knows nothing about a document
-    // still gets its colours, which is the whole reason a format is
-    // optional here.
+    // Never a refusal of the document. An agent that knows nothing about
+    // it still gets its colours, which is the whole reason a format is
+    // optional here. Read as the schema types them, though: a `format: 7`
+    // was read as absent and a `dedupe: "yes"` as false, silences the
+    // schema never allowed.
     let format = resolve_format(
-        arguments.get("format").and_then(Value::as_str),
-        arguments.get("filename").and_then(Value::as_str),
+        optional_str(arguments, "format")?,
+        optional_str(arguments, "filename")?,
     );
+    let dedupe = optional_bool(arguments, "dedupe")?;
 
     let mut values: Vec<Value> = extract::extract(content, format)
         .into_iter()
@@ -89,7 +99,7 @@ pub(crate) fn run(arguments: &Value) -> Result<Value, String> {
         })
         .collect();
 
-    if arguments.get("dedupe").and_then(Value::as_bool) == Some(true) {
+    if dedupe {
         let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
         values.retain(|value| seen.insert(value["value"].to_string()));
     }
@@ -110,19 +120,26 @@ pub(crate) fn run(arguments: &Value) -> Result<Value, String> {
     ))
 }
 
-/// Clamp quietly, reject loudly — the npm server's asymmetry.
-fn read_max_results(arguments: &Value) -> Result<usize, String> {
+/// Clamp quietly, reject loudly — the npm server's asymmetry. The other
+/// two servers read `2.0`, `1e3` and `1E20` as caps; serde reads all
+/// three as floats, so `as_u64` refused them here while the extension's
+/// server answered.
+fn read_max_results(arguments: &Value) -> Result<usize, Refusal> {
     let Some(raw) = arguments.get("maxResults") else {
         return Ok(DEFAULT_MAX_RESULTS);
     };
-    let invalid = "maxResults must be a positive integer".to_string();
-    let value = raw.as_u64().ok_or(invalid.clone())?;
-    if value < 1 {
-        return Err(invalid);
+    let invalid = || Refusal::InvalidParams("maxResults must be a positive integer".to_string());
+    let value = raw.as_f64().ok_or_else(invalid)?;
+    if !value.is_finite() || value.fract() != 0.0 || value < 1.0 {
+        return Err(invalid());
     }
-    Ok(usize::try_from(value)
-        .unwrap_or(MAX_MAX_RESULTS)
-        .min(MAX_MAX_RESULTS))
+    // A whole number prints without a point or an exponent, so the parse
+    // is exact and casts nothing; one too wide for `usize` fails it, and
+    // that is a cap past the ceiling.
+    let cap = format!("{value}")
+        .parse::<usize>()
+        .unwrap_or(MAX_MAX_RESULTS);
+    Ok(cap.min(MAX_MAX_RESULTS))
 }
 
 #[cfg(test)]
@@ -142,8 +159,12 @@ mod tests {
         content: Option<String>,
         arguments: Value,
         expected: Option<Value>,
+        /// A schema violation: `-32602`, in these words.
         #[serde(rename = "expectedError")]
         expected_error: Option<String>,
+        /// A tool failure on what it was given: an `isError` result.
+        #[serde(rename = "expectedFailure")]
+        expected_failure: Option<String>,
     }
 
     #[test]
@@ -163,47 +184,24 @@ mod tests {
                 arguments["content"] = json!(content);
             }
 
-            // A refused document is compared by shape, not by text. The
-            // message comes from whichever parser did the refusing —
-            // `@iarna/toml` and the `toml` crate word it differently, and
-            // neither is wrong — so what has to match is that both
-            // refused, both reported it, and both returned nothing.
-            //
-            // One case is a refusal *only* on the extension's side:
-            // `@iarna/toml` is TOML 0.5 and rejects a mixed inline array
-            // where the `toml` crate reads it. That divergence is in
-            // SPEC.md and pinned in toml.rs.
-            if case
-                .expected
-                .as_ref()
-                .is_some_and(|expected| expected["ok"] == false)
-            {
-                let ours = run(&arguments).expect("a result");
-                if case.file.as_deref() == Some("mixed-array.toml") {
-                    assert_eq!(ours["ok"], true, "this parser reads TOML 1.0");
-                    assert_eq!(ours["data"]["colors"], json!([1, 2.5]));
-                } else {
-                    assert_eq!(ours["ok"], false, "{}", case.name);
-                    assert_eq!(
-                        ours["diagnostics"][0]["code"], "parse-error",
-                        "{}",
-                        case.name
-                    );
-                    assert_eq!(ours["data"]["colors"], json!([]), "{}", case.name);
-                }
-                continue;
-            }
-
-            match (case.expected, case.expected_error) {
-                (_, Some(expected)) => {
+            match (case.expected, case.expected_error, case.expected_failure) {
+                (_, Some(expected), _) => {
                     assert_eq!(
                         run(&arguments).expect_err(&case.name),
-                        expected,
+                        Refusal::InvalidParams(expected),
                         "{}",
                         case.name
                     );
                 }
-                (Some(expected), None) => {
+                (_, None, Some(expected)) => {
+                    assert_eq!(
+                        run(&arguments).expect_err(&case.name),
+                        Refusal::Failure(expected),
+                        "{}",
+                        case.name
+                    );
+                }
+                (Some(expected), None, None) => {
                     assert_eq!(
                         run(&arguments).expect(&case.name),
                         expected,
@@ -211,7 +209,9 @@ mod tests {
                         case.name
                     );
                 }
-                (None, None) => panic!("{} pins neither a result nor an error", case.name),
+                (None, None, None) => {
+                    panic!("{} pins neither a result nor a refusal", case.name);
+                }
             }
         }
     }
@@ -283,6 +283,7 @@ mod tests {
     #[test]
     fn a_fractional_cap_is_refused() {
         let error = run(&json!({ "content": "x", "maxResults": 1.5 })).expect_err("a refusal");
-        assert_eq!(error, "maxResults must be a positive integer");
+        assert_eq!(error.message(), "maxResults must be a positive integer");
+        assert!(matches!(error, Refusal::InvalidParams(_)));
     }
 }

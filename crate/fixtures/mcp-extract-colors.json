@@ -621,5 +621,84 @@
 			"maxResults": 0
 		},
 		"expectedError": "maxResults must be a positive integer"
+	},
+	{
+		"name": "a format that is not a string is refused, not read as absent",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": 7
+		},
+		"expectedError": "format must be a string"
+	},
+	{
+		"name": "a filename that is not a string is refused",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": "css",
+			"filename": 7
+		},
+		"expectedError": "filename must be a string"
+	},
+	{
+		"name": "a dedupe that is not a boolean is refused, not read as false",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": "css",
+			"dedupe": "yes"
+		},
+		"expectedError": "dedupe must be a boolean"
+	},
+	{
+		"name": "an argument the schema does not declare is refused",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": "css",
+			"extra": true
+		},
+		"expectedError": "unknown argument: extra"
+	},
+	{
+		"name": "two undeclared arguments are named, sorted",
+		"content": "a{color:#fff}",
+		"arguments": {
+			"format": "css",
+			"extra": true,
+			"another": 1
+		},
+		"expectedError": "unknown arguments: another, extra"
+	},
+	{
+		"name": "a cap written with a point is a cap",
+		"file": "theme.css",
+		"arguments": {
+			"format": "css",
+			"maxResults": 2.0
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 2,
+						"column": 12
+					},
+					{
+						"value": "#F0A",
+						"format": "hex",
+						"line": 3,
+						"column": 13
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 2,
+				"truncated": true
+			}
+		}
 	}
 ]

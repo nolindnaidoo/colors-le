@@ -275,6 +275,21 @@ function mcpRequests(): readonly Record<string, unknown>[] {
 		call(6, 'colors_le_scan', {}),
 		call(7, 'colors_le_scan', { path: join(tree, 'missing') }),
 		call(8, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 'css' }),
+		// Arguments that do not fit the schema: a wrong type, an undeclared
+		// name, an entry of `paths` that is not a string, a cap written as a
+		// float. Each was answered its own way by each server.
+		call(9, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 7 }),
+		call(10, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 'css', dedupe: 'yes' }),
+		call(11, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 'css', filename: 7 }),
+		call(12, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 'css', palette: ['#fff'], another: 1 }),
+		call(13, 'extract_colors', { content: '.a{color:#1a2b3c}\n.b{color:#fff}', format: 'css', maxResults: 1.0 }),
+		call(14, 'extract_colors', { content: '.a{color:#1a2b3c}', format: 'css', maxResults: '7' }),
+		call(15, 'extract_colors', { format: 'css' }),
+		call(16, 'colors_le_scan', { paths: [repo, 7] }),
+		call(17, 'colors_le_scan', { path: 7 }),
+		call(18, 'colors_le_scan', { path: repo, hidden: 'yes' }),
+		call(19, 'colors_le_scan', { path: repo, contrast: true }),
+		call(20, 'colors_le_scan', { path: repo, format: 7 }),
 	];
 }
 

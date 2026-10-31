@@ -316,6 +316,13 @@ saying so beats a flag that quietly means something different here.
   runs against both.
 - **`colors_le_scan` is this server's own**: files or directories in,
   the same reports the CLI writes, palette included.
+- **A schema violation is a protocol error, `-32602`, in the same words
+  on every server this repository ships**: a required argument missing,
+  a wrong type on an optional one, a cap that is not a whole number, an
+  argument the schema does not declare. A tool that fails on what it was
+  given at run time, a path that is not there, answers a result carrying
+  `isError`. A cap written as `2.0` or `1e3` is a cap: JSON Schema's
+  `integer` is any number with a zero fractional part.
 
 ## Non-goals
 
