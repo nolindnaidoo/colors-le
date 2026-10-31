@@ -225,7 +225,7 @@ Two tools, both returning `{ ok, data, diagnostics, meta }`:
 The palette belongs to the CLI. An agent handing over document text has
 no palette file to point at.
 
-## The other four ways to run it
+## The other ways to run it
 
 | Where | What you get | Install |
 |---|---|---|

@@ -4,7 +4,7 @@
  *
  * Packs `mcp/`, installs the tarball into a clean throwaway project, and runs
  * the *installed* binary through a real MCP handshake. That is what
- * `npx urls-le-mcp` does, minus the registry — so it catches the failures a
+ * `npx colors-le-mcp` does, minus the registry — so it catches the failures a
  * source-level test cannot: a missing `files` entry, a bin path that does not
  * resolve, a lost shebang, or an executable bit npm never set.
  *
