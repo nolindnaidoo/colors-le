@@ -3,6 +3,7 @@ import {
 	_cancelAfterProgress,
 	_clipboardText,
 	_createDocument,
+	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
 	_setActiveEditor,
@@ -343,6 +344,41 @@ describe('colors-le.extractColors: undelivered results', () => {
 		await runCommand('colors-le.extractColors');
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(events).toContain('extract-success');
+	});
+});
+
+describe('two invocations at once', () => {
+	// Nothing serialises the commands: a second one can start while the first
+	// is awaiting the host. Each reaches its own result.
+	it('two extracts started together each open their own results', async () => {
+		registerExtractCommand(makeContext(), makeDeps());
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setActiveEditor(
+			_createDocument({ content: 'a { color: #123456; }', languageId: 'css' }),
+		);
+		const handler = _registeredCommands().get('colors-le.extractColors');
+		if (!handler) throw new Error('extract command not registered');
+		await Promise.all([handler(), handler()]);
+		expect(_openedDocuments().map((d) => d.getText())).toEqual([
+			'#123456',
+			'#123456',
+		]);
+		expect(_shownMessages().filter((m) => m.kind === 'error')).toEqual([]);
+	});
+
+	it('a dedupe and a sort started together each write their own document', async () => {
+		_setConfig('colors-le.notificationsLevel', 'all');
+		_setConfig('colors-le.sortMode', 'hex-asc');
+		registerDedupeCommand(makeContext(), makeDeps());
+		registerSortCommand(makeContext(), makeDeps());
+		_setActiveEditor(_createDocument({ content: '#bbb\n#aaa\n#bbb\n' }));
+		const dedupe = _registeredCommands().get('colors-le.postProcess.dedupe');
+		const sort = _registeredCommands().get('colors-le.postProcess.sort');
+		if (!dedupe || !sort) throw new Error('commands not registered');
+		await Promise.all([dedupe(), sort()]);
+		expect(
+			appliedEdits.map((edit) => edit.replacements[0]?.newText).sort(),
+		).toEqual(['#aaa\n#bbb\n#bbb\n', '#bbb\n#aaa\n']);
 	});
 });
 

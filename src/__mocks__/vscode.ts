@@ -394,6 +394,22 @@ export interface ShownMessage {
 }
 
 const shownMessages: ShownMessage[] = [];
+
+const statusBarItems: Array<{ disposed: boolean }> = [];
+const outputChannels: Array<{ disposed: boolean }> = [];
+
+export function _statusBarItems(): ReadonlyArray<{ disposed: boolean }> {
+	return statusBarItems;
+}
+
+export function _outputChannels(): ReadonlyArray<{ disposed: boolean }> {
+	return outputChannels;
+}
+
+/** How many configuration listeners are registered right now. */
+export function _configListenerCount(): number {
+	return configListeners.length;
+}
 let activeTextEditor: { document: MockDocument } | undefined;
 let quickPickResponder: ((items: unknown[]) => unknown) | undefined;
 let warningResponder: ((items: unknown[]) => unknown) | undefined;
@@ -492,25 +508,37 @@ export const window = {
 	showTextDocument: async (_document: unknown, _column?: unknown) => undefined,
 	createOutputChannel: (_name: string) => {
 		const linesOut: string[] = [];
-		return {
+		const channel = {
+			disposed: false,
 			appendLine: (line: string) => linesOut.push(line),
-			dispose: () => {},
+			dispose(): void {
+				channel.disposed = true;
+			},
 			_lines: linesOut,
 		};
+		outputChannels.push(channel);
+		return channel;
 	},
-	createStatusBarItem: (_alignment?: unknown, _priority?: number) => ({
-		text: '',
-		tooltip: '',
-		command: undefined as unknown,
-		visible: false,
-		show(): void {
-			(this as { visible: boolean }).visible = true;
-		},
-		hide(): void {
-			(this as { visible: boolean }).visible = false;
-		},
-		dispose: () => {},
-	}),
+	createStatusBarItem: (_alignment?: unknown, _priority?: number) => {
+		const item = {
+			text: '',
+			tooltip: '',
+			command: undefined as unknown,
+			visible: false,
+			disposed: false,
+			show(): void {
+				item.visible = true;
+			},
+			hide(): void {
+				item.visible = false;
+			},
+			dispose(): void {
+				item.disposed = true;
+			},
+		};
+		statusBarItems.push(item);
+		return item;
+	},
 	withProgress: async <T>(
 		_options: unknown,
 		task: (
@@ -659,6 +687,8 @@ export function _resetMockState(): void {
 	configUpdates.length = 0;
 	configListeners.length = 0;
 	shownMessages.length = 0;
+	statusBarItems.length = 0;
+	outputChannels.length = 0;
 	appliedEdits.length = 0;
 	executedBuiltins.length = 0;
 	registeredCommands.clear();
