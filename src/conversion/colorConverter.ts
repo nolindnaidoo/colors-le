@@ -212,8 +212,8 @@ function parseColorToRGB(colorString: string): ColorSpace | null {
  * Parse hex string to RGB
  */
 function parseHexToRGB(hex: string): ColorSpace | null {
-	if (hex.length === 3) {
-		// Short hex: #rgb -> #rrggbb
+	if (hex.length === 3 || hex.length === 4) {
+		// Short hex: #rgb[a] -> #rrggbb[aa]
 		hex = hex
 			.split('')
 			.map((char) => char + char)

@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import {
 	detectColorFormat,
+	isValidColorFormat,
 	parseColor,
+	parseColorToHSL,
 	type RgbColor,
 	rgbToHex,
 	rgbToHsl,
@@ -250,5 +252,74 @@ describe('HSL to RGB conversion edge cases', () => {
 	test('should handle HSL with low lightness', () => {
 		const result = parseColor('hsl(0, 100%, 0%)');
 		expect(result).toEqual({ r: 0, g: 0, b: 0 });
+	});
+});
+
+describe('what Extract reports, the readers read', () => {
+	// The readers behind Validate, Filter, Analyze and Convert lagged the
+	// extractor: a 4-digit hex and a keyword were found and then called
+	// invalid, a functional call in capitals could not be read, and only a
+	// 6-digit hex, a legacy hsl() or modern syntax had an HSL at all.
+	test('parses a four-digit hex with its alpha', () => {
+		expect(parseColor('#f0a8')).toEqual({ r: 255, g: 0, b: 170, a: 136 / 255 });
+	});
+
+	test('parses a functional call in either case', () => {
+		expect(parseColor('RGB(1, 2, 3)')).toEqual({ r: 1, g: 2, b: 3 });
+		expect(parseColor('HSL(0, 100%, 50%)')).toEqual({ r: 255, g: 0, b: 0 });
+	});
+
+	test('parses the keywords, and transparent as a see-through black', () => {
+		expect(parseColor('red')).toEqual({ r: 255, g: 0, b: 0 });
+		expect(parseColor('Grey')).toEqual({ r: 128, g: 128, b: 128 });
+		expect(parseColor('transparent')).toEqual({ r: 0, g: 0, b: 0, a: 0 });
+	});
+
+	test('does not read a prototype name as a keyword', () => {
+		for (const name of ['constructor', '__proto__', 'toString']) {
+			expect(parseColor(name), name).toBeNull();
+			expect(isValidColorFormat(name), name).toBe(false);
+		}
+	});
+
+	test('calls valid exactly what it can read', () => {
+		for (const value of [
+			'red',
+			'grey',
+			'transparent',
+			'#f0a8',
+			'#F0A',
+			'RGB(1, 2, 3)',
+			'oklch(70% 0.1 250)',
+		]) {
+			expect(isValidColorFormat(value), value).toBe(true);
+		}
+		for (const value of ['blurple', '#12345', 'rgb(1, 2)', '']) {
+			expect(isValidColorFormat(value), value).toBe(false);
+		}
+	});
+
+	test('derives an HSL from every notation', () => {
+		expect(parseColorToHSL('rgb(255, 0, 0)')).toEqual({ h: 0, s: 100, l: 50 });
+		expect(parseColorToHSL('rgba(0, 0, 0, 0.5)')).toEqual({ h: 0, s: 0, l: 0 });
+		expect(parseColorToHSL('hsla(210, 50%, 40%, 0.8)')).toEqual({
+			h: 210,
+			s: 50,
+			l: 40,
+		});
+		expect(parseColorToHSL('#f00')).toEqual({ h: 0, s: 100, l: 50 });
+		expect(parseColorToHSL('#ff000080')).toEqual({ h: 0, s: 100, l: 50 });
+		expect(parseColorToHSL('#f00f')).toEqual({ h: 0, s: 100, l: 50 });
+		expect(parseColorToHSL('navy')).toEqual({ h: 240, s: 100, l: 25 });
+		expect(parseColorToHSL('transparent')).toEqual({ h: 0, s: 0, l: 0 });
+		expect(parseColorToHSL('notacolour')).toBeNull();
+	});
+
+	test('keeps the hue on the wheel', () => {
+		// Rounding took a hue just under 360 to 360, which no hue range
+		// includes and the red check reads as its own sector.
+		const { h } = rgbToHsl({ r: 255, g: 0, b: 1 });
+		expect(h).toBeGreaterThanOrEqual(0);
+		expect(h).toBeLessThan(360);
 	});
 });

@@ -205,8 +205,16 @@ describe('convertColor: input parsing', () => {
 		expect(r.success).toBe(false);
 	});
 
+	it('parses a four-digit hex and keeps its alpha', () => {
+		// Extract reports `#rgba`; Convert answered "Unable to parse color".
+		const r = convertColor(color('#f0a8'), { targetFormat: 'rgba' });
+		expect(r.success).toBe(true);
+		expect(r.converted).toMatch(/^rgba\(255, 0, 170, 0\.53/);
+	});
+
 	it('rejects a malformed hex length', () => {
-		const r = convertColor(color('#ff00'), { targetFormat: 'rgb' });
+		// Five digits is the one length CSS does not spell; four is #rgba.
+		const r = convertColor(color('#ff000'), { targetFormat: 'rgb' });
 		expect(r.success).toBe(false);
 	});
 });

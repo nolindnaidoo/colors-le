@@ -60,6 +60,25 @@ describe('filterColors: lightness bounds', () => {
 		expect(result.filtered.some((c) => c.value === '#ffffff')).toBe(false);
 	});
 
+	it('reads every notation, so a filter cannot be passed by spelling', () => {
+		// Only a 6-digit hex, a legacy hsl() and modern syntax had a
+		// lightness; an rgb(), an rgba(), an hsla(), a short hex or a keyword
+		// passed every lightness and saturation filter untested.
+		const result = filterColors(
+			[
+				color('rgb(0, 0, 0)', 'rgb'),
+				color('rgba(0, 0, 0, 1)', 'rgba'),
+				color('hsla(0, 0%, 0%, 1)', 'hsla'),
+				color('#000'),
+				color('#000000ff'),
+				color('black', 'named'),
+				color('#ffffff'),
+			],
+			{ minLightness: 50 },
+		);
+		expect(result.filtered.map((c) => c.value)).toEqual(['#ffffff']);
+	});
+
 	it('applies both bounds together', () => {
 		const result = filterColors(PALETTE, {
 			minLightness: 30,
@@ -94,6 +113,16 @@ describe('filterColors: exclusions', () => {
 		const withJunk = [color('#ff0000'), color('notacolour')];
 		const result = filterColors(withJunk, { excludeInvalid: true });
 		expect(result.filtered.some((c) => c.value === 'notacolour')).toBe(false);
+	});
+
+	it('calls a keyword and a four-digit hex valid', () => {
+		// Both are notations the extractor reports; both were dropped as
+		// "invalid format".
+		const result = filterColors(
+			[color('red', 'named'), color('#f0a8'), color('notacolour')],
+			{ excludeInvalid: true },
+		);
+		expect(result.filtered.map((c) => c.value)).toEqual(['red', '#f0a8']);
 	});
 
 	it('removes transparent colours when asked', () => {

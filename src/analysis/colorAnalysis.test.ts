@@ -45,6 +45,17 @@ describe('detectColorAnomalies', () => {
 	it('handles empty input', () => {
 		expect(detectColorAnomalies([])).toEqual([]);
 	});
+
+	it('does not call a keyword or a four-digit hex invalid', () => {
+		// Both are notations the extractor reports, and both were listed as
+		// high-severity "Invalid color format" anomalies.
+		const anomalies = detectColorAnomalies([
+			color('red', 'named'),
+			color('transparent', 'named'),
+			color('#f0a8'),
+		]);
+		expect(anomalies.filter((a) => a.type === 'invalid')).toEqual([]);
+	});
 });
 
 describe('detectColorPatterns', () => {

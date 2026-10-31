@@ -14,6 +14,17 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Validate, Filter, Analyze and Convert read every notation Extract
+  reports.** A keyword such as `red` or `transparent` and a four-digit hex
+  such as `#f0a8` were found by Extract and then called "Invalid color
+  format" by Validate and Analyze and dropped by Filter's invalid-colour
+  option, and Convert answered "Unable to parse color" for the four-digit
+  hex. Only a six-digit hex, a legacy `hsl()` and the CSS Color 4 syntax
+  had a hue, saturation or lightness at all, so an `rgb()`, an `rgba()`,
+  an `hsla()`, a short hex or a keyword passed every lightness and
+  saturation filter untested and sat out the harmony, temperature, mood
+  and cluster analysis. A functional call in capitals could not be read. A
+  hue just under 360 rounded to 360, which no range on the wheel includes.
 - **Every MCP server this repository ships refuses an argument that does
   not fit the tool's schema as a protocol error, `-32602`, in the same
   words.** A `format: 7` was read as absent, a `dedupe: "yes"` or
