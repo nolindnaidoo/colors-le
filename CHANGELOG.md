@@ -14,6 +14,10 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Cancelling an extraction is reported as a cancel.** Clicking Cancel on
+  the progress notification produced the error toast "Color extraction
+  failed: Operation cancelled by user" and an error event in the telemetry
+  log.
 - **Validate reports a contrast it could not compute as that.** A value
   the converter could not read had a contrast ratio of 1, so the report
   said "Contrast ratio 1.00:1 fails WCAG AA" about a colour nothing had

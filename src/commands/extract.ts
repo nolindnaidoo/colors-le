@@ -58,12 +58,13 @@ export function registerExtractCommand(
 			}
 
 			try {
+				// A cancel is what the user asked for, not a failure: it used to
+				// be thrown, and the catch below reported it as "Color extraction
+				// failed" with an error event.
 				const result = await deps.notifier.showProgress(
 					'Extracting colors...',
 					async (progress, token) => {
-						if (token.isCancellationRequested) {
-							throw new Error('Operation cancelled by user');
-						}
+						if (token.isCancellationRequested) return undefined;
 						progress.report({ message: vscode.l10n.t('Analyzing file...') });
 
 						const extractionResult = await extractColors(
@@ -76,9 +77,7 @@ export function registerExtractCommand(
 							},
 						);
 
-						if (token.isCancellationRequested) {
-							throw new Error('Operation cancelled by user');
-						}
+						if (token.isCancellationRequested) return undefined;
 						progress.report({
 							message: vscode.l10n.t('Formatting results...'),
 							increment: 50,
@@ -87,6 +86,12 @@ export function registerExtractCommand(
 						return extractionResult;
 					},
 				);
+
+				if (result === undefined) {
+					deps.notifier.showInfo(vscode.l10n.t('Extraction cancelled.'));
+					deps.telemetry.event('extract-cancelled');
+					return;
+				}
 
 				if (!result.success && result.errors.length > 0) {
 					const messages = result.errors

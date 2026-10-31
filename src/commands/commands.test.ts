@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	_cancelAfterProgress,
 	_clipboardText,
 	_createDocument,
 	_registeredCommands,
@@ -343,6 +344,34 @@ describe('colors-le.extractColors: undelivered results', () => {
 		expect(_clipboardText()).toBe('#ff0000\n#00ff00');
 		expect(events).toContain('extract-success');
 	});
+});
+
+describe('colors-le.extractColors: cancelled', () => {
+	// A click on Cancel threw an Error that the catch reported as "Color
+	// extraction failed: Operation cancelled by user", an error toast and an
+	// `extract-error` telemetry event for something the user asked for.
+	for (const checkpoint of [0, 1]) {
+		it(`reports a cancel at check ${checkpoint} as a cancel, not a failure`, async () => {
+			const events: string[] = [];
+			registerExtractCommand(makeContext(), makeDeps(events));
+			_setConfig('colors-le.notificationsLevel', 'all');
+			_cancelAfterProgress(checkpoint);
+			_setActiveEditor(
+				_createDocument({
+					content: 'a { color: #ff0000; }',
+					languageId: 'css',
+				}),
+			);
+			await runCommand('colors-le.extractColors');
+			expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+				['info', 'Extraction cancelled.'],
+			]);
+			expect(appliedEdits).toHaveLength(0);
+			expect(events).toContain('extract-cancelled');
+			expect(events).not.toContain('extract-error');
+			expect(events).not.toContain('extract-success');
+		});
+	}
 });
 
 describe('colors-le.extractColors: clipboard failure', () => {

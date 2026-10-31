@@ -349,6 +349,30 @@ export const workspace = {
 export const appliedEdits: WorkspaceEdit[] = [];
 let applyEditResult = true;
 
+/**
+ * A token that flips partway through, the way a real one does when the user
+ * clicks Cancel on the progress notification. Counting checks rather than
+ * progress reports is what makes each checkpoint individually reachable:
+ * `_cancelAfterProgress(1)` cancels between the first and second check.
+ */
+let cancelAfterChecks: number | undefined;
+let checksSeen = 0;
+
+const progressToken = {
+	get isCancellationRequested(): boolean {
+		if (cancelAfterChecks === undefined) return false;
+		if (checksSeen >= cancelAfterChecks) return true;
+		checksSeen += 1;
+		return false;
+	},
+};
+
+/** Cancel once the operation has checked the token `n` times (0 = immediately). */
+export function _cancelAfterProgress(n: number | undefined): void {
+	cancelAfterChecks = n;
+	checksSeen = 0;
+}
+
 let openDocumentError: Error | undefined;
 
 /** Make the next openTextDocument reject, as it does when there is no window. */
@@ -493,8 +517,7 @@ export const window = {
 			progress: { report: (_value: unknown) => void },
 			token: { isCancellationRequested: boolean },
 		) => Promise<T>,
-	): Promise<T> =>
-		task({ report: () => {} }, { isCancellationRequested: false }),
+	): Promise<T> => task({ report: () => {} }, progressToken),
 	createWebviewPanel: (
 		_viewType: string,
 		_title: string,
@@ -626,6 +649,8 @@ export const FileType = {
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
 	env.appName = 'Visual Studio Code';
+	cancelAfterChecks = undefined;
+	checksSeen = 0;
 	clipboardError = undefined;
 	applyEditResult = true;
 	openDocumentError = undefined;
