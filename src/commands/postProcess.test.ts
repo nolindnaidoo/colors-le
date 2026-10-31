@@ -252,7 +252,10 @@ describe('analyze: report sections', () => {
 
 	it('reports a document with no colours', async () => {
 		await analyze('nothing to see here');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+			['info', 'No colors found to analyze'],
+		]);
+		expect(_openedDocuments()).toHaveLength(0);
 	});
 
 	it('includes the statistics sections for a varied palette', async () => {
@@ -261,12 +264,22 @@ describe('analyze: report sections', () => {
 		await analyze(
 			'#ff0000\n#ff3333\n#00ff00\nrgb(0, 0, 255)\nhsl(60, 100%, 50%)\n#ff0000\n',
 		);
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Total Colors**: 6');
+		expect(report).toContain('- **Unique Colors**: 5');
+		expect(report).toContain('- **Dominant Hue**:');
+		expect(report).toContain('- **Average Saturation**: 100%');
+		expect(report).toContain('- **Average Lightness**: 52%');
+		expect(report).toContain('## Format Distribution');
+		expect(report).toContain('## Most Common Colors');
+		expect(report).toContain('| `#ff0000` | 2 | 33.3% |');
 	});
 
 	it('handles a single-colour document', async () => {
 		await analyze('#ff0000\n');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Total Colors**: 1');
+		expect(report).toContain('- **Color Harmony**: none (0% confidence)');
 	});
 
 	it('reports contrast as not assessed rather than passed', async () => {
@@ -281,7 +294,9 @@ describe('analyze: report sections', () => {
 	it('handles a greyscale palette', async () => {
 		// Saturation zero exercises the hue branch differently.
 		await analyze('#000000\n#777777\n#ffffff\n');
-		expect(_shownMessages().length).toBeGreaterThan(0);
+		const report = _openedDocuments()[0]?.getText() ?? '';
+		expect(report).toContain('- **Average Saturation**: 0%');
+		expect(report).toContain('- **Mood**: muted');
 	});
 });
 

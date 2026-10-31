@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
+	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
 	_respondToInputBox,
@@ -56,19 +57,39 @@ beforeEach(() => {
 	_resetMockState();
 });
 
+/** The markdown report the command opened beside the editor. */
+function report(): string {
+	const opened = _openedDocuments();
+	expect(opened).toHaveLength(1);
+	expect(opened[0]?.languageId).toBe('markdown');
+	return opened[0]?.getText() ?? '';
+}
+
+// Every test here used to end without an assertion, so a command that opened
+// nothing, or a report with the wrong numbers in it, passed. Each reads the
+// report back now.
+
 describe('colors-le.analyze', () => {
 	it('produces an analysis report for the active document', async () => {
 		registerAnalyzeCommand(makeContext());
 		_setActiveEditor(_createDocument(CSS_DOC));
 		await runCommand('colors-le.analyze');
-		// The report opens as a side-by-side markdown document; reaching this
-		// point without a thrown error means extraction + analysis + report
-		// generation all ran.
+		const text = report();
+		expect(text).toContain('# Color Analysis Report');
+		expect(text).toContain('- **Total Colors**: 5');
+		expect(text).toContain('- **Unique Colors**: 4');
+		expect(text).toContain('| HEX | 2 | 40.0% |');
+		expect(text).toContain('| `#ff0000` | 2 | 40.0% |');
 	});
 
 	it('warns when there is no active editor', async () => {
+		_setConfig('colors-le.notificationsLevel', 'important');
 		registerAnalyzeCommand(makeContext());
 		await runCommand('colors-le.analyze');
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+			['warning', 'No active editor found'],
+		]);
+		expect(_openedDocuments()).toHaveLength(0);
 	});
 });
 
@@ -82,6 +103,13 @@ describe('colors-le.convert', () => {
 			byValue(true), // round values
 		]);
 		await runCommand('colors-le.convert');
+		const text = report();
+		expect(text).toContain('**Target Format**: RGB');
+		expect(text).toContain('| `#ff0000` | `rgb(255, 0, 0)` | HEX → RGB |');
+		expect(text).toContain(
+			'| `hsl(240, 100%, 50%)` | `rgb(0, 0, 255)` | HSL → RGB |',
+		);
+		expect(text).toContain('- **Successful**: 5');
 	});
 
 	it('converts to hex incl. case/short-hex options', async () => {
@@ -95,6 +123,13 @@ describe('colors-le.convert', () => {
 			byValue(false), // full hex
 		]);
 		await runCommand('colors-le.convert');
+		const text = report();
+		expect(text).toContain('| `rgb(0, 255, 0)` | `#00ff00` | RGB → HEX |');
+		expect(text).toContain(
+			'| `rgba(1, 2, 3, 0.5)` | `#01020380` | RGBA → HEX |',
+		);
+		expect(text).toContain('- **Uppercase**: No');
+		expect(text).toContain('- **Short Hex**: No');
 	});
 
 	it('does nothing when the format pick is dismissed', async () => {
@@ -102,6 +137,7 @@ describe('colors-le.convert', () => {
 		_setActiveEditor(_createDocument(CSS_DOC));
 		scriptQuickPicks([() => undefined]);
 		await runCommand('colors-le.convert');
+		expect(_openedDocuments()).toHaveLength(0);
 	});
 });
 
@@ -116,6 +152,15 @@ describe('colors-le.filter', () => {
 			() => [], // no additional filters
 		]);
 		await runCommand('colors-le.filter');
+		const text = report();
+		expect(text).toContain('- **Max Lightness**: 30%');
+		expect(text).toContain('- **Min Saturation**: 70%');
+		expect(text).toContain('- **Kept**: 0');
+		expect(text).toContain('- **Excluded**: 5');
+		// rgba(1, 2, 3, 0.5) is dark enough and half saturated; the rest are
+		// at 50% lightness.
+		expect(text).toContain('| too light | 4 | 80.0% |');
+		expect(text).toContain('| too muted | 1 | 20.0% |');
 	});
 
 	it('supports include-format selection', async () => {
@@ -129,6 +174,10 @@ describe('colors-le.filter', () => {
 			() => [],
 		]);
 		await runCommand('colors-le.filter');
+		const text = report();
+		expect(text).toContain('- **Include Formats**: HEX, HSL, RGB, RGBA');
+		expect(text).toContain('- **Kept**: 5');
+		expect(text).toContain('- **Excluded**: 0');
 	});
 });
 
@@ -143,6 +192,21 @@ describe('colors-le.validate', () => {
 			byValue('all'), // allow all formats
 		]);
 		await runCommand('colors-le.validate');
+		const text = report();
+		expect(text).toContain('- **Total Colors**: 5');
+		expect(text).toContain('  - Background: `#ffffff`');
+		expect(text).toContain('  - WCAG AA: 4.5:1');
+		// Red on white is 4.0:1.
+		expect(text).toContain(
+			'Contrast ratio 4.00:1 fails WCAG AA (minimum 4.5:1)',
+		);
+		// The near-black is 20.8:1, so it carries a level and no contrast issue;
+		// blue has no issue at all and is counted among the valid.
+		expect(text).toContain(
+			'### 🟡 `rgba(1, 2, 3, 0.5)`\n\n**Contrast Ratio**: 20.77:1\n**Accessibility Level**: AA',
+		);
+		expect(text).toContain('- **Warnings**: 4');
+		expect(text).toContain('✅ **1 colors passed all validation checks**');
 	});
 
 	it('does nothing when checks are dismissed', async () => {
@@ -150,6 +214,7 @@ describe('colors-le.validate', () => {
 		_setActiveEditor(_createDocument(CSS_DOC));
 		scriptQuickPicks([() => undefined]);
 		await runCommand('colors-le.validate');
+		expect(_openedDocuments()).toHaveLength(0);
 	});
 });
 
@@ -163,6 +228,13 @@ describe('additional option paths', () => {
 			byValue(false), // keep decimals
 		]);
 		await runCommand('colors-le.convert');
+		const text = report();
+		expect(text).toContain('**Target Format**: HSL');
+		expect(text).toContain('- **Preserve Alpha**: No');
+		expect(text).toContain('| `#ff0000` | `hsl(0, 100%, 50%)` | HEX → HSL |');
+		expect(text).toContain(
+			'| `rgba(1, 2, 3, 0.5)` | `hsl(210, 50%, 1%)` | RGBA → HSL |',
+		);
 	});
 
 	it('filter: exclude formats with custom lightness range', async () => {
@@ -177,6 +249,12 @@ describe('additional option paths', () => {
 			() => [], // no additional filters
 		]);
 		await runCommand('colors-le.filter');
+		const text = report();
+		expect(text).toContain('- **Exclude Formats**: HEX');
+		expect(text).toContain('- **Min Lightness**: 20%');
+		expect(text).toContain('- **Max Lightness**: 20%');
+		expect(text).toContain('- **Max Saturation**: 30%');
+		expect(text).toContain('- **Kept**: 0');
 	});
 
 	it('validate: hex-only restriction flags non-hex colors', async () => {
@@ -190,6 +268,12 @@ describe('additional option paths', () => {
 			byValue('hex'),
 		]);
 		await runCommand('colors-le.validate');
+		const text = report();
+		expect(text).toContain('- **Allowed Formats**: HEX');
+		expect(text).toContain('Format RGB not in allowed formats');
+		expect(text).toContain('Format HSL not in allowed formats');
+		expect(text).toContain('Format RGBA not in allowed formats');
+		expect(text).toContain('| 🟡 format | warning | 3 |');
 	});
 });
 
