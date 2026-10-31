@@ -14,6 +14,10 @@ version and releases from one tag.
 
 ### Fixed
 
+- **`notificationsLevel` governs Analyze, Convert, Filter and Validate.**
+  The four showed their "No active editor", "No colors found" and
+  completion toasts directly, so `silent` and `important` silenced the
+  other commands and not these.
 - **Cancelling an extraction is reported as a cancel.** Clicking Cancel on
   the progress notification produced the error toast "Color extraction
   failed: Operation cancelled by user" and an error event in the telemetry

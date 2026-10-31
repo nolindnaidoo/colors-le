@@ -16,13 +16,16 @@ import { guarded } from './guard';
  * Register the filter colors command
  */
 export function registerFilterCommand(context: vscode.ExtensionContext): void {
+	// One notifier for the guard and the body, so notificationsLevel governs
+	// what the command says and not only the guard's failure toast.
+	const notifier = createNotifier();
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.filter',
-		guarded(createNotifier(), async () => {
+		guarded(notifier, async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage('No active editor found');
+					notifier.showWarning('No active editor found');
 					return;
 				}
 
@@ -35,9 +38,7 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					await vscode.window.showInformationMessage(
-						'No colors found to filter',
-					);
+					notifier.showInfo('No colors found to filter');
 					return;
 				}
 
@@ -65,15 +66,13 @@ export function registerFilterCommand(context: vscode.ExtensionContext): void {
 					preview: false,
 				});
 
-				await vscode.window.showInformationMessage(
+				notifier.showInfo(
 					`Color filtering completed. ${filterResult.summary.kept.toString()} colors kept, ${filterResult.summary.excluded.toString()} excluded.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
-				await vscode.window.showErrorMessage(
-					`Filtering failed: ${errorMessage}`,
-				);
+				notifier.showError(`Filtering failed: ${errorMessage}`);
 			}
 		}),
 	);

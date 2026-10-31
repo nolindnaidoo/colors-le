@@ -16,13 +16,16 @@ import { guarded } from './guard';
  * Register the convert colors command
  */
 export function registerConvertCommand(context: vscode.ExtensionContext): void {
+	// One notifier for the guard and the body, so notificationsLevel governs
+	// what the command says and not only the guard's failure toast.
+	const notifier = createNotifier();
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.convert',
-		guarded(createNotifier(), async () => {
+		guarded(notifier, async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage('No active editor found');
+					notifier.showWarning('No active editor found');
 					return;
 				}
 
@@ -35,9 +38,7 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					await vscode.window.showInformationMessage(
-						'No colors found to convert',
-					);
+					notifier.showInfo('No colors found to convert');
 					return;
 				}
 
@@ -78,15 +79,13 @@ export function registerConvertCommand(context: vscode.ExtensionContext): void {
 				const successCount = conversions.filter((c) => c.success).length;
 				const failureCount = conversions.length - successCount;
 
-				await vscode.window.showInformationMessage(
+				notifier.showInfo(
 					`Color conversion completed. ${successCount.toString()} successful, ${failureCount.toString()} failed.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
-				await vscode.window.showErrorMessage(
-					`Conversion failed: ${errorMessage}`,
-				);
+				notifier.showError(`Conversion failed: ${errorMessage}`);
 			}
 		}),
 	);

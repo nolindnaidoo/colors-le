@@ -1,4 +1,4 @@
-import { beforeEach, describe, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	_createDocument,
 	_registeredCommands,
@@ -6,6 +6,8 @@ import {
 	_respondToInputBox,
 	_respondToQuickPick,
 	_setActiveEditor,
+	_setConfig,
+	_shownMessages,
 } from '../__mocks__/vscode';
 import { registerAnalyzeCommand } from './analyze';
 import { registerConvertCommand } from './convert';
@@ -189,4 +191,58 @@ describe('additional option paths', () => {
 		]);
 		await runCommand('colors-le.validate');
 	});
+});
+
+describe('the report commands obey notificationsLevel', () => {
+	// Each of the four was wrapped in `guarded(createNotifier(), …)` and then
+	// called `vscode.window.show*Message` itself, so the level governed the
+	// guard's own failure toast and nothing the command said: the "No active
+	// editor" warning and the completion summary showed at `silent`.
+	const commands = [
+		{
+			id: 'colors-le.analyze',
+			register: () => registerAnalyzeCommand(makeContext()),
+			picks: [],
+			summary: /^Color analysis completed/,
+		},
+		{
+			id: 'colors-le.convert',
+			register: () => registerConvertCommand(makeContext()),
+			picks: [byValue('rgb'), byValue(true), byValue(true)],
+			summary: /^Color conversion completed/,
+		},
+		{
+			id: 'colors-le.filter',
+			register: () => registerFilterCommand(makeContext()),
+			picks: [byValue('none'), byValue('none'), byValue('none'), () => []],
+			summary: /^Color filtering completed/,
+		},
+		{
+			id: 'colors-le.validate',
+			register: () => registerValidateCommand(makeContext()),
+			picks: [allItems, byValue('AA'), byValue('all')],
+			summary: /^Color validation completed/,
+		},
+	];
+
+	for (const command of commands) {
+		it(`${command.id}: says nothing at silent, and the summary at all`, async () => {
+			command.register();
+			await runCommand(command.id);
+			expect(_shownMessages()).toEqual([]);
+
+			_setActiveEditor(_createDocument(CSS_DOC));
+			_respondToInputBox(() => '#ffffff');
+			scriptQuickPicks([...command.picks]);
+			await runCommand(command.id);
+			expect(_shownMessages()).toEqual([]);
+
+			_setConfig('colors-le.notificationsLevel', 'all');
+			_respondToInputBox(() => '#ffffff');
+			scriptQuickPicks([...command.picks]);
+			await runCommand(command.id);
+			expect(_shownMessages().map((m) => m.kind)).toEqual(['info']);
+			expect(_shownMessages()[0]?.message).toMatch(command.summary);
+		});
+	}
 });

@@ -23,13 +23,16 @@ import { guarded } from './guard';
  * Register the analyze colors command
  */
 export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
+	// One notifier for the guard and the body, so notificationsLevel governs
+	// what the command says and not only the guard's failure toast.
+	const notifier = createNotifier();
 	const disposable = vscode.commands.registerCommand(
 		'colors-le.analyze',
-		guarded(createNotifier(), async () => {
+		guarded(notifier, async () => {
 			try {
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					await vscode.window.showWarningMessage('No active editor found');
+					notifier.showWarning('No active editor found');
 					return;
 				}
 
@@ -42,9 +45,7 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 				);
 
 				if (!result.success || result.colors.length === 0) {
-					await vscode.window.showInformationMessage(
-						'No colors found to analyze',
-					);
+					notifier.showInfo('No colors found to analyze');
 					return;
 				}
 
@@ -81,15 +82,13 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 					preview: false,
 				});
 
-				await vscode.window.showInformationMessage(
+				notifier.showInfo(
 					`Color analysis completed. Found ${statistics.total.toString()} colors with ${statistics.unique.toString()} unique values.`,
 				);
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error';
-				await vscode.window.showErrorMessage(
-					`Analysis failed: ${errorMessage}`,
-				);
+				notifier.showError(`Analysis failed: ${errorMessage}`);
 			}
 		}),
 	);
