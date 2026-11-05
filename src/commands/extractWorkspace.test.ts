@@ -187,6 +187,17 @@ describe('colors-le.extractWorkspace and colors-le.extractFolder', () => {
 		);
 	});
 
+	it('says the limit was reached when it lands inside the last file', async () => {
+		open({ '/w/a.css': 'a { color: #111111; background: #222222; }\n' });
+		_setConfig('colors-le.workspace.scanMaxResults', 1);
+		await runCommand('colors-le.extractWorkspace');
+
+		expect(report()).toContain(
+			'> The results limit of 1 was reached. The colors after it in that file were not counted.',
+		);
+		expect(report()).not.toContain('The rest of the files were not read.');
+	});
+
 	it('says when a folder holds no colors', async () => {
 		open({ '/w/a.txt': 'nothing here\n' });
 		await runCommand('colors-le.extractWorkspace');

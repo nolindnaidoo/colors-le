@@ -108,6 +108,9 @@ async function extractWorkspace(
 			const found = new Map<string, Occurrence[]>();
 			const failed: string[] = [];
 			let total = 0;
+			// A color past the limit is dropped, and the scan reports an early
+			// stop only when files remained: inside the last file it said nothing.
+			let dropped = false;
 			const scanned = await scanFiles(
 				root,
 				files,
@@ -129,7 +132,10 @@ async function extractWorkspace(
 						return true;
 					}
 					for (const color of colors) {
-						if (total >= config.workspaceScanMaxResults) return false;
+						if (total >= config.workspaceScanMaxResults) {
+							dropped = true;
+							return false;
+						}
 						const occurrence = {
 							file,
 							written: color.value,
@@ -165,6 +171,7 @@ async function extractWorkspace(
 						limits,
 						positions,
 						failed,
+						resultsCap: dropped ? config.workspaceScanMaxResults : undefined,
 					}),
 				config,
 				deps,
@@ -230,7 +237,8 @@ export interface ExtractWorkspaceReportInput {
 	readonly limits: ScanLimits;
 	readonly positions?: boolean;
 	/** Files the reader threw on, which were read and yielded nothing. */
-	readonly failed?: readonly string[];
+	readonly failed?: readonly string[] /** The results limit, when a color was dropped for it inside a file. */;
+	readonly resultsCap?: number | undefined;
 }
 
 /**
@@ -245,6 +253,7 @@ export function formatExtractWorkspaceReport({
 	limits,
 	positions = true,
 	failed = [],
+	resultsCap,
 }: ExtractWorkspaceReportInput): string {
 	const lines: string[] = [
 		`# ${vscode.l10n.t('{0} workspace report', 'Colors-LE')}`,
@@ -298,6 +307,15 @@ export function formatExtractWorkspaceReport({
 				'Colors could not be read from {0} file(s), so they are not in this report: {1}',
 				failed.length,
 				failed.map(code).join(', '),
+			),
+		);
+	// The scan's own note covers the files it never opened; this one covers
+	// the rest of the file the limit was reached in.
+	if (resultsCap !== undefined)
+		notes.push(
+			vscode.l10n.t(
+				'The results limit of {0} was reached. The colors after it in that file were not counted.',
+				resultsCap,
 			),
 		);
 	if (notes.length > 0) lines.push(...notes.map((note) => `> ${note}`), '');

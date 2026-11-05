@@ -223,5 +223,6 @@
   "Could not replace the document contents: the edit was rejected.": "Could not replace the document contents: the edit was rejected.",
   "Could not deduplicate: the edit was rejected.": "Could not deduplicate: the edit was rejected.",
   "Could not sort: the edit was rejected.": "Could not sort: the edit was rejected.",
-  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Colors could not be read from {0} file(s), so they are not in this report: {1}"
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Colors could not be read from {0} file(s), so they are not in this report: {1}",
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "The results limit of {0} was reached. The colors after it in that file were not counted."
 }

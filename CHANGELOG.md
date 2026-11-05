@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **A folder report says when the results limit was reached inside its last file.** The colours after it were dropped with no note, because the scan says it stopped early only when files remained.
 - **A folder report names a file the reader failed on.** The failure was caught and the file counted as read with no colours.
 - **An empty document is no colours, not a failure.** Extract showed "Extraction failed: Content is empty or invalid" as an error, and the `extract_colors` tool on the extension's and the npm server answered `ok: false` where the crate's answers `ok: true`.
 - **Filter's presets drop the colours their labels exclude.** "Lightness < 30%" kept a colour at exactly 30%, which "30% ≤ Lightness ≤ 70%" also kept, and the same at 70% and for the two saturation presets. The filter report shows the bound as 29% or 71%.

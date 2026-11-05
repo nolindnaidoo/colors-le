@@ -223,5 +223,6 @@
   "Could not replace the document contents: the edit was rejected.": "无法替换文档内容：编辑被拒绝。",
   "Could not deduplicate: the edit was rejected.": "无法去重：编辑被拒绝。",
   "Could not sort: the edit was rejected.": "无法排序：编辑被拒绝。",
-  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "无法从 {0} 个文件中读取颜色，因此它们不在此报告中：{1}"
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "无法从 {0} 个文件中读取颜色，因此它们不在此报告中：{1}",
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "已达到结果上限 {0}。该文件中之后的颜色未被计数。"
 }

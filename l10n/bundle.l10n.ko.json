@@ -223,5 +223,6 @@
   "Could not replace the document contents: the edit was rejected.": "문서 내용을 바꿀 수 없습니다: 편집이 거부되었습니다.",
   "Could not deduplicate: the edit was rejected.": "중복 제거할 수 없습니다: 편집이 거부되었습니다.",
   "Could not sort: the edit was rejected.": "정렬할 수 없습니다: 편집이 거부되었습니다.",
-  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0}개 파일에서 색상을 읽을 수 없어 이 보고서에 포함되지 않았습니다: {1}"
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0}개 파일에서 색상을 읽을 수 없어 이 보고서에 포함되지 않았습니다: {1}",
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "결과 제한 {0}에 도달했습니다. 해당 파일에서 그 이후의 색상은 집계되지 않았습니다."
 }

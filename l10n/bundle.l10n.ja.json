@@ -223,5 +223,6 @@
   "Could not replace the document contents: the edit was rejected.": "ドキュメントの内容を置き換えられませんでした: 編集が拒否されました。",
   "Could not deduplicate: the edit was rejected.": "重複排除できませんでした: 編集が拒否されました。",
   "Could not sort: the edit was rejected.": "並べ替えできませんでした: 編集が拒否されました。",
-  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0} 個のファイルから色を読み取れなかったため、このレポートには含まれていません：{1}"
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0} 個のファイルから色を読み取れなかったため、このレポートには含まれていません：{1}",
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "結果の上限 {0} に達しました。そのファイル内のそれ以降の色は数えられていません。"
 }
