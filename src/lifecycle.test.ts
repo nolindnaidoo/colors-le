@@ -66,8 +66,8 @@ async function runEveryCommand(): Promise<void> {
 }
 
 // The telemetry, the status bar item, its listener, its wrapper, eleven
-// commands and the eleven code action registrations.
-const SUBSCRIPTIONS = 26;
+// commands and the ten code action registrations.
+const SUBSCRIPTIONS = 25;
 
 describe('lifecycle', () => {
 	beforeEach(() => {
@@ -92,7 +92,7 @@ describe('lifecycle', () => {
 			listeners: 1,
 			statusBars: 1,
 			channels: 1,
-			codeActions: 11,
+			codeActions: 10,
 			timers: 0,
 		});
 
