@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Filter's presets drop the colours their labels exclude.** "Lightness < 30%" kept a colour at exactly 30%, which "30% ≤ Lightness ≤ 70%" also kept, and the same at 70% and for the two saturation presets. The filter report shows the bound as 29% or 71%.
 - **Convert and Validate's contrast read a colour as every other command does.** They had a reader of their own that rounded a channel landing on .5 down, so `hsl(210, 50%, 50%)` converted to `#407fbf` where CSS gives `#4080bf`. An `rgba()` with an alpha of 1 is converted as opaque, with no `ff` appended. Filter's Exclude transparent drops `#f000`, `rgb(0 0 0 / 0)` and every other notation with zero alpha, where it knew only `transparent`, `rgba()`, `hsla()` and eight-digit hex.
 - **A legacy `hsl()` hue past 360 reads round the wheel, and a component past its range is clamped.** `hsl(400, 50%, 50%)` read as hue 320 and `rgb(300, 0, 0)` was written back as `#12c0000`, so Analyze, Filter, Validate and the folder palette grouped and judged them wrongly. The npm command line's `--palette` reads them the same way now.
 - **Cancel stops a workspace or folder scan that is on its last file.** The scan read the Cancel button only before each file, so a click during the last read, or while the report was being copied, still opened the report and announced it.

@@ -153,8 +153,8 @@ describe('colors-le.filter', () => {
 		]);
 		await runCommand('colors-le.filter');
 		const text = report();
-		expect(text).toContain('- **Max Lightness**: 30%');
-		expect(text).toContain('- **Min Saturation**: 70%');
+		expect(text).toContain('- **Max Lightness**: 29%');
+		expect(text).toContain('- **Min Saturation**: 71%');
 		expect(text).toContain('- **Kept**: 0');
 		expect(text).toContain('- **Excluded**: 5');
 		// rgba(1, 2, 3, 0.5) is dark enough and half saturated; the rest are
@@ -253,7 +253,7 @@ describe('additional option paths', () => {
 		expect(text).toContain('- **Exclude Formats**: HEX');
 		expect(text).toContain('- **Min Lightness**: 20%');
 		expect(text).toContain('- **Max Lightness**: 20%');
-		expect(text).toContain('- **Max Saturation**: 30%');
+		expect(text).toContain('- **Max Saturation**: 29%');
 		expect(text).toContain('- **Kept**: 0');
 	});
 
