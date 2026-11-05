@@ -12,6 +12,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A document with many colours is scanned in linear time.** Settling the
+  matches looked each one up in a list of those before it: 200,000
+  colours in one file took 1.5 s and 400,000 nearly 6 s. The budget suite
+  holds four times the colours to under six times the time.
 - **A FIFO is named, and the links a walk passes over are counted.** A
   FIFO, a socket or a device in a walk was dropped without a word, and
   one named outright was walked as an empty directory, exit 1 with

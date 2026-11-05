@@ -115,6 +115,18 @@ impl Tree {
     }
 }
 
+impl Tree {
+    /// One stylesheet holding `colours` declarations and nothing else.
+    fn dense(name: &str, colours: usize) -> Self {
+        let root =
+            std::env::temp_dir().join(format!("colors-le-budget-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).expect("a temporary directory");
+        std::fs::write(root.join("many.css"), "a{color:#fff}\n".repeat(colours)).expect("a file");
+        Self { root }
+    }
+}
+
 impl Drop for Tree {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.root);
@@ -196,5 +208,33 @@ fn four_times_the_tree_is_not_sixteen_times_the_work() {
         ratio < LINEARITY,
         "four times the tree took {ratio:.2}x as long ({small:?} then {large:?}), \
          over the {LINEARITY}x ceiling — the scan is not linear in the size of the tree"
+    );
+}
+
+/// The same check inside one file: a document with four times the colours.
+/// The tree check above cannot see it, because its files hold a handful
+/// each; `settle` once looked every match up in a list of the ones before
+/// it, and 400,000 colours took six seconds.
+#[test]
+fn four_times_the_colours_is_not_sixteen_times_the_work() {
+    if !enabled() {
+        println!(
+            "budget SKIPPED: set COLORS_LE_BUDGET=1 to run it. \
+             This did NOT pass — it did not run."
+        );
+        return;
+    }
+
+    let one = Tree::dense("dense-one", 50_000);
+    let four = Tree::dense("dense-four", 200_000);
+
+    let small = time(&one.root);
+    let large = time(&four.root);
+    let ratio = large.as_secs_f64() / small.as_secs_f64().max(0.000_001);
+    println!("budget: 50,000 colours {small:?}, 200,000 colours {large:?}, ratio {ratio:.2}");
+    assert!(
+        ratio < LINEARITY,
+        "four times the colours took {ratio:.2}x as long ({small:?} then {large:?}), \
+         over the {LINEARITY}x ceiling — the scan is not linear in the colours a file holds"
     );
 }
