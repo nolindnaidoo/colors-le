@@ -222,5 +222,6 @@
   "Extracted the colors, but could not copy them to the clipboard: {0}": "Кольори витягнуто, але не вдалося скопіювати їх до буфера обміну: {0}",
   "Could not replace the document contents: the edit was rejected.": "Не вдалося замінити вміст документа: зміну відхилено.",
   "Could not deduplicate: the edit was rejected.": "Не вдалося виконати дедуплікацію: зміну відхилено.",
-  "Could not sort: the edit was rejected.": "Не вдалося відсортувати: зміну відхилено."
+  "Could not sort: the edit was rejected.": "Не вдалося відсортувати: зміну відхилено.",
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не вдалося прочитати кольори з файлів ({0}), тому їх немає в цьому звіті: {1}"
 }

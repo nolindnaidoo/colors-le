@@ -222,5 +222,6 @@
   "Extracted the colors, but could not copy them to the clipboard: {0}": "已提取颜色，但无法复制到剪贴板：{0}",
   "Could not replace the document contents: the edit was rejected.": "无法替换文档内容：编辑被拒绝。",
   "Could not deduplicate: the edit was rejected.": "无法去重：编辑被拒绝。",
-  "Could not sort: the edit was rejected.": "无法排序：编辑被拒绝。"
+  "Could not sort: the edit was rejected.": "无法排序：编辑被拒绝。",
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "无法从 {0} 个文件中读取颜色，因此它们不在此报告中：{1}"
 }

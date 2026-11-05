@@ -222,5 +222,6 @@
   "Extracted the colors, but could not copy them to the clipboard: {0}": "Цвета извлечены, но их не удалось скопировать в буфер обмена: {0}",
   "Could not replace the document contents: the edit was rejected.": "Не удалось заменить содержимое документа: изменение отклонено.",
   "Could not deduplicate: the edit was rejected.": "Не удалось выполнить дедупликацию: изменение отклонено.",
-  "Could not sort: the edit was rejected.": "Не удалось отсортировать: изменение отклонено."
+  "Could not sort: the edit was rejected.": "Не удалось отсортировать: изменение отклонено.",
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не удалось прочитать цвета из файлов ({0}), поэтому их нет в этом отчёте: {1}"
 }

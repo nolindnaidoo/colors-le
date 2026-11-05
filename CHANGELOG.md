@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **A folder report names a file the reader failed on.** The failure was caught and the file counted as read with no colours.
 - **An empty document is no colours, not a failure.** Extract showed "Extraction failed: Content is empty or invalid" as an error, and the `extract_colors` tool on the extension's and the npm server answered `ok: false` where the crate's answers `ok: true`.
 - **Filter's presets drop the colours their labels exclude.** "Lightness < 30%" kept a colour at exactly 30%, which "30% ≤ Lightness ≤ 70%" also kept, and the same at 70% and for the two saturation presets. The filter report shows the bound as 29% or 71%.
 - **Convert and Validate's contrast read a colour as every other command does.** They had a reader of their own that rounded a channel landing on .5 down, so `hsl(210, 50%, 50%)` converted to `#407fbf` where CSS gives `#4080bf`. An `rgba()` with an alpha of 1 is converted as opaque, with no `ff` appended. Filter's Exclude transparent drops `#f000`, `rgb(0 0 0 / 0)` and every other notation with zero alpha, where it knew only `transparent`, `rgba()`, `hsla()` and eight-digit hex.

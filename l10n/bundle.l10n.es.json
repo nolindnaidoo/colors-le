@@ -222,5 +222,6 @@
   "Extracted the colors, but could not copy them to the clipboard: {0}": "Se extrajeron los colores, pero no se pudieron copiar al portapapeles: {0}",
   "Could not replace the document contents: the edit was rejected.": "No se pudo reemplazar el contenido del documento: se rechazó la edición.",
   "Could not deduplicate: the edit was rejected.": "No se pudo deduplicar: se rechazó la edición.",
-  "Could not sort: the edit was rejected.": "No se pudo ordenar: se rechazó la edición."
+  "Could not sort: the edit was rejected.": "No se pudo ordenar: se rechazó la edición.",
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "No se pudieron leer los colores de {0} archivo(s), así que no están en este informe: {1}"
 }

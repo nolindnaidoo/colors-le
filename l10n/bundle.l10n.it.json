@@ -222,5 +222,6 @@
   "Extracted the colors, but could not copy them to the clipboard: {0}": "I colori sono stati estratti, ma non è stato possibile copiarli negli appunti: {0}",
   "Could not replace the document contents: the edit was rejected.": "Impossibile sostituire il contenuto del documento: la modifica è stata rifiutata.",
   "Could not deduplicate: the edit was rejected.": "Impossibile deduplicare: la modifica è stata rifiutata.",
-  "Could not sort: the edit was rejected.": "Impossibile ordinare: la modifica è stata rifiutata."
+  "Could not sort: the edit was rejected.": "Impossibile ordinare: la modifica è stata rifiutata.",
+  "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Non è stato possibile leggere i colori di {0} file, quindi non sono in questo report: {1}"
 }

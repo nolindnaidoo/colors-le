@@ -106,6 +106,7 @@ async function extractWorkspace(
 				limits,
 			);
 			const found = new Map<string, Occurrence[]>();
+			const failed: string[] = [];
 			let total = 0;
 			const scanned = await scanFiles(
 				root,
@@ -117,10 +118,17 @@ async function extractWorkspace(
 						message: vscode.l10n.t('{0} of {1} files', done, all),
 					}),
 				({ file, text }) => {
-					for (const color of extractColorsFromText(
-						text,
-						resolveFormat(undefined, file),
-					)) {
+					let colors: ReturnType<typeof extractColorsFromText>;
+					try {
+						colors = extractColorsFromText(
+							text,
+							resolveFormat(undefined, file),
+						);
+					} catch {
+						failed.push(file);
+						return true;
+					}
+					for (const color of colors) {
 						if (total >= config.workspaceScanMaxResults) return false;
 						const occurrence = {
 							file,
@@ -156,6 +164,7 @@ async function extractWorkspace(
 						summary,
 						limits,
 						positions,
+						failed,
 					}),
 				config,
 				deps,
@@ -220,6 +229,8 @@ export interface ExtractWorkspaceReportInput {
 	readonly summary: ScanSummary;
 	readonly limits: ScanLimits;
 	readonly positions?: boolean;
+	/** Files the reader threw on, which were read and yielded nothing. */
+	readonly failed?: readonly string[];
 }
 
 /**
@@ -233,6 +244,7 @@ export function formatExtractWorkspaceReport({
 	summary,
 	limits,
 	positions = true,
+	failed = [],
 }: ExtractWorkspaceReportInput): string {
 	const lines: string[] = [
 		`# ${vscode.l10n.t('{0} workspace report', 'Colors-LE')}`,
@@ -280,6 +292,14 @@ export function formatExtractWorkspaceReport({
 	}
 
 	const notes = unreadNotes(summary, limits, code('colors-le.workspace.*'));
+	if (failed.length > 0)
+		notes.push(
+			vscode.l10n.t(
+				'Colors could not be read from {0} file(s), so they are not in this report: {1}',
+				failed.length,
+				failed.map(code).join(', '),
+			),
+		);
 	if (notes.length > 0) lines.push(...notes.map((note) => `> ${note}`), '');
 	return lines.join('\n');
 }
