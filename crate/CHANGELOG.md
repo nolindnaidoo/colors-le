@@ -12,6 +12,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`--help` lists `--palette` among its options**, and shows `--format`
+  as required with `--stdin`, as it is.
 - **`colors_le_scan` names a skipped file at the top of its answer**, as a
   warning, as it was written to. It matched on an error severity, and a
   skip is a warning, so it never did.

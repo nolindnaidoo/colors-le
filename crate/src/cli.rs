@@ -15,7 +15,7 @@ use crate::scan::{self, FileReport, ScanOptions};
 use crate::walk::{self, WalkOptions};
 
 const USAGE: &str = "usage: colors-le [options] <file|dir>...
-       colors-le [options] --stdin [--format <format>]
+       colors-le [options] --stdin --format <format>
        colors-le mcp
        colors-le --version | --help
 
@@ -36,6 +36,9 @@ over silently and counted in the summary. It was never a text candidate,
 so it is not a file that failed to be read.
 
 Options:
+  --palette <file>     a list of approved colours; anything else is a
+                       finding. One per line, a JSON array, or a flat
+                       JSON object's values
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
                        file name; a name this does not know is refused
@@ -420,11 +423,17 @@ mod tests {
 
     #[test]
     fn every_documented_flag_is_parsed_and_the_reverse() {
-        let mut documented: Vec<&str> = USAGE
-            .split_whitespace()
+        // The Options block, not the whole text: a flag named only in prose
+        // passed this while the list a reader scans left it out.
+        let options = USAGE
+            .split_once("Options:")
+            .and_then(|(_, rest)| rest.split_once("\n\n"))
+            .map(|(block, _)| block)
+            .expect("an Options block");
+        let mut documented: Vec<&str> = options
+            .lines()
+            .filter_map(|line| line.split_whitespace().next())
             .filter(|word| word.starts_with("--"))
-            .map(|word| word.trim_end_matches([',', '.', ':', ';']))
-            .filter(|word| !matches!(*word, "--version" | "--help"))
             .collect();
         documented.sort_unstable();
         documented.dedup();

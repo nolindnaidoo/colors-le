@@ -33,11 +33,14 @@ const noDeps = Object.freeze({
 
 describe('usage', () => {
 	it('names every flag the parser accepts, and no other', () => {
+		// The Options block, not the whole text: a flag named only in prose
+		// passed this while the list a reader scans left it out.
+		const block = USAGE.split('Options:')[1]?.split('\n\n')[0] ?? '';
 		const named = new Set(
-			USAGE.split(/\s+/)
-				.filter((word) => word.startsWith('--'))
-				.map((word) => word.replace(/[,.:;]+$/, ''))
-				.filter((word) => word !== '--version' && word !== '--help'),
+			block
+				.split('\n')
+				.map((line) => line.trim().split(/\s+/)[0] ?? '')
+				.filter((word) => word.startsWith('--')),
 		);
 		expect([...named].sort()).toEqual([...FLAGS].sort());
 	});
