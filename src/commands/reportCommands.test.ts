@@ -82,6 +82,21 @@ describe('colors-le.analyze', () => {
 		expect(text).toContain('| `#ff0000` | 2 | 40.0% |');
 	});
 
+	it('says how many colors its two tables leave out', async () => {
+		registerAnalyzeCommand(makeContext());
+		const lines = Array.from(
+			{ length: 25 },
+			(_, i) => `.c${i} { color: #${(i + 1).toString(16).padStart(6, '0')}; }`,
+		);
+		_setActiveEditor(
+			_createDocument({ content: lines.join('\n'), languageId: 'css' }),
+		);
+		await runCommand('colors-le.analyze');
+		const text = report();
+		expect(text).toContain('*The 10 most common of 25 distinct colors.*');
+		expect(text).toContain('*5 more colors not shown.*');
+	});
+
 	it('warns when there is no active editor', async () => {
 		_setConfig('colors-le.notificationsLevel', 'important');
 		registerAnalyzeCommand(makeContext());

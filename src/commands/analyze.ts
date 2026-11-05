@@ -171,6 +171,11 @@ function generateAnalysisReport(
 				`| \`${color.color}\` | ${color.count} | ${color.percentage.toFixed(1)}% |`,
 			);
 		}
+		if (statistics.unique > statistics.mostCommon.length)
+			report.push(
+				'',
+				`*The ${statistics.mostCommon.length} most common of ${statistics.unique} distinct colors.*`,
+			);
 		report.push('');
 	}
 
@@ -314,6 +319,8 @@ function generateAnalysisReport(
 				`| \`${usage.color}\` | ${usage.frequency} | ${contexts}${moreContexts} |`,
 			);
 		}
+		if (palette.usage.length > 20)
+			report.push('', `*${palette.usage.length - 20} more colors not shown.*`);
 		report.push('');
 	}
 

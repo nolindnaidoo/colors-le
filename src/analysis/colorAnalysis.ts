@@ -378,7 +378,9 @@ export function clusterColors(
 		}
 	}
 
-	return Object.freeze(clusters.slice(0, maxClusters));
+	// Every hue range that holds a colour: the first five in wheel order
+	// dropped Blue and Magenta whenever the warmer ranges were full.
+	return Object.freeze(clusters);
 }
 
 /**
