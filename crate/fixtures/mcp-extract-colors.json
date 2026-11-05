@@ -607,6 +607,46 @@
 		}
 	},
 	{
+		"name": "an empty document is nothing found, not a failure",
+		"content": "",
+		"arguments": {
+			"format": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 0,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "a document of whitespace is nothing found, not a failure",
+		"content": " \n\t\n",
+		"arguments": {
+			"format": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 0,
+				"truncated": false
+			}
+		}
+	},
+	{
 		"name": "content must be a string",
 		"arguments": {
 			"format": "css"

@@ -194,12 +194,14 @@ describe('colors-le.extractColors', () => {
 		expect(_shownMessages()[0]?.kind).toBe('error');
 	});
 
-	it('reports empty documents as info, not error', async () => {
+	it.each([
+		['a document with no colors', 'p { margin: 0; }'],
+		['an empty document', ''],
+		['a document of whitespace', ' \n\t\n'],
+	])('reports %s as no colors found, not an error', async (_name, content) => {
 		_setConfig('colors-le.notificationsLevel', 'all');
 		registerExtractCommand(makeContext(), makeDeps());
-		_setActiveEditor(
-			_createDocument({ content: 'p { margin: 0; }', languageId: 'css' }),
-		);
+		_setActiveEditor(_createDocument({ content, languageId: 'css' }));
 		await runCommand('colors-le.extractColors');
 		expect(
 			_shownMessages().some((m) => m.message.includes('No colors found')),

@@ -22,17 +22,13 @@ export async function extractColors(
 	const startTime = Date.now();
 	const fileType = determineFileType(languageId);
 
-	if (!content || content.trim().length === 0) {
+	// An empty document holds no colours. That is an answer, not a failure:
+	// the crate's server answers it `ok`, and Extract says no colours.
+	if (content.trim().length === 0) {
 		return Object.freeze({
-			success: false,
+			success: true,
 			colors: Object.freeze([]),
-			errors: Object.freeze([
-				{
-					type: 'validation-error' as const,
-					message: 'Content is empty or invalid',
-					filepath: options.filepath,
-				},
-			]),
+			errors: Object.freeze([]),
 			warnings: Object.freeze([]),
 			metadata: options.includeMetadata
 				? Object.freeze({
