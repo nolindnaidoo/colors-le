@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TOOLS } from '../mcp/tools';
+import { parseColor, rgbToHex } from '../utils/colorConversion';
 import { parse } from './args';
 import { rustIoMessage } from './ioError';
 import { serve } from './mcp';
@@ -108,6 +109,20 @@ describe('palette', () => {
 			['hsl(0, 100%, 150%)', 'hsl(0, 100%, 100%)'],
 		] as const)
 			expect(paletteContains(parsePalette(same).palette, hsl), hsl).toBe(true);
+	});
+
+	it('resolves every legacy hsl to the colour the extension reads', () => {
+		const misses: string[] = [];
+		for (let h = 0; h < 360; h += 5)
+			for (let sat = 0; sat <= 100; sat += 10)
+				for (let l = 0; l <= 100; l += 5) {
+					const hsl = `hsl(${h}, ${sat}%, ${l}%)`;
+					const rgb = parseColor(hsl);
+					if (rgb === null) throw new Error(hsl);
+					if (!paletteContains(parsePalette(rgbToHex(rgb)).palette, hsl))
+						misses.push(`${hsl} is not ${rgbToHex(rgb)}`);
+				}
+		expect(misses).toEqual([]);
 	});
 
 	it('keeps a named colour equal only to itself', () => {

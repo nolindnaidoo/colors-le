@@ -12,6 +12,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A palette's `hsl()` resolves to the colour CSS gives.** A channel that
+  lands on .5 was computed a hair under it and rounded down, so
+  `hsl(210, 50%, 50%)` matched `#407fbf` and not `#4080bf`, and so on for
+  hundreds of hsl values. The npm command line's `--palette` reads them
+  the same way.
 - **A palette's legacy `hsl()` reads a hue round the wheel and clamps its
   percentages.** A hue past 720 or below 0, or a saturation past 100%,
   resolved to another colour.
