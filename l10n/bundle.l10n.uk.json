@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "Розмір файлу ({0} байт) перевищує поріг безпеки ({1} байт)",
   "Safety checks passed with {0} warning(s)": "Перевірки безпеки пройдено, попереджень: {0}",
   "Safety checks passed": "Перевірки безпеки пройдено",
-  "Large file detected: {0} lines (threshold: {1})": "Виявлено великий файл: {0} рядків (поріг: {1})",
   "Large number of colors detected: an estimated {0}": "Виявлено багато кольорів: приблизно {0}",
   "Continue Anyway": "Усе одно продовжити",
   "Cancel": "Скасувати",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не вдалося прочитати кольори з файлів ({0}), тому їх немає в цьому звіті: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Досягнуто ліміту результатів {0}. Наступні кольори у цьому файлі не було враховано.",
   "Round lightness and chroma to three decimals, hue to two": "Округлити світлість і хроматичність до трьох знаків, тон — до двох",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Видобути кольори з папки» читає папки. Вибрані елементи, що не є папками ({0}), пропущено."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Видобути кольори з папки» читає папки. Вибрані елементи, що не є папками ({0}), пропущено.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "Рядків результату: {0} — більше за {1}, дозволених налаштуванням безпеки перед відкриттям або копіюванням."
 }

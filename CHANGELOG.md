@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **The two safety thresholds measure what their settings say.** `safety.largeOutputLinesThreshold` counted the document's lines before extraction, so a one-line document with a thousand colours never warned, and its warning was a toast the default notification level hides; Extract now asks, in a dialog, before opening or copying more result lines than it allows. `safety.fileSizeWarnBytes` compared UTF-16 units in Extract and bytes in a folder scan; both count bytes.
 - **Extract Colors from Folder scans every folder of an Explorer multi-selection**, one report each, and says how many selected items were not folders. It scanned the folder that was clicked and said nothing about the rest.
 - **`colors_le_scan` on the npm command line names a skipped file at the top of its answer**, as a warning, as it was written to. It matched on an error severity, and a skip is a warning, so it never did.
 - **Convert asks only the questions that change its output.** "Round values?" was asked for every target and changed nothing but OKLCH, whose values are the only ones with decimals; it is asked for OKLCH alone and says what it rounds. "Preserve alpha channel?" was asked for rgb() and hsl(), which never carry alpha, and not for OKLCH, which dropped alpha every time; it is asked for hex and OKLCH.

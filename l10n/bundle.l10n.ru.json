@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "Размер файла ({0} байт) превышает порог безопасности ({1} байт)",
   "Safety checks passed with {0} warning(s)": "Проверки безопасности пройдены, предупреждений: {0}",
   "Safety checks passed": "Проверки безопасности пройдены",
-  "Large file detected: {0} lines (threshold: {1})": "Обнаружен большой файл: {0} строк (порог: {1})",
   "Large number of colors detected: an estimated {0}": "Обнаружено много цветов: примерно {0}",
   "Continue Anyway": "Всё равно продолжить",
   "Cancel": "Отмена",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не удалось прочитать цвета из файлов ({0}), поэтому их нет в этом отчёте: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Достигнут лимит результатов {0}. Последующие цвета в этом файле не были учтены.",
   "Round lightness and chroma to three decimals, hue to two": "Округлить светлоту и хроматичность до трёх знаков, тон — до двух",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Извлечь цвета из папки» читает папки. Выбранные элементы, не являющиеся папками ({0}), пропущены."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Извлечь цвета из папки» читает папки. Выбранные элементы, не являющиеся папками ({0}), пропущены.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "Строк результата: {0} — больше {1}, допустимых настройкой безопасности перед открытием или копированием."
 }

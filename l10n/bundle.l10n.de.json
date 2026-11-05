@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "Dateigröße ({0} Byte) überschreitet den Sicherheitsschwellenwert ({1} Byte)",
   "Safety checks passed with {0} warning(s)": "Sicherheitsprüfungen mit {0} Warnung(en) bestanden",
   "Safety checks passed": "Sicherheitsprüfungen bestanden",
-  "Large file detected: {0} lines (threshold: {1})": "Große Datei erkannt: {0} Zeilen (Schwellenwert: {1})",
   "Large number of colors detected: an estimated {0}": "Große Anzahl an Farben erkannt: geschätzt {0}",
   "Continue Anyway": "Trotzdem fortfahren",
   "Cancel": "Abbrechen",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Aus {0} Datei(en) konnten keine Farben gelesen werden, daher fehlen sie in diesem Bericht: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Das Ergebnislimit von {0} wurde erreicht. Die Farben danach in dieser Datei wurden nicht gezählt.",
   "Round lightness and chroma to three decimals, hue to two": "Helligkeit und Buntheit auf drei Dezimalstellen runden, den Farbton auf zwei",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "„Farben aus dem Ordner extrahieren“ liest Ordner. {0} ausgewählte Element(e), die keine Ordner sind, wurden ausgelassen."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "„Farben aus dem Ordner extrahieren“ liest Ordner. {0} ausgewählte Element(e), die keine Ordner sind, wurden ausgelassen.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "{0} Ergebniszeilen, mehr als die {1}, die die Sicherheitseinstellung vor dem Öffnen oder Kopieren zulässt."
 }

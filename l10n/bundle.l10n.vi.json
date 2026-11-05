@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "Kích thước tệp ({0} byte) vượt quá ngưỡng an toàn ({1} byte)",
   "Safety checks passed with {0} warning(s)": "Đã vượt qua kiểm tra an toàn với {0} cảnh báo",
   "Safety checks passed": "Đã vượt qua kiểm tra an toàn",
-  "Large file detected: {0} lines (threshold: {1})": "Phát hiện tệp lớn: {0} dòng (ngưỡng: {1})",
   "Large number of colors detected: an estimated {0}": "Phát hiện nhiều màu: ước tính {0}",
   "Continue Anyway": "Vẫn tiếp tục",
   "Cancel": "Hủy",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Không thể đọc màu từ {0} tệp, nên chúng không có trong báo cáo này: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Đã đạt giới hạn kết quả {0}. Các màu sau đó trong tệp này không được đếm.",
   "Round lightness and chroma to three decimals, hue to two": "Làm tròn độ sáng và độ bão hòa đến ba chữ số thập phân, sắc độ đến hai",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "\"Trích xuất màu từ thư mục\" đọc thư mục. Đã bỏ qua {0} mục được chọn không phải thư mục."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "\"Trích xuất màu từ thư mục\" đọc thư mục. Đã bỏ qua {0} mục được chọn không phải thư mục.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "{0} dòng kết quả, nhiều hơn {1} dòng mà cài đặt an toàn cho phép trước khi mở hoặc sao chép."
 }

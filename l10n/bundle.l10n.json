@@ -184,7 +184,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "File size ({0} bytes) exceeds the safety threshold ({1} bytes)",
   "Safety checks passed with {0} warning(s)": "Safety checks passed with {0} warning(s)",
   "Safety checks passed": "Safety checks passed",
-  "Large file detected: {0} lines (threshold: {1})": "Large file detected: {0} lines (threshold: {1})",
   "Large number of colors detected: an estimated {0}": "Large number of colors detected: an estimated {0}",
   "Continue Anyway": "Continue Anyway",
   "Cancel": "Cancel",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Colors could not be read from {0} file(s), so they are not in this report: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "The results limit of {0} was reached. The colors after it in that file were not counted.",
   "Round lightness and chroma to three decimals, hue to two": "Round lightness and chroma to three decimals, hue to two",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "{0} result lines, more than the {1} the safety setting allows before opening or copying them."
 }

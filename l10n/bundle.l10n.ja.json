@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "ファイルサイズ ({0} バイト) が安全しきい値 ({1} バイト) を超えています",
   "Safety checks passed with {0} warning(s)": "安全チェックに合格しました（警告 {0} 件）",
   "Safety checks passed": "安全チェックに合格しました",
-  "Large file detected: {0} lines (threshold: {1})": "大きなファイルを検出しました: {0} 行（しきい値: {1}）",
   "Large number of colors detected: an estimated {0}": "多数の色を検出しました: 推定 {0} 色",
   "Continue Anyway": "このまま続行",
   "Cancel": "キャンセル",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0} 個のファイルから色を読み取れなかったため、このレポートには含まれていません：{1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "結果の上限 {0} に達しました。そのファイル内のそれ以降の色は数えられていません。",
   "Round lightness and chroma to three decimals, hue to two": "明度と彩度を小数点以下3桁、色相を2桁に丸める",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "「フォルダーから色を抽出」はフォルダーを読み取ります。フォルダーではない選択項目 {0} 個は除外されました。"
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "「フォルダーから色を抽出」はフォルダーを読み取ります。フォルダーではない選択項目 {0} 個は除外されました。",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "結果は {0} 行で、安全設定が開く・コピーする前に許可する {1} 行を超えています。"
 }

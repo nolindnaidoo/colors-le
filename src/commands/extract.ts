@@ -9,7 +9,10 @@ import { copyResults } from '../utils/clipboard';
 import { dedupeColors } from '../utils/dedupe';
 import { describeError, sanitizeErrorMessage } from '../utils/errors';
 import { onValues, positioned, withPosition } from '../utils/positions';
-import { handleSafetyChecksWithUserConfirmation } from '../utils/safety';
+import {
+	confirmLargeOutput,
+	handleSafetyChecksWithUserConfirmation,
+} from '../utils/safety';
 import { guarded } from './guard';
 import { deliverResults } from './output';
 
@@ -47,7 +50,6 @@ export function registerExtractCommand(
 					allowOverride: true,
 					customThresholds: {
 						fileSizeBytes: config.safetyFileSizeWarnBytes,
-						lineCount: config.safetyLargeOutputLinesThreshold,
 					},
 				},
 			);
@@ -126,6 +128,8 @@ export function registerExtractCommand(
 					// By color, keeping the first: with positions every line differs.
 					formattedColors = onValues(formattedColors, dedupeColors);
 				}
+
+				if (!(await confirmLargeOutput(formattedColors.length, config))) return;
 
 				const all = formattedColors.join('\n');
 				const delivered = await deliverResults(

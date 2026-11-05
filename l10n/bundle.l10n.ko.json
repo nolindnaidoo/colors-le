@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "파일 크기({0}바이트)가 안전 임계값({1}바이트)을 초과합니다",
   "Safety checks passed with {0} warning(s)": "안전 검사를 통과했습니다(경고 {0}개)",
   "Safety checks passed": "안전 검사를 통과했습니다",
-  "Large file detected: {0} lines (threshold: {1})": "대용량 파일 감지: {0}줄(임계값: {1})",
   "Large number of colors detected: an estimated {0}": "많은 수의 색상 감지: 약 {0}개",
   "Continue Anyway": "계속 진행",
   "Cancel": "취소",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0}개 파일에서 색상을 읽을 수 없어 이 보고서에 포함되지 않았습니다: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "결과 제한 {0}에 도달했습니다. 해당 파일에서 그 이후의 색상은 집계되지 않았습니다.",
   "Round lightness and chroma to three decimals, hue to two": "명도와 채도는 소수점 셋째 자리, 색상은 둘째 자리로 반올림",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "'폴더에서 색상 추출'은 폴더를 읽습니다. 폴더가 아닌 선택 항목 {0}개는 제외되었습니다."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "'폴더에서 색상 추출'은 폴더를 읽습니다. 폴더가 아닌 선택 항목 {0}개는 제외되었습니다.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "결과가 {0}줄로, 안전 설정이 열거나 복사하기 전에 허용하는 {1}줄보다 많습니다."
 }

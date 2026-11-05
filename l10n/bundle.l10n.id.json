@@ -181,7 +181,6 @@
   "File size ({0} bytes) exceeds the safety threshold ({1} bytes)": "Ukuran file ({0} byte) melebihi ambang batas keamanan ({1} byte)",
   "Safety checks passed with {0} warning(s)": "Pemeriksaan keamanan lolos dengan {0} peringatan",
   "Safety checks passed": "Pemeriksaan keamanan lolos",
-  "Large file detected: {0} lines (threshold: {1})": "File besar terdeteksi: {0} baris (ambang: {1})",
   "Large number of colors detected: an estimated {0}": "Banyak warna terdeteksi: sekitar {0}",
   "Continue Anyway": "Tetap Lanjutkan",
   "Cancel": "Batal",
@@ -225,5 +224,6 @@
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Warna tidak dapat dibaca dari {0} file, jadi tidak ada di laporan ini: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Batas hasil {0} telah tercapai. Warna setelahnya di file tersebut tidak dihitung.",
   "Round lightness and chroma to three decimals, hue to two": "Bulatkan kecerahan dan kroma ke tiga desimal, rona ke dua",
-  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "\"Ekstrak Warna dari Folder\" membaca folder. {0} item terpilih yang bukan folder dilewati."
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "\"Ekstrak Warna dari Folder\" membaca folder. {0} item terpilih yang bukan folder dilewati.",
+  "{0} result lines, more than the {1} the safety setting allows before opening or copying them.": "{0} baris hasil, lebih dari {1} yang diizinkan pengaturan keamanan sebelum dibuka atau disalin."
 }

@@ -6,6 +6,7 @@ import {
 	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
+	_respondToWarning,
 	_setActiveEditor,
 	_setApplyEditResult,
 	_setClipboardError,
@@ -192,6 +193,28 @@ describe('colors-le.extractColors', () => {
 		registerExtractCommand(makeContext(), makeDeps());
 		await runCommand('colors-le.extractColors');
 		expect(_shownMessages()[0]?.kind).toBe('error');
+	});
+
+	it('asks before opening or copying more result lines than the safety setting allows', async () => {
+		_setConfig('colors-le.safety.largeOutputLinesThreshold', 100);
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		registerExtractCommand(makeContext(), makeDeps());
+		// One line holding 150 colours: the document's line count is 1.
+		_setActiveEditor(
+			_createDocument({
+				content: Array.from({ length: 150 }, () => 'color: #123456;').join(' '),
+				languageId: 'css',
+			}),
+		);
+		const asked: string[] = [];
+		_respondToWarning((items) => {
+			asked.push(String(items.length));
+			return undefined;
+		});
+		await runCommand('colors-le.extractColors');
+		expect(asked).toHaveLength(1);
+		expect(_openedDocuments()).toHaveLength(0);
+		expect(_clipboardText()).toBe('');
 	});
 
 	it.each([
