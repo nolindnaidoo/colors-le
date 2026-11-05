@@ -12,6 +12,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`colors_le_scan` names a skipped file at the top of its answer**, as a
+  warning, as it was written to. It matched on an error severity, and a
+  skip is a warning, so it never did.
 - **A document with many colours is scanned in linear time.** Settling the
   matches looked each one up in a list of those before it: 200,000
   colours in one file took 1.5 s and 400,000 nearly 6 s. The budget suite

@@ -73,8 +73,10 @@ async function scan(args: Record<string, unknown>): Promise<unknown> {
 		0,
 	);
 	const diagnostics = reports
+		// A skip is a warning, so matching on an error severity, as this did,
+		// reached no report at all.
 		.filter((report) =>
-			report.diagnostics.some((found) => found.severity === 'error'),
+			report.diagnostics.some((found) => found.code === 'skipped'),
 		)
 		.map((report) => ({
 			severity: 'warning' as const,

@@ -616,6 +616,33 @@ describe('mcp: the tools over the crate framing', () => {
 		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"${name}","arguments":${args}}}\n`;
 	const refusal = (reply: string) => JSON.parse(reply).error;
 
+	it('names a skipped file at the top of a scan, as a warning', async () => {
+		const root = mkdtempSync(join(tmpdir(), 'colors-le-scan-skipped-'));
+		const files = [join(root, 'theme.css'), join(root, 'latin1.css')];
+		writeFileSync(files[0] as string, '.a{color:#1a2b3c}\n');
+		writeFileSync(
+			files[1] as string,
+			Buffer.from([0x23, 0x66, 0x66, 0x66, 0xe9]),
+		);
+		try {
+			const { written } = await session([
+				call('colors_le_scan', JSON.stringify({ path: root })),
+			]);
+			const answer = JSON.parse(written[0] as string).result.structuredContent;
+			expect(answer.ok).toBe(true);
+			expect(answer.diagnostics).toEqual([
+				{
+					severity: 'warning',
+					code: 'unreadable',
+					message: `${files[1]} could not be read, so this scan does not cover it`,
+				},
+			]);
+		} finally {
+			for (const file of files) unlinkSync(file);
+			rmdirSync(root);
+		}
+	});
+
 	it('refuses a wrong-typed or undeclared argument as a protocol error, and a path that is not there as a tool failure', async () => {
 		// A `hidden: "yes"` was read as false and a `format: 7` as absent, and
 		// an argument the schema does not declare was accepted, on this

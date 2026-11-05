@@ -382,9 +382,11 @@ fn scan_tool(arguments: &Value) -> Result<Value, Refusal> {
     let diagnostics: Vec<Value> = reports
         .iter()
         .filter(|report| {
+            // A skip is a warning, so matching on an error severity, as
+            // this did, reached no report at all.
             report["diagnostics"]
                 .as_array()
-                .is_some_and(|list| list.iter().any(|d| d["severity"] == "error"))
+                .is_some_and(|list| list.iter().any(|d| d["code"] == "skipped"))
         })
         .map(|report| {
             warning(
@@ -958,6 +960,34 @@ mod tests {
         let data = &response["result"]["structuredContent"]["data"];
         assert_eq!(data["reports"].as_array().expect("a list").len(), 1);
         assert_eq!(data["binarySkipped"], 1);
+    }
+
+    /// A file that looked like text and was not read is named at the top
+    /// of the answer too, not only inside its own report.
+    #[test]
+    fn the_scan_tool_names_a_skipped_file_in_its_diagnostics() {
+        let tree = TempTree::new("mcp-skipped");
+        tree.write("theme.css", ".a{color:#1a2b3c}\n");
+        std::fs::write(
+            tree.path().join("latin1.css"),
+            [b'#', b'f', b'f', b'f', 0xe9],
+        )
+        .expect("a file");
+        let response = call(
+            "colors_le_scan",
+            &json!({ "path": tree.path().to_string_lossy() }),
+        );
+        let answer = &response["result"]["structuredContent"];
+        let diagnostics = answer["diagnostics"].as_array().expect("a list");
+        assert_eq!(diagnostics.len(), 1, "{answer}");
+        assert_eq!(diagnostics[0]["code"], "unreadable");
+        assert!(
+            diagnostics[0]["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("latin1.css")),
+            "{answer}"
+        );
+        assert_eq!(answer["ok"], true, "a skip is a warning");
     }
 
     /// A format the caller named and this cannot resolve is refused,

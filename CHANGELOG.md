@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **`colors_le_scan` on the npm command line names a skipped file at the top of its answer**, as a warning, as it was written to. It matched on an error severity, and a skip is a warning, so it never did.
 - **Convert asks only the questions that change its output.** "Round values?" was asked for every target and changed nothing but OKLCH, whose values are the only ones with decimals; it is asked for OKLCH alone and says what it rounds. "Preserve alpha channel?" was asked for rgb() and hsl(), which never carry alpha, and not for OKLCH, which dropped alpha every time; it is asked for hex and OKLCH.
 - **The Quick Fix is no longer registered for `yml`**, which is a file extension and not a language id, so the registration reached nothing. YAML documents keep it through `yaml`.
 - **The npm command line names a FIFO and counts the links it does not follow.** A FIFO, a socket or a device met in a walk was dropped without a word, and one named outright was refused as "Not a directory"; each is now a `skipped` report, "not a regular file", never opened. A `--palette` naming a FIFO waited forever and is refused now. A symbolic link in a walk is still not followed, and stderr ends with the count; `colors_le_scan` carries it as `symbolicLinks`.
