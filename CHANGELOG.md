@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **Translations that said something else are corrected**, after every value in every catalogue was read: "Filter Colors" read as "filter by colour" or "colours of filters" in seven languages, lightness was rendered as weight or clarity in five, Korean contrast validation read as a control group, the Korean editor as a person who edits, the Vietnamese agent mode as a sales agent, and a range as a product line in four. Lightness is one word per language now.
 - **Messages name a command as the palette shows it, in every language.** In Indonesian, Japanese, Brazilian Portuguese, Russian, Ukrainian, Vietnamese and Chinese a message told the user to run a command by a name the palette did not show. In Russian and Ukrainian the palette titles are verbs now, as their messages and every other command title already were, and Ukrainian Deduplicate no longer reads "duplication".
 - **The npm command line's `--help` lists `--palette` among its options**, and shows `--format` as required with `--stdin`, as it is.
 - **The two safety thresholds measure what their settings say.** `safety.largeOutputLinesThreshold` counted the document's lines before extraction, so a one-line document with a thousand colours never warned, and its warning was a toast the default notification level hides; Extract now asks, in a dialog, before opening or copying more result lines than it allows. `safety.fileSizeWarnBytes` compared UTF-16 units in Extract and bytes in a folder scan; both count bytes.

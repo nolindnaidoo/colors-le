@@ -37,7 +37,7 @@
 	"manifest.settings.statusbar.enabled.desc": "Hiển thị mục trạng thái Colors-LE trên thanh trạng thái để truy cập nhanh",
 	"manifest.settings.telemetry.desc": "Bật nhật ký telemetry chỉ cục bộ vào bảng điều khiển Đầu ra",
 	"manifest.capability.untrusted-workspaces.desc": "Chức năng bị giới hạn trong các không gian làm việc không tin cậy",
-	"manifest.mcp.label": "Các công cụ trích xuất màu Colors-LE dành cho chế độ đại lý",
+	"manifest.mcp.label": "Các công cụ trích xuất màu Colors-LE dành cho chế độ tác nhân",
 	"manifest.settings.workspace.excludes.desc": "Mẫu glob của các tệp bổ sung mà lượt quét thư mục hoặc không gian làm việc bỏ qua, ngoài danh sách tích hợp sẵn. Ví dụ: **/fixtures/**",
 	"manifest.settings.workspace.max-files.desc": "Số tệp tối đa mà một lượt quét thư mục hoặc không gian làm việc đọc",
 	"manifest.settings.workspace.max-results.desc": "Số kết quả tối đa mà một lượt quét thư mục hoặc không gian làm việc báo cáo trước khi ngừng đọc",

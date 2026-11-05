@@ -18,7 +18,7 @@
 	"manifest.settings.notifications.level.desc": "Contrôler le niveau de détail des notifications",
 	"manifest.settings.notifications.level.option.all": "Afficher toutes les notifications",
 	"manifest.settings.notifications.level.option.important": "Afficher uniquement les notifications importantes",
-	"manifest.settings.notifications.level.option.silent": "Supprimer toutes les notifications",
+	"manifest.settings.notifications.level.option.silent": "Masquer toutes les notifications",
 	"manifest.settings.open.side-by-side.desc": "Ouvrir les résultats d'extraction dans un nouvel éditeur à côté",
 	"manifest.settings.safety.enabled.desc": "Activer les contrôles de sécurité pour les fichiers et les opérations volumineux",
 	"manifest.settings.safety.warn.file-size.desc": "Avertir lorsque la taille du fichier d'entrée dépasse ce seuil en octets",
