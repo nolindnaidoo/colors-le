@@ -76,7 +76,13 @@ fn restore_permissions(root: &Path) {
         return;
     };
     for entry in entries.flatten() {
-        let _ = std::fs::set_permissions(entry.path(), std::fs::Permissions::from_mode(0o644));
+        // A directory needs its search bit back, or the removal cannot
+        // descend into it and the tree is left in the temporary directory.
+        let mode = match entry.file_type() {
+            Ok(kind) if kind.is_dir() => 0o755,
+            _ => 0o644,
+        };
+        let _ = std::fs::set_permissions(entry.path(), std::fs::Permissions::from_mode(mode));
     }
 }
 
@@ -577,4 +583,14 @@ fn symlink(target: &Path, link: &Path) -> bool {
         }
         std::os::windows::fs::symlink_file(target, link).is_ok()
     }
+}
+
+#[test]
+fn a_tree_holding_a_directory_is_removed_when_dropped() {
+    let tree = Tree::new("dropped");
+    std::fs::create_dir(tree.path().join("sub")).expect("a directory");
+    std::fs::write(tree.path().join("sub").join("a.css"), ".a{}").expect("a file");
+    let root = tree.path().to_path_buf();
+    drop(tree);
+    assert!(!root.exists(), "{} was left behind", root.display());
 }
