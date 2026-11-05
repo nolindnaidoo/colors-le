@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Color } from '../types';
+import { parseColor, rgbToHex } from '../utils/colorConversion';
 import {
 	convertColor,
 	convertColors,
@@ -279,5 +280,32 @@ describe('convertColors: batch behaviour', () => {
 
 	it('returns an empty array for no input', () => {
 		expect(convertColors([], { targetFormat: 'rgb' })).toHaveLength(0);
+	});
+});
+
+describe('Convert reads a colour as every other command does', () => {
+	// Convert and Validate's contrast had a reader of their own, which
+	// rounded a channel that lands on .5 down where CSS rounds it up.
+	it.each([
+		'hsl(210, 50%, 50%)',
+		'hsla(60, 100%, 25%, 0.3)',
+		'hsl(400, 50%, 50%)',
+		'rgb(300, 0, 0)',
+		'#f008',
+		'rebeccapurple',
+		'oklch(0.6 0.2 30)',
+	])('%s', (value) => {
+		const rgb = parseColor(value);
+		const converted = convertColor(color(value), {
+			targetFormat: 'hex',
+			preserveAlpha: true,
+		}).converted;
+		expect(rgb && rgbToHex(rgb)).toBe(converted);
+	});
+
+	it('measures contrast on the same reading', () => {
+		expect(getContrastRatio('hsl(400, 100%, 50%)', 'hsl(40, 100%, 50%)')).toBe(
+			1,
+		);
 	});
 });

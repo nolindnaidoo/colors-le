@@ -4,9 +4,11 @@ import type { Color } from '../types';
 // RgbColor/HslColor); the two were verified equivalent across the 8-bit cube
 // before the duplicate was removed. The interfaces differ only by `readonly`,
 // which TypeScript ignores for assignability.
-import { rgbToHsl as sharedRgbToHsl } from '../utils/colorConversion';
-import { parseModernColor, srgbToOklch } from '../utils/cssColor';
-import { NAMED_COLOR_RGB } from '../utils/namedColors';
+import {
+	parseColor,
+	rgbToHsl as sharedRgbToHsl,
+} from '../utils/colorConversion';
+import { srgbToOklch } from '../utils/cssColor';
 
 export interface ColorConversionOptions {
 	readonly targetFormat: 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'oklch';
@@ -54,7 +56,7 @@ export function convertColor(
 	options: ColorConversionOptions,
 ): ColorConversionResult {
 	try {
-		const rgb = parseColorToRGB(color.value);
+		const rgb = readColor(color.value);
 		if (!rgb) {
 			return Object.freeze({
 				original: color,
@@ -134,145 +136,14 @@ export function getAvailableFormats(): readonly TargetFormat[] {
 }
 
 /**
- * Parse a color string to RGB values
+ * The one reader every command uses, so Convert and Validate's contrast
+ * cannot read a colour differently from Extract, Filter and Analyze. An
+ * alpha of 1 is opaque, so it is dropped rather than written as `ff`.
  */
-function parseColorToRGB(colorString: string): ColorSpace | null {
-	const color = colorString.trim().toLowerCase();
-
-	// Hex colors
-	const hexMatch = color.match(/^#([0-9a-f]{3,8})$/i);
-	if (hexMatch?.[1]) {
-		return parseHexToRGB(hexMatch[1]);
-	}
-
-	// RGB colors
-	const rgbMatch = color.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
-	if (rgbMatch?.[1] && rgbMatch[2] && rgbMatch[3]) {
-		return {
-			r: Number.parseInt(rgbMatch[1], 10),
-			g: Number.parseInt(rgbMatch[2], 10),
-			b: Number.parseInt(rgbMatch[3], 10),
-		};
-	}
-
-	// RGBA colors
-	const rgbaMatch = color.match(
-		/^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/,
-	);
-	if (rgbaMatch?.[1] && rgbaMatch[2] && rgbaMatch[3] && rgbaMatch[4]) {
-		return {
-			r: Number.parseInt(rgbaMatch[1], 10),
-			g: Number.parseInt(rgbaMatch[2], 10),
-			b: Number.parseInt(rgbaMatch[3], 10),
-			a: Number.parseFloat(rgbaMatch[4]),
-		};
-	}
-
-	// HSL colors
-	const hslMatch = color.match(
-		/^hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)$/,
-	);
-	if (hslMatch?.[1] && hslMatch[2] && hslMatch[3]) {
-		const h = Number.parseInt(hslMatch[1], 10);
-		const s = Number.parseInt(hslMatch[2], 10);
-		const l = Number.parseInt(hslMatch[3], 10);
-		return hslToRgb(h, s, l);
-	}
-
-	// HSLA colors
-	const hslaMatch = color.match(
-		/^hsla\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*,\s*([\d.]+)\s*\)$/,
-	);
-	if (hslaMatch?.[1] && hslaMatch[2] && hslaMatch[3] && hslaMatch[4]) {
-		const h = Number.parseInt(hslaMatch[1], 10);
-		const s = Number.parseInt(hslaMatch[2], 10);
-		const l = Number.parseInt(hslaMatch[3], 10);
-		const a = Number.parseFloat(hslaMatch[4]);
-		const rgb = hslToRgb(h, s, l);
-		return rgb ? { ...rgb, a } : null;
-	}
-
-	// Named colors
-	const namedColor = getNamedColorRGB(color);
-	if (namedColor) {
-		return namedColor;
-	}
-
-	// CSS Color 4: space-separated rgb()/hsl(), hwb(), lab(), lch(),
-	// oklab(), oklch(), color().
-	const modern = parseModernColor(color);
-	if (modern) {
-		return modern.a === 1 ? { r: modern.r, g: modern.g, b: modern.b } : modern;
-	}
-
-	return null;
-}
-
-/**
- * Parse hex string to RGB
- */
-function parseHexToRGB(hex: string): ColorSpace | null {
-	if (hex.length === 3 || hex.length === 4) {
-		// Short hex: #rgb[a] -> #rrggbb[aa]
-		hex = hex
-			.split('')
-			.map((char) => char + char)
-			.join('');
-	}
-
-	if (hex.length === 6) {
-		// Standard hex: #rrggbb
-		return {
-			r: Number.parseInt(hex.slice(0, 2), 16),
-			g: Number.parseInt(hex.slice(2, 4), 16),
-			b: Number.parseInt(hex.slice(4, 6), 16),
-		};
-	}
-
-	if (hex.length === 8) {
-		// Hex with alpha: #rrggbbaa
-		return {
-			r: Number.parseInt(hex.slice(0, 2), 16),
-			g: Number.parseInt(hex.slice(2, 4), 16),
-			b: Number.parseInt(hex.slice(4, 6), 16),
-			a: Number.parseInt(hex.slice(6, 8), 16) / 255,
-		};
-	}
-
-	return null;
-}
-
-/**
- * Convert HSL to RGB
- */
-function hslToRgb(h: number, s: number, l: number): ColorSpace | null {
-	h = h / 360;
-	s = s / 100;
-	l = l / 100;
-
-	const hue2rgb = (p: number, q: number, t: number): number => {
-		if (t < 0) t += 1;
-		if (t > 1) t -= 1;
-		if (t < 1 / 6) return p + (q - p) * 6 * t;
-		if (t < 1 / 2) return q;
-		if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-		return p;
-	};
-
-	if (s === 0) {
-		// Achromatic
-		const value = Math.round(l * 255);
-		return { r: value, g: value, b: value };
-	}
-
-	const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-	const p = 2 * l - q;
-
-	return {
-		r: Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
-		g: Math.round(hue2rgb(p, q, h) * 255),
-		b: Math.round(hue2rgb(p, q, h - 1 / 3) * 255),
-	};
+function readColor(value: string): ColorSpace | null {
+	const rgb = parseColor(value);
+	if (rgb === null) return null;
+	return rgb.a === 1 ? { r: rgb.r, g: rgb.g, b: rgb.b } : rgb;
 }
 
 /**
@@ -386,19 +257,10 @@ function rgbToOklchString(
 }
 
 /**
- * Get RGB values for named colors
- */
-function getNamedColorRGB(colorName: string): ColorSpace | null {
-	if (colorName === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
-	const rgb = NAMED_COLOR_RGB[colorName];
-	return rgb ? { r: rgb[0], g: rgb[1], b: rgb[2] } : null;
-}
-
-/**
  * Validate color format
  */
 export function validateColorFormat(color: string, format: string): boolean {
-	const rgb = parseColorToRGB(color);
+	const rgb = readColor(color);
 	if (!rgb) return false;
 
 	switch (format) {
@@ -431,8 +293,8 @@ export function getContrastRatio(
 	color1: string,
 	color2: string,
 ): number | null {
-	const rgb1 = parseColorToRGB(color1);
-	const rgb2 = parseColorToRGB(color2);
+	const rgb1 = readColor(color1);
+	const rgb2 = readColor(color2);
 
 	if (!rgb1 || !rgb2) return null;
 
