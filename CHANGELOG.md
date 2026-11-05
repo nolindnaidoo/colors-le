@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **A legacy `hsl()` hue past 360 reads round the wheel, and a component past its range is clamped.** `hsl(400, 50%, 50%)` read as hue 320 and `rgb(300, 0, 0)` was written back as `#12c0000`, so Analyze, Filter, Validate and the folder palette grouped and judged them wrongly. The npm command line's `--palette` reads them the same way now.
 - **Cancel stops a workspace or folder scan that is on its last file.** The scan read the Cancel button only before each file, so a click during the last read, or while the report was being copied, still opened the report and announced it.
 - **Every message, button, progress title and tooltip goes through the runtime bundle.** Analyze, Convert, Filter, Validate, Deduplicate, Sort, the clipboard, the safety dialog and the status bar spoke English in every locale, and four strings already wrapped for translation were missing from the bundles. A test now reads the source for all of it.
 - **The Named format can be allowed in Validate in every language.** The choice was read off the translated label, so outside English a named color was never allowed.

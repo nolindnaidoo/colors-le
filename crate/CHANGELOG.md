@@ -12,6 +12,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A palette's legacy `hsl()` reads a hue round the wheel and clamps its
+  percentages.** A hue past 720 or below 0, or a saturation past 100%,
+  resolved to another colour.
 - **The MCP server refuses an argument that does not fit the tool's schema
   as a protocol error, `-32602`, in the npm servers' words.** A `format: 7`
   was read as absent, a `hidden: "yes"` as false, an argument the schema

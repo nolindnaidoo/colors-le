@@ -212,9 +212,20 @@ fn resolve_hsl(value: &str) -> Option<[u8; 4]> {
     if parts.len() < 3 {
         return None;
     }
-    let hue = parts[0].parse::<f64>().ok()? / 360.0;
-    let saturation = parts[1].trim_end_matches('%').parse::<f64>().ok()? / 100.0;
-    let lightness = parts[2].trim_end_matches('%').parse::<f64>().ok()? / 100.0;
+    // CSS reads a hue round the wheel and clamps the percentages.
+    let hue = parts[0].parse::<f64>().ok()?.rem_euclid(360.0) / 360.0;
+    let saturation = parts[1]
+        .trim_end_matches('%')
+        .parse::<f64>()
+        .ok()?
+        .clamp(0.0, 100.0)
+        / 100.0;
+    let lightness = parts[2]
+        .trim_end_matches('%')
+        .parse::<f64>()
+        .ok()?
+        .clamp(0.0, 100.0)
+        / 100.0;
     let alpha = parts.get(3).map_or(Some(255), |alpha| to_alpha(alpha))?;
 
     if saturation == 0.0 {
@@ -401,6 +412,18 @@ mod tests {
             ("hsl(210, 50%, 40%)", "#336699"),
         ] {
             assert!(palette(hex).contains(hsl), "{hsl} should resolve to {hex}");
+        }
+    }
+
+    #[test]
+    fn a_legacy_hsl_outside_its_range_reads_as_css_reads_it() {
+        for (hsl, same) in [
+            ("hsl(760, 100%, 50%)", "hsl(40, 100%, 50%)"),
+            ("hsl(-320, 100%, 50%)", "hsl(40, 100%, 50%)"),
+            ("hsl(0, 150%, 50%)", "hsl(0, 100%, 50%)"),
+            ("hsl(0, 100%, 150%)", "hsl(0, 100%, 100%)"),
+        ] {
+            assert!(palette(same).contains(hsl), "{hsl} should read as {same}");
         }
     }
 }

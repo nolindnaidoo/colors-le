@@ -323,3 +323,22 @@ describe('what Extract reports, the readers read', () => {
 		expect(h).toBeLessThan(360);
 	});
 });
+
+describe('a legacy component outside its range', () => {
+	test('reads a hue past 360 round the wheel', () => {
+		expect(parseColor('hsl(400, 50%, 50%)')).toEqual(
+			parseColor('hsl(40, 50%, 50%)'),
+		);
+		expect(parseColor('hsl(720, 100%, 50%)')).toEqual(
+			parseColor('hsl(0, 100%, 50%)'),
+		);
+	});
+
+	test('clamps a channel past 255, a percentage past 100 and an alpha past 1', () => {
+		expect(parseColor('rgb(300, 0, 0)')).toEqual({ r: 255, g: 0, b: 0 });
+		expect(parseColor('rgba(0, 0, 0, 5)')).toEqual({ r: 0, g: 0, b: 0, a: 1 });
+		expect(parseColor('hsl(0, 150%, 50%)')).toEqual(
+			parseColor('hsl(0, 100%, 50%)'),
+		);
+	});
+});

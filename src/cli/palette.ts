@@ -191,7 +191,14 @@ function resolveHsl(value: string): Rgba | null {
 	if (hue === null || saturation === null || lightness === null) return null;
 	const alpha = parts[3] === undefined ? 255 : toAlpha(parts[3]);
 	if (alpha === null) return null;
-	return hslToRgba(hue / 360, saturation / 100, lightness / 100, alpha);
+	// CSS reads a hue round the wheel and clamps the percentages.
+	const percent = (value: number) => Math.min(Math.max(value, 0), 100) / 100;
+	return hslToRgba(
+		(((hue % 360) + 360) % 360) / 360,
+		percent(saturation),
+		percent(lightness),
+		alpha,
+	);
 }
 
 function hslToRgba(

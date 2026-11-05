@@ -95,10 +95,12 @@ function parseRgb(rgb: string): RgbColor | null {
 	);
 	if (!match) return null;
 
-	const r = parseInt(match[1] ?? '0', 10);
-	const g = parseInt(match[2] ?? '0', 10);
-	const b = parseInt(match[3] ?? '0', 10);
-	const a = match[4] ? parseFloat(match[4]) : undefined;
+	// CSS clamps a channel past 255 and an alpha past 1 rather than refusing
+	// them, and a channel left at 300 is written back as a seven-digit hex.
+	const r = Math.min(255, parseInt(match[1] ?? '0', 10));
+	const g = Math.min(255, parseInt(match[2] ?? '0', 10));
+	const b = Math.min(255, parseInt(match[3] ?? '0', 10));
+	const a = match[4] ? Math.min(1, parseFloat(match[4])) : undefined;
 
 	return { r, g, b, a };
 }
@@ -109,10 +111,12 @@ function parseHsl(hsl: string): RgbColor | null {
 	);
 	if (!match) return null;
 
-	const h = parseInt(match[1] ?? '0', 10);
-	const s = parseInt(match[2] ?? '0', 10);
-	const l = parseInt(match[3] ?? '0', 10);
-	const a = match[4] ? parseFloat(match[4]) : undefined;
+	// CSS reads a hue round the wheel and clamps the percentages; a hue past
+	// 360 used to land in the last sector, so 400 read as 320.
+	const h = parseInt(match[1] ?? '0', 10) % 360;
+	const s = Math.min(100, parseInt(match[2] ?? '0', 10));
+	const l = Math.min(100, parseInt(match[3] ?? '0', 10));
+	const a = match[4] ? Math.min(1, parseFloat(match[4])) : undefined;
 
 	return hslToRgb({ h, s, l, a });
 }

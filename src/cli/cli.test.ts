@@ -100,6 +100,16 @@ describe('palette', () => {
 		expect(paletteContains(palette, '#ff0000')).toBe(false);
 	});
 
+	it('reads a legacy hsl outside its range as CSS reads it', () => {
+		for (const [hsl, same] of [
+			['hsl(760, 100%, 50%)', 'hsl(40, 100%, 50%)'],
+			['hsl(-320, 100%, 50%)', 'hsl(40, 100%, 50%)'],
+			['hsl(0, 150%, 50%)', 'hsl(0, 100%, 50%)'],
+			['hsl(0, 100%, 150%)', 'hsl(0, 100%, 100%)'],
+		] as const)
+			expect(paletteContains(parsePalette(same).palette, hsl), hsl).toBe(true);
+	});
+
 	it('keeps a named colour equal only to itself', () => {
 		const { palette } = parsePalette('white');
 		expect(paletteContains(palette, 'WHITE')).toBe(true);
