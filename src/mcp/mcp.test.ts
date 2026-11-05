@@ -641,3 +641,33 @@ describe('serve: a client that reads slowly', () => {
 		expect(reader.input.isPaused()).toBe(false);
 	});
 });
+
+describe('extract_colors on a document cut off or left unclosed', () => {
+	// The engine scans text and parses no format, so a document cut off or
+	// left unclosed is read for what it holds. CSS Syntax 3 recovers from
+	// every parse error, and an HTML tag cut off at end of file is dropped
+	// (HTML, "eof-in-tag"), which is what the markup reader does.
+	it.each([
+		['json', '{"brand": "#1a2b3c", "accent": "#ff', ['#1a2b3c']],
+		['css', 'a { color: #fff; } /* b { color: #000; }', ['#fff']],
+		[
+			'javascript',
+			"const a = '#123456;\nconst b = '#abcdef';",
+			['#123456', '#abcdef'],
+		],
+		['html', '<div style="color: #fff', []],
+	])(
+		'%s cut off is read for what it holds, with no diagnostic',
+		async (format, content, colors) => {
+			const tool = TOOLS.find((t) => t.name === 'extract_colors');
+			const answer = (await tool?.handler({ content, format })) as {
+				ok: boolean;
+				data: { colors: Array<{ value: string }> };
+				diagnostics: unknown[];
+			};
+			expect(answer.ok).toBe(true);
+			expect(answer.diagnostics).toEqual([]);
+			expect(answer.data.colors.map((c) => c.value)).toEqual(colors);
+		},
+	);
+});

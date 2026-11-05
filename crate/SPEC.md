@@ -107,6 +107,13 @@ plaintext` — and anything else is scanned as raw text and reported as
 format `unknown`. That field is the reader's signal that the answer came
 from a scan rather than a parser.
 
+**No document is malformed here.** Both engines scan text and parse no
+format, so a document cut off mid-value or left unclosed is read for
+what it holds, with no diagnostic: CSS Syntax 3 recovers from every
+parse error, and an HTML tag cut off at the end of the file is dropped,
+as HTML's eof-in-tag rule drops it. `mcp.test.ts` holds four such
+documents.
+
 Refusing an unknown format was the 0.1.0 behaviour and it was wrong in
 one specific way: it could not open a `.json`, which is where a design
 system keeps its tokens. What the refusal protected against is one
