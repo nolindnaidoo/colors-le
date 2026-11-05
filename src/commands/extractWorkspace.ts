@@ -63,16 +63,56 @@ export function registerExtractWorkspaceCommands(
 			'colors-le.extractWorkspace',
 			guarded(deps.notifier, async () => extractWorkspace(deps)),
 		),
-		// The Explorer hands over the folder that was clicked. From the
-		// palette there is none, and the command asks.
+		// The Explorer hands over the folder that was clicked and, on a
+		// multi-selection, every entry selected; reading only the first
+		// scanned one folder of several without a word. From the palette
+		// there is neither, and the command asks.
 		vscode.commands.registerCommand(
 			'colors-le.extractFolder',
-			guarded(deps.notifier, async (picked?: vscode.Uri) => {
-				const folder = picked ?? (await askForFolder());
-				if (folder !== undefined) await extractWorkspace(deps, folder);
-			}),
+			guarded(
+				deps.notifier,
+				async (picked?: vscode.Uri, selected?: readonly vscode.Uri[]) => {
+					const handed =
+						selected !== undefined && selected.length > 0
+							? selected
+							: picked === undefined
+								? []
+								: [picked];
+					if (handed.length === 0) {
+						const folder = await askForFolder();
+						if (folder !== undefined) await extractWorkspace(deps, folder);
+						return;
+					}
+					for (const folder of await foldersOf(handed, deps))
+						await extractWorkspace(deps, folder);
+				},
+			),
 		),
 	);
+}
+
+/** The folders among what the Explorer handed over, saying what was left out. */
+async function foldersOf(
+	handed: readonly vscode.Uri[],
+	deps: WorkspaceDeps,
+): Promise<vscode.Uri[]> {
+	const folders: vscode.Uri[] = [];
+	for (const uri of handed) {
+		const kind = await vscode.workspace.fs.stat(uri).then(
+			(stat) => stat.type,
+			() => vscode.FileType.Unknown,
+		);
+		if ((kind & vscode.FileType.Directory) !== 0) folders.push(uri);
+	}
+	const left = handed.length - folders.length;
+	if (left > 0)
+		deps.notifier.showWarning(
+			vscode.l10n.t(
+				'Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.',
+				left,
+			),
+		);
+	return folders;
 }
 
 /**

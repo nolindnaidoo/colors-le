@@ -224,5 +224,6 @@
   "Could not sort: the edit was rejected.": "並べ替えできませんでした: 編集が拒否されました。",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "{0} 個のファイルから色を読み取れなかったため、このレポートには含まれていません：{1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "結果の上限 {0} に達しました。そのファイル内のそれ以降の色は数えられていません。",
-  "Round lightness and chroma to three decimals, hue to two": "明度と彩度を小数点以下3桁、色相を2桁に丸める"
+  "Round lightness and chroma to three decimals, hue to two": "明度と彩度を小数点以下3桁、色相を2桁に丸める",
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "「フォルダーから色を抽出」はフォルダーを読み取ります。フォルダーではない選択項目 {0} 個は除外されました。"
 }

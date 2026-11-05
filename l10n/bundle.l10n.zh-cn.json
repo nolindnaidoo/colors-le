@@ -224,5 +224,6 @@
   "Could not sort: the edit was rejected.": "无法排序：编辑被拒绝。",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "无法从 {0} 个文件中读取颜色，因此它们不在此报告中：{1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "已达到结果上限 {0}。该文件中之后的颜色未被计数。",
-  "Round lightness and chroma to three decimals, hue to two": "将明度和色度舍入到三位小数，色相舍入到两位"
+  "Round lightness and chroma to three decimals, hue to two": "将明度和色度舍入到三位小数，色相舍入到两位",
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "“从文件夹提取颜色”读取文件夹。已略过 {0} 个不是文件夹的选中项。"
 }

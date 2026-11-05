@@ -198,6 +198,33 @@ describe('colors-le.extractWorkspace and colors-le.extractFolder', () => {
 		expect(report()).not.toContain('The rest of the files were not read.');
 	});
 
+	it('scans every folder of an Explorer multi-selection, and names what is not one', async () => {
+		_setConfig('colors-le.notificationsLevel', 'all');
+		open({
+			'/w/a/x.css': 'x { color: #111111; }\n',
+			'/w/b/y.css': 'y { color: #222222; }\n',
+			'/w/c.css': 'c { color: #333333; }\n',
+		});
+		// What the Explorer passes for a right-click on a multi-selection.
+		await runCommand('colors-le.extractFolder', Uri.file('/w/a'), [
+			Uri.file('/w/a'),
+			Uri.file('/w/b'),
+			Uri.file('/w/c.css'),
+		]);
+		const reports = _openedDocuments().map((doc) => doc.getText());
+		expect(reports).toHaveLength(2);
+		expect(reports[0]).toContain('#111111');
+		expect(reports[1]).toContain('#222222');
+		expect(reports.join('\n')).not.toContain('#333333');
+		expect(_shownMessages()).toContainEqual(
+			expect.objectContaining({
+				kind: 'warning',
+				message:
+					'Extract Colors from Folder reads folders. 1 selected item(s) that are not folders were left out.',
+			}),
+		);
+	});
+
 	it('says when a folder holds no colors', async () => {
 		open({ '/w/a.txt': 'nothing here\n' });
 		await runCommand('colors-le.extractWorkspace');

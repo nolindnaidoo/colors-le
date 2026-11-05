@@ -224,5 +224,6 @@
   "Could not sort: the edit was rejected.": "Не вдалося відсортувати: зміну відхилено.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не вдалося прочитати кольори з файлів ({0}), тому їх немає в цьому звіті: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Досягнуто ліміту результатів {0}. Наступні кольори у цьому файлі не було враховано.",
-  "Round lightness and chroma to three decimals, hue to two": "Округлити світлість і хроматичність до трьох знаків, тон — до двох"
+  "Round lightness and chroma to three decimals, hue to two": "Округлити світлість і хроматичність до трьох знаків, тон — до двох",
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Видобути кольори з папки» читає папки. Вибрані елементи, що не є папками ({0}), пропущено."
 }

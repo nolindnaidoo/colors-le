@@ -224,5 +224,6 @@
   "Could not sort: the edit was rejected.": "No se pudo ordenar: se rechazó la edición.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "No se pudieron leer los colores de {0} archivo(s), así que no están en este informe: {1}",
   "The results limit of {0} was reached. The colors after it in that file were not counted.": "Se alcanzó el límite de resultados de {0}. Los colores posteriores en ese archivo no se contaron.",
-  "Round lightness and chroma to three decimals, hue to two": "Redondear la luminosidad y el croma a tres decimales y el tono a dos"
+  "Round lightness and chroma to three decimals, hue to two": "Redondear la luminosidad y el croma a tres decimales y el tono a dos",
+  "Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.": "«Extraer colores de la carpeta» lee carpetas. Se omitieron {0} elemento(s) seleccionado(s) que no son carpetas."
 }
