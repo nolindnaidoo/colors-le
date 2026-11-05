@@ -637,7 +637,8 @@ describe('mcp: the tools over the crate framing', () => {
 				{
 					severity: 'warning',
 					code: 'unreadable',
-					message: `${files[1]} could not be read, so this scan does not cover it`,
+					// A report's paths use `/` on every platform.
+					message: `${(files[1] as string).replace(/\\/g, '/')} could not be read, so this scan does not cover it`,
 				},
 			]);
 		} finally {

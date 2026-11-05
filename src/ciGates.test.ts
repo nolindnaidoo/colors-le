@@ -29,21 +29,25 @@ function refused(line: string): boolean {
 	);
 }
 
-describe('the inline-suppression gate', () => {
-	it.each([
-		'#[allow(dead_code)]',
-		'#![allow(dead_code)]',
-		'#[cfg_attr(test, allow(unused))]',
-		'    #[allow(clippy::too_many_lines)]',
-	])('refuses %s', (line) => {
-		expect(refused(line)).toBe(true);
-	});
+// The gate runs on Linux only, with grep, so the test does too.
+describe.skipIf(process.platform === 'win32')(
+	'the inline-suppression gate',
+	() => {
+		it.each([
+			'#[allow(dead_code)]',
+			'#![allow(dead_code)]',
+			'#[cfg_attr(test, allow(unused))]',
+			'    #[allow(clippy::too_many_lines)]',
+		])('refuses %s', (line) => {
+			expect(refused(line)).toBe(true);
+		});
 
-	it.each([
-		'// allow(dead_code) in a comment is prose',
-		'#[cfg_attr(not(test), expect(dead_code, reason = "a fixture"))]',
-		'let allowed = true;',
-	])('lets %s through', (line) => {
-		expect(refused(line)).toBe(false);
-	});
-});
+		it.each([
+			'// allow(dead_code) in a comment is prose',
+			'#[cfg_attr(not(test), expect(dead_code, reason = "a fixture"))]',
+			'let allowed = true;',
+		])('lets %s through', (line) => {
+			expect(refused(line)).toBe(false);
+		});
+	},
+);
