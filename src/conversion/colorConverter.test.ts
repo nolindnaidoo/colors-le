@@ -6,7 +6,6 @@ import {
 	convertColors,
 	getAvailableFormats,
 	getContrastRatio,
-	validateColorFormat,
 } from './colorConverter';
 
 function color(value: string, format: Color['format'] = 'hex'): Color {
@@ -112,17 +111,6 @@ describe('getAvailableFormats', () => {
 		expect(formats).toContain('hex');
 		expect(formats).toContain('rgb');
 		expect(formats).toContain('hsl');
-	});
-});
-
-describe('validateColorFormat', () => {
-	it('accepts values matching the format', () => {
-		expect(validateColorFormat('#ff0000', 'hex')).toBe(true);
-		expect(validateColorFormat('rgb(1, 2, 3)', 'rgb')).toBe(true);
-	});
-
-	it('rejects mismatches', () => {
-		expect(validateColorFormat('#ff0000', 'rgb')).toBe(false);
 	});
 });
 
@@ -235,20 +223,6 @@ describe('convertColor: option handling', () => {
 			roundValues: true,
 		});
 		expect(r.converted).not.toMatch(/\.\d{3}/);
-	});
-});
-
-describe('validateColorFormat: each format', () => {
-	it('recognises every supported format', () => {
-		expect(validateColorFormat('#ff0000', 'hex')).toBe(true);
-		expect(validateColorFormat('rgb(1, 2, 3)', 'rgb')).toBe(true);
-		expect(validateColorFormat('rgba(1, 2, 3, 1)', 'rgba')).toBe(true);
-		expect(validateColorFormat('hsl(0, 1%, 2%)', 'hsl')).toBe(true);
-		expect(validateColorFormat('hsla(0, 1%, 2%, 1)', 'hsla')).toBe(true);
-	});
-
-	it('rejects an unknown format name', () => {
-		expect(validateColorFormat('#ff0000', 'nonsense')).toBe(false);
 	});
 });
 

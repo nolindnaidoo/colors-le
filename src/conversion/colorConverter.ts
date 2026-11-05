@@ -257,33 +257,6 @@ function rgbToOklchString(
 }
 
 /**
- * Validate color format
- */
-export function validateColorFormat(color: string, format: string): boolean {
-	const rgb = readColor(color);
-	if (!rgb) return false;
-
-	switch (format) {
-		case 'hex':
-			return /^#[0-9a-f]{3,8}$/i.test(color);
-		case 'rgb':
-			return /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i.test(color);
-		case 'rgba':
-			return /^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i.test(
-				color,
-			);
-		case 'hsl':
-			return /^hsl\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/i.test(color);
-		case 'hsla':
-			return /^hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*[\d.]+\s*\)$/i.test(
-				color,
-			);
-		default:
-			return false;
-	}
-}
-
-/**
  * The WCAG contrast ratio between two colours, or null when either cannot
  * be read. It answered 1 for an unreadable colour, and 1 is a real answer,
  * "the same colour", so Validate printed "Contrast ratio 1.00:1 fails WCAG

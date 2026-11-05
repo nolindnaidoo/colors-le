@@ -1,4 +1,3 @@
-import type { ColorFormat } from '../types';
 import { parseModernColor } from './cssColor';
 import { NAMED_COLOR_RGB } from './namedColors';
 
@@ -200,58 +199,6 @@ export function rgbToHsl(rgb: RgbColor): HslColor {
 		l: Math.round(l * 100),
 		a: rgb.a,
 	};
-}
-
-export function rgbToRgbString(rgb: RgbColor): string {
-	if (rgb.a !== undefined) {
-		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})`;
-	}
-	return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-}
-
-export function rgbToHslString(rgb: RgbColor): string {
-	const hsl = rgbToHsl(rgb);
-	if (hsl.a !== undefined) {
-		return `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${hsl.a})`;
-	}
-	return `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
-}
-
-export function detectColorFormat(colorValue: string): ColorFormat {
-	const trimmed = colorValue.trim();
-
-	if (trimmed.startsWith('#')) {
-		return 'hex';
-	}
-
-	if (trimmed.startsWith('rgb(')) {
-		return 'rgb';
-	}
-
-	if (trimmed.startsWith('rgba(')) {
-		return 'rgba';
-	}
-
-	if (trimmed.startsWith('hsl(')) {
-		return 'hsl';
-	}
-
-	if (trimmed.startsWith('hsla(')) {
-		return 'hsla';
-	}
-
-	for (const name of [
-		'hwb',
-		'lab',
-		'lch',
-		'oklab',
-		'oklch',
-		'color',
-	] as const) {
-		if (trimmed.startsWith(`${name}(`)) return name;
-	}
-
-	return 'unknown';
 }
 
 /**

@@ -295,12 +295,6 @@ export function detectColorPatterns(
 		patterns.push(themePattern);
 	}
 
-	// Detect brand patterns
-	const brandPattern = detectBrandPattern(uniqueColors);
-	if (brandPattern) {
-		patterns.push(brandPattern);
-	}
-
 	return Object.freeze(patterns);
 }
 
@@ -614,11 +608,6 @@ function detectThemePattern(colors: readonly string[]): ColorPattern | null {
 		});
 	}
 
-	return null;
-}
-
-function detectBrandPattern(_colors: readonly string[]): ColorPattern | null {
-	// Simplified brand detection - would need brand color database
 	return null;
 }
 
