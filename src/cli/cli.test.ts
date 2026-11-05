@@ -1,7 +1,9 @@
+import { execFileSync } from 'node:child_process';
 import {
 	mkdirSync,
 	mkdtempSync,
 	rmdirSync,
+	symlinkSync,
 	unlinkSync,
 	writeFileSync,
 } from 'node:fs';
@@ -290,7 +292,7 @@ describe('walk and run', () => {
 		const root = tree({ 'a.css': '', 'a/b.css': '', 'z.css': '' });
 		// The walk keeps the platform's separator, as the crate's does; a
 		// report turns it into `/` later.
-		const walked = collect([root], DEFAULT_WALK).map((path) =>
+		const walked = collect([root], DEFAULT_WALK).files.map((path) =>
 			path.slice(root.length + 1),
 		);
 		expect(walked).toEqual([join('a', 'b.css'), 'a.css', 'z.css']);
@@ -303,16 +305,91 @@ describe('walk and run', () => {
 			'a.css': '',
 			'b.css': '',
 		});
-		const names = collect([loose], DEFAULT_WALK).map((path) =>
+		const names = collect([loose], DEFAULT_WALK).files.map((path) =>
 			path.slice(loose.length + 1),
 		);
 		expect(names).toEqual(['a.css']);
 	});
 
+	async function runCli(args: readonly string[]) {
+		let out = '';
+		let err = '';
+		const code = await run(args, {
+			stdout: (text) => {
+				out += text;
+			},
+			stderr: (text) => {
+				err += text;
+			},
+			stdoutIsTerminal: false,
+			readStdin: async () => new Uint8Array(),
+			version: '0.0.0',
+		});
+		return { code, out, err };
+	}
+
+	function fifo(root: string, name: string): string {
+		const path = join(root, name);
+		execFileSync('mkfifo', [path]);
+		made.push(path);
+		return path;
+	}
+
+	it.skipIf(process.platform === 'win32')(
+		'names a FIFO in a walk and named outright, and never opens it',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			const pipe = fifo(root, 'pipe.css');
+			const walked = await runCli([root]);
+			expect(walked.err).toContain(`${pipe}: not a regular file`);
+			const named = await runCli([pipe]);
+			expect(named.code).toBe(1);
+			expect(named.err).toBe(
+				`${pipe}: not a regular file\n0 colors in 1 file\n`,
+			);
+		},
+	);
+
+	it.skipIf(process.platform === 'win32')(
+		'refuses a FIFO palette rather than waiting on it',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			const pipe = fifo(root, 'palette.txt');
+			const result = await runCli(['--palette', pipe, root]);
+			expect(result.code).toBe(2);
+			expect(result.err).toBe(
+				`colors-le: could not read the palette ${pipe}: not a regular file\n`,
+			);
+		},
+	);
+
+	it.skipIf(process.platform === 'win32')(
+		'counts the links a walk passes over',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			for (const [target, name] of [
+				['theme.css', 'link.css'],
+				['gone.css', 'broken.css'],
+				['loop-b', 'loop-a'],
+				['loop-a', 'loop-b'],
+			] as const) {
+				symlinkSync(join(root, target), join(root, name));
+				made.push(join(root, name));
+			}
+			const result = await runCli([root]);
+			expect(result.code).toBe(0);
+			expect(result.err).toMatch(
+				/1 color in 1 file\n4 symbolic links not followed\n$/,
+			);
+		},
+	);
+
 	it('passes over hidden entries unless asked', () => {
 		const root = tree({ '.hidden.css': '', 'shown.css': '' });
-		expect(collect([root], DEFAULT_WALK)).toHaveLength(1);
-		expect(collect([root], { ...DEFAULT_WALK, hidden: true })).toHaveLength(2);
+		expect(collect([root], DEFAULT_WALK).files).toHaveLength(1);
+		expect(
+			collect([root], { ...DEFAULT_WALK, hidden: true }).files,
+		).toHaveLength(2);
 	});
 
 	it('writes JSON Lines to a pipe and the summary to stderr', async () => {

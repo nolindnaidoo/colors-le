@@ -6,7 +6,7 @@
  * protocol: a script reading JSON Lines from `colors-le` cannot know which of
  * the two binaries it is talking to.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { basename, sep } from 'node:path';
 import { extractColors } from '../extraction/extract';
 import { resolveFormat } from '../mcp/fileType';
@@ -50,12 +50,30 @@ export type Examined =
 
 const BINARY_WINDOW = 8 * 1024;
 
+/** Why a FIFO, a socket or a device is skipped, in the crate's words too. */
+export const NOT_A_REGULAR_FILE = 'not a regular file';
+
+/**
+ * A FIFO, a socket or a device: there, and not a file. A read on a pipe with
+ * no writer never returns, so one is named by its kind and never opened.
+ */
+export function isIrregularFile(path: string): boolean {
+	try {
+		return !statSync(path).isFile();
+	} catch {
+		// Not there or not reachable: the read says which, in its own words.
+		return false;
+	}
+}
+
 export async function scanFile(
 	path: string,
 	options: ScanOptions,
 ): Promise<Examined> {
 	const file = reportedPath(path);
 	const format = options.format ?? resolveFormat(undefined, basename(path));
+	if (isIrregularFile(path))
+		return text(skipped(file, format, NOT_A_REGULAR_FILE));
 
 	let bytes: Buffer;
 	try {

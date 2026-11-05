@@ -50,7 +50,7 @@ async function scan(args: Record<string, unknown>): Promise<unknown> {
 	};
 	// A path that is not there is a fact about the filesystem, not the
 	// schema: `collect` throws a plain Error, which is a tool failure.
-	const targets = collect(inputs, {
+	const walked = collect(inputs, {
 		hidden: flag('hidden'),
 		respectIgnore: !flag('ignored'),
 	});
@@ -59,7 +59,7 @@ async function scan(args: Record<string, unknown>): Promise<unknown> {
 	// to a file listing does not have to guess why the numbers differ.
 	let binarySkipped = 0;
 	const reports: FileReport[] = [];
-	for (const target of targets) {
+	for (const target of walked.files) {
 		const examined = await scanFile(target, options);
 		if (examined.kind === 'binary') {
 			binarySkipped += 1;
@@ -84,7 +84,7 @@ async function scan(args: Record<string, unknown>): Promise<unknown> {
 
 	return envelope(
 		'colors_le_scan',
-		{ reports, colors, binarySkipped },
+		{ reports, colors, binarySkipped, symbolicLinks: walked.symlinks },
 		reports.length,
 		diagnostics,
 		false,

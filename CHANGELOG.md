@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **The npm command line names a FIFO and counts the links it does not follow.** A FIFO, a socket or a device met in a walk was dropped without a word, and one named outright was refused as "Not a directory"; each is now a `skipped` report, "not a regular file", never opened. A `--palette` naming a FIFO waited forever and is refused now. A symbolic link in a walk is still not followed, and stderr ends with the count; `colors_le_scan` carries it as `symbolicLinks`.
 - **Extraction stays fast on input that never closes.** Spaces after an `rgb(` with no `)`, an unclosed `<style>` and a run of `>` with no `<` each took time in the square of their length: 200,000 unclosed `<style>` tags took about a minute. They take milliseconds now, with every result unchanged over 200,000 generated documents.
 - **A file named `css`, `json` or `md`, with no extension, is read as that format by `extract_colors`**, as the crate's server already read it. The extension's and the npm server read it as raw text.
 - **Analyze keeps every hue cluster and says what its tables leave out.** It listed the first five hue ranges in wheel order, so Blue and Magenta vanished whenever the warmer ranges held colours, and the Most Common and Color Usage tables stopped at 10 and 20 rows without saying how many were left.

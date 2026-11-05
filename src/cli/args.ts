@@ -10,7 +10,7 @@ import {
 } from '../mcp/fileType';
 import { rustIoMessage } from './ioError';
 import { isEmptyPalette, type Palette, parsePalette } from './palette';
-import type { ScanOptions } from './scan';
+import { isIrregularFile, NOT_A_REGULAR_FILE, type ScanOptions } from './scan';
 import { FLAGS } from './usage';
 import type { WalkOptions } from './walk';
 
@@ -120,6 +120,11 @@ function forcedFormat(value: string | undefined): string {
 
 function readPalette(value: string | undefined, deps: ParseDeps): Palette {
 	if (value === undefined) throw new Error('--palette needs a file');
+	// Refused rather than read: the run waited on a FIFO forever.
+	if (isIrregularFile(value))
+		throw new Error(
+			`could not read the palette ${value}: ${NOT_A_REGULAR_FILE}`,
+		);
 	let text: string;
 	try {
 		text = deps.readFile(value);

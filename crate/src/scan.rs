@@ -90,9 +90,19 @@ pub(crate) enum Examined {
     Binary,
 }
 
+/// Why a FIFO, a socket or a device is skipped, in the npm command line's
+/// words too.
+pub(crate) const NOT_A_REGULAR_FILE: &str = "not a regular file";
+
 pub(crate) fn scan_file(path: &PathBuf, options: &ScanOptions) -> Examined {
     let file = reported_path(path);
     let format = options.format.unwrap_or_else(|| format_of(path));
+
+    // A FIFO, a socket or a device is named by its kind and never opened:
+    // a read on a pipe with no writer never returns.
+    if std::fs::metadata(path).is_ok_and(|metadata| !metadata.is_file()) {
+        return Examined::Text(skipped(file, format, NOT_A_REGULAR_FILE));
+    }
 
     match std::fs::read(path) {
         Ok(bytes) if looks_binary(&bytes) => Examined::Binary,

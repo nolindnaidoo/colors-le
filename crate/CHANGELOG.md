@@ -12,6 +12,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A FIFO is named, and the links a walk passes over are counted.** A
+  FIFO, a socket or a device in a walk was dropped without a word, and
+  one named outright was walked as an empty directory, exit 1 with
+  "0 colors in 0 files". Each is a `skipped` report now, "not a regular
+  file", and never opened. `--palette` naming a FIFO waited forever and
+  exits 2 now. A symbolic link in a walk is still not followed; stderr
+  ends with how many, and `colors_le_scan` carries `symbolicLinks`.
 - **The shared corpus holds a filename that is a format name**, `css` and
   `JSON`, which this server read as that format and the two JavaScript
   servers as raw text.

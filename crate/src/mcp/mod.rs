@@ -359,13 +359,13 @@ fn scan_tool(arguments: &Value) -> Result<Value, Refusal> {
 
     // A path that is not there is a fact about the filesystem, not the
     // schema: a tool failure the model reads, not a protocol error.
-    let targets = walk::collect(&inputs, &walk_options).map_err(Refusal::Failure)?;
+    let walked = walk::collect(&inputs, &walk_options).map_err(Refusal::Failure)?;
     // A binary file gets no report — it was never a text candidate — but
     // it is counted, because an agent comparing this to a file listing
     // would otherwise have to guess why the numbers differ.
     let mut binary: u64 = 0;
     let mut reports: Vec<Value> = Vec::new();
-    for target in &targets {
+    for target in &walked.files {
         match scan::scan_file(target, &options) {
             scan::Examined::Text(report) => {
                 reports.push(serde_json::to_value(report).expect("a report serializes"));
@@ -400,7 +400,12 @@ fn scan_tool(arguments: &Value) -> Result<Value, Refusal> {
     let count = reports.len();
     Ok(envelope(
         "colors_le_scan",
-        &json!({ "reports": reports, "colors": colors, "binarySkipped": binary }),
+        &json!({
+            "reports": reports,
+            "colors": colors,
+            "binarySkipped": binary,
+            "symbolicLinks": walked.symlinks,
+        }),
         count,
         &diagnostics,
         false,
