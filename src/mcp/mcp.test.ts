@@ -109,6 +109,19 @@ describe('fileType: tolerant resolution', () => {
 		expect(resolveFormat('tsx', undefined)).toBe('typescript');
 	});
 
+	it.each([
+		['css', 'css'],
+		['SCSS', 'scss'],
+		['json', 'json'],
+		['md', 'markdown'],
+		['.css', 'css'],
+		['theme.css', 'css'],
+		['styles/css', FALLBACK_FORMAT],
+		['my.dir/css', FALLBACK_FORMAT],
+	])('reads the filename %s as the crate reads it', (filename, format) => {
+		expect(resolveFormat(undefined, filename)).toBe(format);
+	});
+
 	it('infers from a filename when no format is given', () => {
 		expect(resolveFormat(undefined, 'theme.scss')).toBe('scss');
 		expect(resolveFormat(undefined, 'logo.svg')).toBe('svg');

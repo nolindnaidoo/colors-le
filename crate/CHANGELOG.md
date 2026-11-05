@@ -12,6 +12,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The shared corpus holds a filename that is a format name**, `css` and
+  `JSON`, which this server read as that format and the two JavaScript
+  servers as raw text.
 - **The shared corpus holds an empty and a whitespace-only document** for
   `extract_colors`, which this server already answered `ok` with no
   diagnostics and the two JavaScript servers answered as a failure.

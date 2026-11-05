@@ -14,6 +14,7 @@ version and releases from one tag.
 
 ### Fixed
 
+- **A file named `css`, `json` or `md`, with no extension, is read as that format by `extract_colors`**, as the crate's server already read it. The extension's and the npm server read it as raw text.
 - **Analyze keeps every hue cluster and says what its tables leave out.** It listed the first five hue ranges in wheel order, so Blue and Magenta vanished whenever the warmer ranges held colours, and the Most Common and Color Usage tables stopped at 10 and 20 rows without saying how many were left.
 - **A folder report says when the results limit was reached inside its last file.** The colours after it were dropped with no note, because the scan says it stopped early only when files remained.
 - **A folder report names a file the reader failed on.** The failure was caught and the file counted as read with no colours.

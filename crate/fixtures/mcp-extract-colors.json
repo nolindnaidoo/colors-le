@@ -213,6 +213,60 @@
 		}
 	},
 	{
+		"name": "a file named css, with no extension, is that format",
+		"content": "a { color: #1a2b3c; }",
+		"arguments": {
+			"filename": "css"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#1a2b3c",
+						"format": "hex",
+						"line": 1,
+						"column": 12
+					}
+				],
+				"fileType": "css"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 1,
+				"truncated": false
+			}
+		}
+	},
+	{
+		"name": "a file named JSON, with no extension, is that format",
+		"content": "{ \"accent\": \"#250\" }",
+		"arguments": {
+			"filename": "JSON"
+		},
+		"expected": {
+			"ok": true,
+			"data": {
+				"colors": [
+					{
+						"value": "#250",
+						"format": "hex",
+						"line": 1,
+						"column": 14
+					}
+				],
+				"fileType": "json"
+			},
+			"diagnostics": [],
+			"meta": {
+				"tool": "extract_colors",
+				"count": 1,
+				"truncated": false
+			}
+		}
+	},
+	{
 		"name": "markup reads attributes",
 		"file": "icon.svg",
 		"arguments": {

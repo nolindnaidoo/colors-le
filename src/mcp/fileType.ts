@@ -116,6 +116,10 @@ export function resolveFormat(
 	}
 
 	if (filename) {
+		// The whole name first, as the crate reads it: a file named `css` or
+		// `.json` has no extension to split on.
+		const whole = ALIASES.get(normalise(filename));
+		if (whole) return whole;
 		const extension = filename.includes('.')
 			? filename.slice(filename.lastIndexOf('.') + 1)
 			: '';
