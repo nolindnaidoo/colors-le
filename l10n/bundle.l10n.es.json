@@ -87,7 +87,6 @@
   "No": "No",
   "Remove alpha channel": "Eliminar el canal alfa",
   "Preserve alpha channel?": "¿Mantener el canal alfa?",
-  "Round values to integers": "Redondea los valores a números enteros",
   "Keep decimal precision": "Mantener la precisión decimal",
   "Round values?": "¿Valores redondeados?",
   "Lowercase": "Minúsculas",
@@ -224,5 +223,6 @@
   "Could not deduplicate: the edit was rejected.": "No se pudo deduplicar: se rechazó la edición.",
   "Could not sort: the edit was rejected.": "No se pudo ordenar: se rechazó la edición.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "No se pudieron leer los colores de {0} archivo(s), así que no están en este informe: {1}",
-  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Se alcanzó el límite de resultados de {0}. Los colores posteriores en ese archivo no se contaron."
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Se alcanzó el límite de resultados de {0}. Los colores posteriores en ese archivo no se contaron.",
+  "Round lightness and chroma to three decimals, hue to two": "Redondear la luminosidad y el croma a tres decimales y el tono a dos"
 }

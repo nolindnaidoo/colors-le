@@ -87,7 +87,6 @@
   "No": "Tidak",
   "Remove alpha channel": "Hapus saluran alfa",
   "Preserve alpha channel?": "Apakah saluran alfa akan dipertahankan?",
-  "Round values to integers": "Bulatkan nilai menjadi bilangan bulat",
   "Keep decimal precision": "Pertahankan presisi desimal",
   "Round values?": "Nilai bulat?",
   "Lowercase": "Huruf kecil",
@@ -224,5 +223,6 @@
   "Could not deduplicate: the edit was rejected.": "Tidak dapat mendeduplikasi: perubahan ditolak.",
   "Could not sort: the edit was rejected.": "Tidak dapat mengurutkan: perubahan ditolak.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Warna tidak dapat dibaca dari {0} file, jadi tidak ada di laporan ini: {1}",
-  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Batas hasil {0} telah tercapai. Warna setelahnya di file tersebut tidak dihitung."
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Batas hasil {0} telah tercapai. Warna setelahnya di file tersebut tidak dihitung.",
+  "Round lightness and chroma to three decimals, hue to two": "Bulatkan kecerahan dan kroma ke tiga desimal, rona ke dua"
 }

@@ -112,11 +112,7 @@ describe('colors-le.convert', () => {
 	it('converts to rgb with scripted options', async () => {
 		registerConvertCommand(makeContext());
 		_setActiveEditor(_createDocument(CSS_DOC));
-		scriptQuickPicks([
-			byValue('rgb'), // target format
-			byValue(true), // preserve alpha
-			byValue(true), // round values
-		]);
+		scriptQuickPicks([byValue('rgb')]); // rgb() asks nothing more
 		await runCommand('colors-le.convert');
 		const text = report();
 		expect(text).toContain('**Target Format**: RGB');
@@ -133,7 +129,6 @@ describe('colors-le.convert', () => {
 		scriptQuickPicks([
 			byValue('hex'),
 			byValue(true), // preserve alpha
-			byValue(true), // round
 			byValue(false), // lowercase
 			byValue(false), // full hex
 		]);
@@ -234,21 +229,40 @@ describe('colors-le.validate', () => {
 });
 
 describe('additional option paths', () => {
-	it('convert: hsl target with alpha dropped', async () => {
+	it('convert: an hsl target asks neither alpha nor rounding', async () => {
+		registerConvertCommand(makeContext());
+		_setActiveEditor(_createDocument(CSS_DOC));
+		let asked = 0;
+		_respondToQuickPick((items) => {
+			asked += 1;
+			return (items as Array<{ value?: string }>).find(
+				(i) => i.value === 'hsl',
+			);
+		});
+		await runCommand('colors-le.convert');
+		expect(asked).toBe(1);
+		const text = report();
+		expect(text).toContain('**Target Format**: HSL');
+		expect(text).not.toContain('Preserve Alpha');
+		expect(text).not.toContain('Round Values');
+		expect(text).toContain('| `#ff0000` | `hsl(0, 100%, 50%)` | HEX → HSL |');
+	});
+
+	it('convert: an oklch target keeps alpha when asked, and rounds', async () => {
 		registerConvertCommand(makeContext());
 		_setActiveEditor(_createDocument(CSS_DOC));
 		scriptQuickPicks([
-			byValue('hsl'),
-			byValue(false), // drop alpha
-			byValue(false), // keep decimals
+			byValue('oklch'),
+			byValue(true), // preserve alpha
+			byValue(true), // round
 		]);
 		await runCommand('colors-le.convert');
 		const text = report();
-		expect(text).toContain('**Target Format**: HSL');
-		expect(text).toContain('- **Preserve Alpha**: No');
-		expect(text).toContain('| `#ff0000` | `hsl(0, 100%, 50%)` | HEX → HSL |');
 		expect(text).toContain(
-			'| `rgba(1, 2, 3, 0.5)` | `hsl(210, 50%, 1%)` | RGBA → HSL |',
+			'| `#ff0000` | `oklch(0.628 0.258 29.23)` | HEX → OKLCH |',
+		);
+		expect(text).toMatch(
+			/\| `rgba\(1, 2, 3, 0\.5\)` \| `oklch\([\d.]+ [\d.]+ [\d.]+ \/ 0\.5\)` \|/,
 		);
 	});
 

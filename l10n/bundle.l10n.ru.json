@@ -87,7 +87,6 @@
   "No": "Нет",
   "Remove alpha channel": "Удалить альфа-канал",
   "Preserve alpha channel?": "Сохранить альфа-канал?",
-  "Round values to integers": "Округлять значения до целых чисел",
   "Keep decimal precision": "Сохранить десятичную точность",
   "Round values?": "Округлённые значения?",
   "Lowercase": "Строчные буквы",
@@ -224,5 +223,6 @@
   "Could not deduplicate: the edit was rejected.": "Не удалось выполнить дедупликацию: изменение отклонено.",
   "Could not sort: the edit was rejected.": "Не удалось отсортировать: изменение отклонено.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Не удалось прочитать цвета из файлов ({0}), поэтому их нет в этом отчёте: {1}",
-  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Достигнут лимит результатов {0}. Последующие цвета в этом файле не были учтены."
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Достигнут лимит результатов {0}. Последующие цвета в этом файле не были учтены.",
+  "Round lightness and chroma to three decimals, hue to two": "Округлить светлоту и хроматичность до трёх знаков, тон — до двух"
 }

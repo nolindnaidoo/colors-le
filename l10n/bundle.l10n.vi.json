@@ -87,7 +87,6 @@
   "No": "Không",
   "Remove alpha channel": "Loại bỏ kênh alpha",
   "Preserve alpha channel?": "Có giữ lại kênh alpha không?",
-  "Round values to integers": "Làm tròn các giá trị thành số nguyên",
   "Keep decimal precision": "Giữ độ chính xác của số thập phân",
   "Round values?": "Làm tròn giá trị?",
   "Lowercase": "Chữ thường",
@@ -224,5 +223,6 @@
   "Could not deduplicate: the edit was rejected.": "Không thể loại trùng lặp: chỉnh sửa bị từ chối.",
   "Could not sort: the edit was rejected.": "Không thể sắp xếp: chỉnh sửa bị từ chối.",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "Không thể đọc màu từ {0} tệp, nên chúng không có trong báo cáo này: {1}",
-  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Đã đạt giới hạn kết quả {0}. Các màu sau đó trong tệp này không được đếm."
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "Đã đạt giới hạn kết quả {0}. Các màu sau đó trong tệp này không được đếm.",
+  "Round lightness and chroma to three decimals, hue to two": "Làm tròn độ sáng và độ bão hòa đến ba chữ số thập phân, sắc độ đến hai"
 }

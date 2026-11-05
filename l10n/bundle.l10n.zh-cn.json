@@ -87,7 +87,6 @@
   "No": "不",
   "Remove alpha channel": "删除Alpha通道",
   "Preserve alpha channel?": "保留Alpha通道吗？",
-  "Round values to integers": "将数值四舍五入为整数",
   "Keep decimal precision": "保持小数精度",
   "Round values?": "取整值？",
   "Lowercase": "小写",
@@ -224,5 +223,6 @@
   "Could not deduplicate: the edit was rejected.": "无法去重：编辑被拒绝。",
   "Could not sort: the edit was rejected.": "无法排序：编辑被拒绝。",
   "Colors could not be read from {0} file(s), so they are not in this report: {1}": "无法从 {0} 个文件中读取颜色，因此它们不在此报告中：{1}",
-  "The results limit of {0} was reached. The colors after it in that file were not counted.": "已达到结果上限 {0}。该文件中之后的颜色未被计数。"
+  "The results limit of {0} was reached. The colors after it in that file were not counted.": "已达到结果上限 {0}。该文件中之后的颜色未被计数。",
+  "Round lightness and chroma to three decimals, hue to two": "将明度和色度舍入到三位小数，色相舍入到两位"
 }
