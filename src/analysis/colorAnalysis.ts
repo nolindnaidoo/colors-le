@@ -295,12 +295,6 @@ export function detectColorPatterns(
 		patterns.push(themePattern);
 	}
 
-	// Detect brand patterns
-	const brandPattern = detectBrandPattern(uniqueColors);
-	if (brandPattern) {
-		patterns.push(brandPattern);
-	}
-
 	return Object.freeze(patterns);
 }
 
@@ -378,7 +372,9 @@ export function clusterColors(
 		}
 	}
 
-	return Object.freeze(clusters.slice(0, maxClusters));
+	// Every hue range that holds a colour: the first five in wheel order
+	// dropped Blue and Magenta whenever the warmer ranges were full.
+	return Object.freeze(clusters);
 }
 
 /**
@@ -612,11 +608,6 @@ function detectThemePattern(colors: readonly string[]): ColorPattern | null {
 		});
 	}
 
-	return null;
-}
-
-function detectBrandPattern(_colors: readonly string[]): ColorPattern | null {
-	// Simplified brand detection - would need brand color database
 	return null;
 }
 

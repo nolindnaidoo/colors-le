@@ -61,10 +61,12 @@ describe('extraction characterization', () => {
 		expect(result).toMatchSnapshot();
 	});
 
-	it('empty content returns validation error', async () => {
-		const result = await extractColors('', 'css');
-		expect(result.success).toBe(false);
-		expect(result.colors).toHaveLength(0);
-		expect(result.errors[0]?.type).toBe('validation-error');
+	it('empty and whitespace content is no colours, not an error', async () => {
+		for (const content of ['', ' \n\t\n']) {
+			const result = await extractColors(content, 'css');
+			expect(result.success).toBe(true);
+			expect(result.colors).toHaveLength(0);
+			expect(result.errors).toEqual([]);
+		}
 	});
 });

@@ -52,8 +52,8 @@ async function execute(args: readonly string[], io: RunIo): Promise<number> {
 		readFile: readUtf8File,
 		warn: (line) => io.stderr(`${line}\n`),
 	});
-	const { reports, binary } = options.stdin
-		? { reports: [await scanStdin(options, io)], binary: 0 }
+	const { reports, binary, symlinks } = options.stdin
+		? { reports: [await scanStdin(options, io)], binary: 0, symlinks: 0 }
 		: await readTree(options);
 
 	io.stdout(
@@ -61,7 +61,7 @@ async function execute(args: readonly string[], io: RunIo): Promise<number> {
 			? values(reports)
 			: jsonLines(reports, io.stdoutIsTerminal),
 	);
-	io.stderr(summary(reports, binary, options.valuesOnly));
+	io.stderr(summary(reports, binary, symlinks, options.valuesOnly));
 	return exitCode(reports, options.strict);
 }
 
@@ -72,10 +72,11 @@ async function execute(args: readonly string[], io: RunIo): Promise<number> {
  */
 async function readTree(
 	options: Cli,
-): Promise<{ reports: FileReport[]; binary: number }> {
+): Promise<{ reports: FileReport[]; binary: number; symlinks: number }> {
 	const reports: FileReport[] = [];
 	let binary = 0;
-	for (const target of collect(options.inputs, options.walk)) {
+	const walked = collect(options.inputs, options.walk);
+	for (const target of walked.files) {
 		const examined = await scanFile(target, options.scan);
 		if (examined.kind === 'binary') {
 			binary += 1;
@@ -83,7 +84,7 @@ async function readTree(
 		}
 		reports.push(examined.report);
 	}
-	return { reports, binary };
+	return { reports, binary, symlinks: walked.symlinks };
 }
 
 /**
@@ -122,6 +123,7 @@ function values(reports: readonly FileReport[]): string {
 function summary(
 	reports: readonly FileReport[],
 	binary: number,
+	symlinks: number,
 	valuesOnStdout: boolean,
 ): string {
 	const lines: string[] = [];
@@ -148,6 +150,12 @@ function summary(
 	lines.push(
 		`${plural(colors, 'color', 'colors')} in ${plural(reports.length, 'file', 'files')}${passedOver}`,
 	);
+	// Never followed, by design, and still not a silence: a link has no report
+	// line, so this is where a reader learns of it.
+	if (symlinks > 0)
+		lines.push(
+			`${plural(symlinks, 'symbolic link', 'symbolic links')} not followed`,
+		);
 	if (outside > 0) {
 		lines.push(
 			`${plural(outside, 'colour is', 'colours are')} not in the palette`,

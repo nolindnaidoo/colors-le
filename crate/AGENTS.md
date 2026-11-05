@@ -158,9 +158,10 @@ pixelactions and scrape-le:
 
 ## Hard rules
 
-- **No inline `#[allow(...)]`** — CI greps and fails the build. Either
-  fix the lint or add a visible, commented relaxation to
-  `[lints.clippy]` in `Cargo.toml`.
+- **No inline `#[allow(...)]`**, outer, inner or under `cfg_attr` — CI
+  greps and fails the build, and `src/ciGates.test.ts` drives that grep
+  with each form. Either fix the lint or add a visible, commented
+  relaxation to `[lints.clippy]` in `Cargo.toml`.
 - **Clippy pedantic, deny warnings.** `cargo clippy --all-targets --
   -D warnings` must pass exactly as CI runs it.
 - **No async runtime.** This tool reads files and asks the filesystem
@@ -181,6 +182,14 @@ pixelactions and scrape-le:
 - **Refuse rather than guess.** A file that cannot be read is reported
   as unexamined and the run exits 2 — never a clean result that quietly
   skipped it. Never report coverage you did not achieve.
+- **A path that is not a regular file is named by its kind, never
+  opened.** A read on a FIFO with no writer never returns: a FIFO, a
+  socket or a device is a `skipped` report, and named as the palette it
+  exits 2. A link inside a walk is not followed and is counted on
+  stderr. `hazards.rs` and `check:cli-parity` drive a real `mkfifo`.
+- **The scan is linear in one document's matches as well as in the
+  tree.** `budget.rs` times a dense document at two sizes beside the
+  tree it times; `settle` was once the square of the colours in a file.
 - **Refusals speak the caller's vocabulary.** An MCP caller has no
   command line; no message aimed at one mentions `--dedupe` or any other
   flag. A test asserts no MCP output contains `--`.

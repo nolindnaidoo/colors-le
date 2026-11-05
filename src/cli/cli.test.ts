@@ -1,7 +1,9 @@
+import { execFileSync } from 'node:child_process';
 import {
 	mkdirSync,
 	mkdtempSync,
 	rmdirSync,
+	symlinkSync,
 	unlinkSync,
 	writeFileSync,
 } from 'node:fs';
@@ -10,6 +12,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TOOLS } from '../mcp/tools';
+import { parseColor, rgbToHex } from '../utils/colorConversion';
 import { parse } from './args';
 import { rustIoMessage } from './ioError';
 import { serve } from './mcp';
@@ -30,11 +33,14 @@ const noDeps = Object.freeze({
 
 describe('usage', () => {
 	it('names every flag the parser accepts, and no other', () => {
+		// The Options block, not the whole text: a flag named only in prose
+		// passed this while the list a reader scans left it out.
+		const block = USAGE.split('Options:')[1]?.split('\n\n')[0] ?? '';
 		const named = new Set(
-			USAGE.split(/\s+/)
-				.filter((word) => word.startsWith('--'))
-				.map((word) => word.replace(/[,.:;]+$/, ''))
-				.filter((word) => word !== '--version' && word !== '--help'),
+			block
+				.split('\n')
+				.map((line) => line.trim().split(/\s+/)[0] ?? '')
+				.filter((word) => word.startsWith('--')),
 		);
 		expect([...named].sort()).toEqual([...FLAGS].sort());
 	});
@@ -98,6 +104,30 @@ describe('palette', () => {
 		expect(paletteContains(palette, '#FFF')).toBe(true);
 		expect(paletteContains(palette, 'hsl(0, 0%, 100%)')).toBe(true);
 		expect(paletteContains(palette, '#ff0000')).toBe(false);
+	});
+
+	it('reads a legacy hsl outside its range as CSS reads it', () => {
+		for (const [hsl, same] of [
+			['hsl(760, 100%, 50%)', 'hsl(40, 100%, 50%)'],
+			['hsl(-320, 100%, 50%)', 'hsl(40, 100%, 50%)'],
+			['hsl(0, 150%, 50%)', 'hsl(0, 100%, 50%)'],
+			['hsl(0, 100%, 150%)', 'hsl(0, 100%, 100%)'],
+		] as const)
+			expect(paletteContains(parsePalette(same).palette, hsl), hsl).toBe(true);
+	});
+
+	it('resolves every legacy hsl to the colour the extension reads', () => {
+		const misses: string[] = [];
+		for (let h = 0; h < 360; h += 5)
+			for (let sat = 0; sat <= 100; sat += 10)
+				for (let l = 0; l <= 100; l += 5) {
+					const hsl = `hsl(${h}, ${sat}%, ${l}%)`;
+					const rgb = parseColor(hsl);
+					if (rgb === null) throw new Error(hsl);
+					if (!paletteContains(parsePalette(rgbToHex(rgb)).palette, hsl))
+						misses.push(`${hsl} is not ${rgbToHex(rgb)}`);
+				}
+		expect(misses).toEqual([]);
 	});
 
 	it('keeps a named colour equal only to itself', () => {
@@ -265,7 +295,7 @@ describe('walk and run', () => {
 		const root = tree({ 'a.css': '', 'a/b.css': '', 'z.css': '' });
 		// The walk keeps the platform's separator, as the crate's does; a
 		// report turns it into `/` later.
-		const walked = collect([root], DEFAULT_WALK).map((path) =>
+		const walked = collect([root], DEFAULT_WALK).files.map((path) =>
 			path.slice(root.length + 1),
 		);
 		expect(walked).toEqual([join('a', 'b.css'), 'a.css', 'z.css']);
@@ -278,16 +308,91 @@ describe('walk and run', () => {
 			'a.css': '',
 			'b.css': '',
 		});
-		const names = collect([loose], DEFAULT_WALK).map((path) =>
+		const names = collect([loose], DEFAULT_WALK).files.map((path) =>
 			path.slice(loose.length + 1),
 		);
 		expect(names).toEqual(['a.css']);
 	});
 
+	async function runCli(args: readonly string[]) {
+		let out = '';
+		let err = '';
+		const code = await run(args, {
+			stdout: (text) => {
+				out += text;
+			},
+			stderr: (text) => {
+				err += text;
+			},
+			stdoutIsTerminal: false,
+			readStdin: async () => new Uint8Array(),
+			version: '0.0.0',
+		});
+		return { code, out, err };
+	}
+
+	function fifo(root: string, name: string): string {
+		const path = join(root, name);
+		execFileSync('mkfifo', [path]);
+		made.push(path);
+		return path;
+	}
+
+	it.skipIf(process.platform === 'win32')(
+		'names a FIFO in a walk and named outright, and never opens it',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			const pipe = fifo(root, 'pipe.css');
+			const walked = await runCli([root]);
+			expect(walked.err).toContain(`${pipe}: not a regular file`);
+			const named = await runCli([pipe]);
+			expect(named.code).toBe(1);
+			expect(named.err).toBe(
+				`${pipe}: not a regular file\n0 colors in 1 file\n`,
+			);
+		},
+	);
+
+	it.skipIf(process.platform === 'win32')(
+		'refuses a FIFO palette rather than waiting on it',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			const pipe = fifo(root, 'palette.txt');
+			const result = await runCli(['--palette', pipe, root]);
+			expect(result.code).toBe(2);
+			expect(result.err).toBe(
+				`colors-le: could not read the palette ${pipe}: not a regular file\n`,
+			);
+		},
+	);
+
+	it.skipIf(process.platform === 'win32')(
+		'counts the links a walk passes over',
+		async () => {
+			const root = tree({ 'theme.css': 'a { color: #1a2b3c; }' });
+			for (const [target, name] of [
+				['theme.css', 'link.css'],
+				['gone.css', 'broken.css'],
+				['loop-b', 'loop-a'],
+				['loop-a', 'loop-b'],
+			] as const) {
+				symlinkSync(join(root, target), join(root, name));
+				made.push(join(root, name));
+			}
+			const result = await runCli([root]);
+			expect(result.code).toBe(0);
+			expect(result.err).toMatch(
+				/1 color in 1 file\n4 symbolic links not followed\n$/,
+			);
+		},
+	);
+
 	it('passes over hidden entries unless asked', () => {
 		const root = tree({ '.hidden.css': '', 'shown.css': '' });
-		expect(collect([root], DEFAULT_WALK)).toHaveLength(1);
-		expect(collect([root], { ...DEFAULT_WALK, hidden: true })).toHaveLength(2);
+		expect(collect([root], DEFAULT_WALK).files).toHaveLength(1);
+		expect(
+			collect([root], { ...DEFAULT_WALK, hidden: true }).files,
+		).toHaveLength(2);
 	});
 
 	it('writes JSON Lines to a pipe and the summary to stderr', async () => {
@@ -513,6 +618,34 @@ describe('mcp: the tools over the crate framing', () => {
 	const call = (name: string, args: string) =>
 		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"${name}","arguments":${args}}}\n`;
 	const refusal = (reply: string) => JSON.parse(reply).error;
+
+	it('names a skipped file at the top of a scan, as a warning', async () => {
+		const root = mkdtempSync(join(tmpdir(), 'colors-le-scan-skipped-'));
+		const files = [join(root, 'theme.css'), join(root, 'latin1.css')];
+		writeFileSync(files[0] as string, '.a{color:#1a2b3c}\n');
+		writeFileSync(
+			files[1] as string,
+			Buffer.from([0x23, 0x66, 0x66, 0x66, 0xe9]),
+		);
+		try {
+			const { written } = await session([
+				call('colors_le_scan', JSON.stringify({ path: root })),
+			]);
+			const answer = JSON.parse(written[0] as string).result.structuredContent;
+			expect(answer.ok).toBe(true);
+			expect(answer.diagnostics).toEqual([
+				{
+					severity: 'warning',
+					code: 'unreadable',
+					// A report's paths use `/` on every platform.
+					message: `${(files[1] as string).replace(/\\/g, '/')} could not be read, so this scan does not cover it`,
+				},
+			]);
+		} finally {
+			for (const file of files) unlinkSync(file);
+			rmdirSync(root);
+		}
+	});
 
 	it('refuses a wrong-typed or undeclared argument as a protocol error, and a path that is not there as a tool failure', async () => {
 		// A `hidden: "yes"` was read as false and a `format: 7` as absent, and

@@ -35,32 +35,52 @@ interface Walk {
 	readonly options: WalkOptions;
 	readonly repository: RepositoryRules | null;
 	readonly files: string[];
+	symlinks: number;
+}
+
+/** What a walk reached, and the links it passed over. */
+export interface Walked {
+	/**
+	 * Every file to read, and every FIFO, socket or device met, which
+	 * `scanFile` names by its kind rather than opening.
+	 */
+	readonly files: readonly string[];
+	/** Links met inside a directory: never followed, and counted. */
+	readonly symlinks: number;
 }
 
 /** Every file to read, in a stable order. Throws a message naming the input. */
 export function collect(
 	inputs: readonly string[],
 	options: WalkOptions,
-): readonly string[] {
+): Walked {
 	const files: string[] = [];
+	let symlinks = 0;
 	for (const input of inputs) {
-		files.push(...filesUnder(input, options));
+		const found = filesUnder(input, options);
+		files.push(...found.files);
+		symlinks += found.symlinks;
 	}
-	return Object.freeze(sortAndDedupe(files));
+	return Object.freeze({
+		files: Object.freeze(sortAndDedupe(files)),
+		symlinks,
+	});
 }
 
-function filesUnder(input: string, options: WalkOptions): readonly string[] {
-	let isFile: boolean;
+function filesUnder(input: string, options: WalkOptions): Walked {
+	let isDirectory: boolean;
 	try {
-		isFile = statSync(input).isFile();
+		isDirectory = statSync(input).isDirectory();
 	} catch (error) {
 		throw new Error(`${input}: ${rustIoMessage(error)}`);
 	}
-	if (isFile) return [input];
+	// Only a directory is walked. A FIFO named outright was refused as "Not a
+	// directory".
+	if (!isDirectory) return { files: [input], symlinks: 0 };
 	return walkDirectory(input, options);
 }
 
-function walkDirectory(root: string, options: WalkOptions): readonly string[] {
+function walkDirectory(root: string, options: WalkOptions): Walked {
 	const absolute = resolve(root);
 	const repoRoot = options.respectIgnore ? repositoryRoot(absolute) : null;
 	const walk: Walk = {
@@ -68,9 +88,10 @@ function walkDirectory(root: string, options: WalkOptions): readonly string[] {
 		options,
 		repository: repoRoot ? repositoryRules(repoRoot) : null,
 		files: [],
+		symlinks: 0,
 	};
 	visit(walk, root, absolute, parentRules(absolute, options));
-	return walk.files;
+	return { files: walk.files, symlinks: walk.symlinks };
 }
 
 /** The crate's `parents(true)`: ignore files above the walk root count too. */
@@ -117,10 +138,7 @@ function visitEntry(
 	chain: readonly DirectoryRules[],
 ): void {
 	if (!walk.options.hidden && entry.name.startsWith('.')) return;
-	// A link is neither: never followed, so a link out of the tree cannot
-	// have this reading files the caller did not point it at.
 	const isDir = entry.isDirectory();
-	if (!isDir && !entry.isFile()) return;
 	if (
 		walk.options.respectIgnore &&
 		isIgnored(absolute, isDir, chain, walk.repository)
@@ -128,6 +146,12 @@ function visitEntry(
 		return;
 	if (isDir) {
 		visit(walk, shown, absolute, chain);
+		return;
+	}
+	// Never followed, so a link out of the tree cannot have this reading files
+	// the caller did not point it at; counted, so it is not a silence.
+	if (entry.isSymbolicLink()) {
+		walk.symlinks += 1;
 		return;
 	}
 	walk.files.push(shown);

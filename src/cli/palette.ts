@@ -191,45 +191,45 @@ function resolveHsl(value: string): Rgba | null {
 	if (hue === null || saturation === null || lightness === null) return null;
 	const alpha = parts[3] === undefined ? 255 : toAlpha(parts[3]);
 	if (alpha === null) return null;
-	return hslToRgba(hue / 360, saturation / 100, lightness / 100, alpha);
+	// CSS reads a hue round the wheel and clamps the percentages.
+	const percent = (value: number) => Math.min(Math.max(value, 0), 100) / 100;
+	return hslToRgba(
+		(((hue % 360) + 360) % 360) / 360,
+		percent(saturation),
+		percent(lightness),
+		alpha,
+	);
 }
 
+/** The extension's reader: one of six orders of (c, x, 0) per sector. */
 function hslToRgba(
 	hue: number,
 	saturation: number,
 	lightness: number,
 	alpha: number,
 ): Rgba {
-	if (saturation === 0) {
-		const grey = roundChannel(lightness * 255);
-		return [grey, grey, grey, alpha];
-	}
-	const q =
-		lightness < 0.5
-			? lightness * (1 + saturation)
-			: lightness + saturation - lightness * saturation;
-	const p = 2 * lightness - q;
+	const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+	const sixths = hue * 6;
+	const x = chroma * (1 - Math.abs((sixths % 2) - 1));
+	const base = lightness - chroma / 2;
+	const [r, g, b] =
+		sixths < 1
+			? [chroma, x, 0]
+			: sixths < 2
+				? [x, chroma, 0]
+				: sixths < 3
+					? [0, chroma, x]
+					: sixths < 4
+						? [0, x, chroma]
+						: sixths < 5
+							? [x, 0, chroma]
+							: [chroma, 0, x];
 	return [
-		roundChannel(hueToRgb(p, q, hue + 1 / 3) * 255),
-		roundChannel(hueToRgb(p, q, hue) * 255),
-		roundChannel(hueToRgb(p, q, hue - 1 / 3) * 255),
+		roundChannel((r + base) * 255),
+		roundChannel((g + base) * 255),
+		roundChannel((b + base) * 255),
 		alpha,
 	];
-}
-
-function hueToRgb(p: number, q: number, shift: number): number {
-	const t = wrapUnit(shift);
-	if (t < 1 / 6) return p + (q - p) * 6 * t;
-	if (t < 1 / 2) return q;
-	if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-	return p;
-}
-
-/** One step either way, as the crate does: it is not a modulo. */
-function wrapUnit(t: number): number {
-	if (t < 0) return t + 1;
-	if (t > 1) return t - 1;
-	return t;
 }
 
 function stripPercent(value: string): string {

@@ -482,3 +482,29 @@ fn prose_naming_a_colour_is_not_a_colour() {
         run.stdout
     );
 }
+
+#[test]
+fn the_short_flags_hidden_no_ignore_and_a_forced_format_are_honoured() {
+    assert_eq!(run(&["-h"]).code, 0);
+    assert!(run(&["-V"]).stdout.starts_with("colors-le "));
+
+    let tree = Tree::new("flags");
+    tree.write(".hidden.css", "a{color:#111111}\n");
+    tree.write(".gitignore", "ignored.css\n");
+    tree.write("ignored.css", "a{color:#222222}\n");
+    std::fs::create_dir_all(tree.path().join(".git")).expect("a repository marker");
+    let root = tree.path().to_string_lossy().into_owned();
+    let walked = run(&[&root]).stdout;
+    assert!(
+        !walked.contains("#111111") && !walked.contains("#222222"),
+        "{walked}"
+    );
+    assert!(run(&["--hidden", &root]).stdout.contains("#111111"));
+    assert!(run(&["--no-ignore", &root]).stdout.contains("#222222"));
+
+    // `#250` is a colour in a stylesheet and an issue reference in prose.
+    let notes = tree.write("notes.txt", "a { color: #250; }\n");
+    let notes = notes.to_string_lossy();
+    assert!(!run(&[&notes]).stdout.contains("#250"));
+    assert!(run(&["--format", "css", &notes]).stdout.contains("#250"));
+}

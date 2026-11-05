@@ -107,6 +107,13 @@ plaintext` — and anything else is scanned as raw text and reported as
 format `unknown`. That field is the reader's signal that the answer came
 from a scan rather than a parser.
 
+**No document is malformed here.** Both engines scan text and parse no
+format, so a document cut off mid-value or left unclosed is read for
+what it holds, with no diagnostic: CSS Syntax 3 recovers from every
+parse error, and an HTML tag cut off at the end of the file is dropped,
+as HTML's eof-in-tag rule drops it. `mcp.test.ts` holds four such
+documents.
+
 Refusing an unknown format was the 0.1.0 behaviour and it was wrong in
 one specific way: it could not open a `.json`, which is where a design
 system keeps its tokens. What the refusal protected against is one
@@ -367,6 +374,17 @@ is:
 - named on stderr,
 - carried in the JSON report with a `skipped` diagnostic saying why,
 - and left out of the exit code.
+
+**A FIFO, a socket or a device is not a file.** Met in a walk or named
+outright, it is a `skipped` report, "not a regular file", and it is
+never opened: a read on a pipe with no writer never returns. Named as
+the palette, it is refused, exit 2.
+
+**A symbolic link inside a directory is never followed.** A link out of
+the tree would have this reading files nobody pointed it at. Each one is
+counted, and stderr ends with `N symbolic links not followed`; the scan
+tool carries the count as `symbolicLinks`. A link named outright is
+followed.
 
 `--strict` turns any skipped file back into exit 2, for a pipeline that
 wants zero tolerance. What is never allowed is the third option: a file

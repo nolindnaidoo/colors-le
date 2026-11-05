@@ -82,6 +82,21 @@ describe('colors-le.analyze', () => {
 		expect(text).toContain('| `#ff0000` | 2 | 40.0% |');
 	});
 
+	it('says how many colors its two tables leave out', async () => {
+		registerAnalyzeCommand(makeContext());
+		const lines = Array.from(
+			{ length: 25 },
+			(_, i) => `.c${i} { color: #${(i + 1).toString(16).padStart(6, '0')}; }`,
+		);
+		_setActiveEditor(
+			_createDocument({ content: lines.join('\n'), languageId: 'css' }),
+		);
+		await runCommand('colors-le.analyze');
+		const text = report();
+		expect(text).toContain('*The 10 most common of 25 distinct colors.*');
+		expect(text).toContain('*5 more colors not shown.*');
+	});
+
 	it('warns when there is no active editor', async () => {
 		_setConfig('colors-le.notificationsLevel', 'important');
 		registerAnalyzeCommand(makeContext());
@@ -97,11 +112,7 @@ describe('colors-le.convert', () => {
 	it('converts to rgb with scripted options', async () => {
 		registerConvertCommand(makeContext());
 		_setActiveEditor(_createDocument(CSS_DOC));
-		scriptQuickPicks([
-			byValue('rgb'), // target format
-			byValue(true), // preserve alpha
-			byValue(true), // round values
-		]);
+		scriptQuickPicks([byValue('rgb')]); // rgb() asks nothing more
 		await runCommand('colors-le.convert');
 		const text = report();
 		expect(text).toContain('**Target Format**: RGB');
@@ -118,7 +129,6 @@ describe('colors-le.convert', () => {
 		scriptQuickPicks([
 			byValue('hex'),
 			byValue(true), // preserve alpha
-			byValue(true), // round
 			byValue(false), // lowercase
 			byValue(false), // full hex
 		]);
@@ -153,8 +163,8 @@ describe('colors-le.filter', () => {
 		]);
 		await runCommand('colors-le.filter');
 		const text = report();
-		expect(text).toContain('- **Max Lightness**: 30%');
-		expect(text).toContain('- **Min Saturation**: 70%');
+		expect(text).toContain('- **Max Lightness**: 29%');
+		expect(text).toContain('- **Min Saturation**: 71%');
 		expect(text).toContain('- **Kept**: 0');
 		expect(text).toContain('- **Excluded**: 5');
 		// rgba(1, 2, 3, 0.5) is dark enough and half saturated; the rest are
@@ -219,21 +229,40 @@ describe('colors-le.validate', () => {
 });
 
 describe('additional option paths', () => {
-	it('convert: hsl target with alpha dropped', async () => {
+	it('convert: an hsl target asks neither alpha nor rounding', async () => {
+		registerConvertCommand(makeContext());
+		_setActiveEditor(_createDocument(CSS_DOC));
+		let asked = 0;
+		_respondToQuickPick((items) => {
+			asked += 1;
+			return (items as Array<{ value?: string }>).find(
+				(i) => i.value === 'hsl',
+			);
+		});
+		await runCommand('colors-le.convert');
+		expect(asked).toBe(1);
+		const text = report();
+		expect(text).toContain('**Target Format**: HSL');
+		expect(text).not.toContain('Preserve Alpha');
+		expect(text).not.toContain('Round Values');
+		expect(text).toContain('| `#ff0000` | `hsl(0, 100%, 50%)` | HEX → HSL |');
+	});
+
+	it('convert: an oklch target keeps alpha when asked, and rounds', async () => {
 		registerConvertCommand(makeContext());
 		_setActiveEditor(_createDocument(CSS_DOC));
 		scriptQuickPicks([
-			byValue('hsl'),
-			byValue(false), // drop alpha
-			byValue(false), // keep decimals
+			byValue('oklch'),
+			byValue(true), // preserve alpha
+			byValue(true), // round
 		]);
 		await runCommand('colors-le.convert');
 		const text = report();
-		expect(text).toContain('**Target Format**: HSL');
-		expect(text).toContain('- **Preserve Alpha**: No');
-		expect(text).toContain('| `#ff0000` | `hsl(0, 100%, 50%)` | HEX → HSL |');
 		expect(text).toContain(
-			'| `rgba(1, 2, 3, 0.5)` | `hsl(210, 50%, 1%)` | RGBA → HSL |',
+			'| `#ff0000` | `oklch(0.628 0.258 29.23)` | HEX → OKLCH |',
+		);
+		expect(text).toMatch(
+			/\| `rgba\(1, 2, 3, 0\.5\)` \| `oklch\([\d.]+ [\d.]+ [\d.]+ \/ 0\.5\)` \|/,
 		);
 	});
 
@@ -253,7 +282,7 @@ describe('additional option paths', () => {
 		expect(text).toContain('- **Exclude Formats**: HEX');
 		expect(text).toContain('- **Min Lightness**: 20%');
 		expect(text).toContain('- **Max Lightness**: 20%');
-		expect(text).toContain('- **Max Saturation**: 30%');
+		expect(text).toContain('- **Max Saturation**: 29%');
 		expect(text).toContain('- **Kept**: 0');
 	});
 

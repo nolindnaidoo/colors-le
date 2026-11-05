@@ -11,7 +11,6 @@ export interface SafetyCheckOptions {
 	readonly allowOverride?: boolean;
 	readonly customThresholds?: {
 		readonly fileSizeBytes?: number;
-		readonly lineCount?: number;
 	};
 }
 
@@ -32,19 +31,23 @@ export function handleSafetyChecks(
 	const fileSizeThreshold =
 		options.customThresholds?.fileSizeBytes ?? config.safetyFileSizeWarnBytes;
 
-	if (content.length > fileSizeThreshold) {
+	// Bytes, as the setting says and as a folder scan measures them: the
+	// string's length is UTF-16 units, so a file of two-byte characters
+	// passed here at twice the size a folder scan skips.
+	const bytes = Buffer.byteLength(content, 'utf8');
+	if (bytes > fileSizeThreshold) {
 		return Object.freeze({
 			proceed: false,
 			message: vscode.l10n.t(
 				'File size ({0} bytes) exceeds the safety threshold ({1} bytes)',
-				content.length,
+				bytes,
 				fileSizeThreshold,
 			),
 			warnings: Object.freeze([]),
 		});
 	}
 
-	const warnings = collectSafetyWarnings(content, config, options);
+	const warnings = collectSafetyWarnings(content);
 	const message =
 		warnings.length > 0
 			? vscode.l10n.t(
@@ -60,27 +63,8 @@ export function handleSafetyChecks(
 	});
 }
 
-function collectSafetyWarnings(
-	content: string,
-	config: Configuration,
-	options: SafetyCheckOptions,
-): string[] {
+function collectSafetyWarnings(content: string): string[] {
 	const warnings: string[] = [];
-	const lines = content.split('\n');
-	const lineCountThreshold =
-		options.customThresholds?.lineCount ??
-		config.safetyLargeOutputLinesThreshold;
-
-	if (lines.length > lineCountThreshold) {
-		warnings.push(
-			vscode.l10n.t(
-				'Large file detected: {0} lines (threshold: {1})',
-				lines.length,
-				lineCountThreshold,
-			),
-		);
-	}
-
 	const estimatedColors = estimateColorCount(content);
 	if (estimatedColors > 1000) {
 		warnings.push(
@@ -92,6 +76,34 @@ function collectSafetyWarnings(
 	}
 
 	return warnings;
+}
+
+/**
+ * Whether to open and copy a result this long, asked before either happens.
+ *
+ * `safety.largeOutputLinesThreshold` counts result lines. It used to count
+ * the document's lines before extraction, so a one-line document with a
+ * thousand colours never warned, and its warning was a toast the default
+ * notification level hides. Asked in a modal, the answer is the user's.
+ */
+export async function confirmLargeOutput(
+	lines: number,
+	config: Configuration,
+): Promise<boolean> {
+	if (!config.safetyEnabled || lines <= config.safetyLargeOutputLinesThreshold)
+		return true;
+	const continueLabel = vscode.l10n.t('Continue Anyway');
+	const choice = await vscode.window.showWarningMessage(
+		vscode.l10n.t(
+			'{0} result lines, more than the {1} the safety setting allows before opening or copying them.',
+			lines,
+			config.safetyLargeOutputLinesThreshold,
+		),
+		{ modal: true },
+		continueLabel,
+		vscode.l10n.t('Cancel'),
+	);
+	return choice === continueLabel;
 }
 
 export async function handleSafetyChecksWithUserConfirmation(

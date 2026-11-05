@@ -212,46 +212,48 @@ fn resolve_hsl(value: &str) -> Option<[u8; 4]> {
     if parts.len() < 3 {
         return None;
     }
-    let hue = parts[0].parse::<f64>().ok()? / 360.0;
-    let saturation = parts[1].trim_end_matches('%').parse::<f64>().ok()? / 100.0;
-    let lightness = parts[2].trim_end_matches('%').parse::<f64>().ok()? / 100.0;
+    // CSS reads a hue round the wheel and clamps the percentages.
+    let hue = parts[0].parse::<f64>().ok()?.rem_euclid(360.0) / 360.0;
+    let saturation = parts[1]
+        .trim_end_matches('%')
+        .parse::<f64>()
+        .ok()?
+        .clamp(0.0, 100.0)
+        / 100.0;
+    let lightness = parts[2]
+        .trim_end_matches('%')
+        .parse::<f64>()
+        .ok()?
+        .clamp(0.0, 100.0)
+        / 100.0;
     let alpha = parts.get(3).map_or(Some(255), |alpha| to_alpha(alpha))?;
 
-    if saturation == 0.0 {
-        let grey = round_channel(lightness * 255.0);
-        return Some([grey, grey, grey, alpha]);
-    }
-    let q = if lightness < 0.5 {
-        lightness * (1.0 + saturation)
+    // The extension's reader: one of six orders of (c, x, 0) per sector.
+    // The p/q form this replaced landed a channel at .5 a hair under it,
+    // and rounded `hsl(210, 50%, 50%)` to `#407fbf` where CSS gives `#4080bf`.
+    let chroma = (1.0 - (2.0 * lightness - 1.0).abs()) * saturation;
+    let sixths = hue * 6.0;
+    let x = chroma * (1.0 - (sixths % 2.0 - 1.0).abs());
+    let base = lightness - chroma / 2.0;
+    let (r, g, b) = if sixths < 1.0 {
+        (chroma, x, 0.0)
+    } else if sixths < 2.0 {
+        (x, chroma, 0.0)
+    } else if sixths < 3.0 {
+        (0.0, chroma, x)
+    } else if sixths < 4.0 {
+        (0.0, x, chroma)
+    } else if sixths < 5.0 {
+        (x, 0.0, chroma)
     } else {
-        lightness + saturation - lightness * saturation
+        (chroma, 0.0, x)
     };
-    let p = 2.0 * lightness - q;
     Some([
-        round_channel(hue_to_rgb(p, q, hue + 1.0 / 3.0) * 255.0),
-        round_channel(hue_to_rgb(p, q, hue) * 255.0),
-        round_channel(hue_to_rgb(p, q, hue - 1.0 / 3.0) * 255.0),
+        round_channel((r + base) * 255.0),
+        round_channel((g + base) * 255.0),
+        round_channel((b + base) * 255.0),
         alpha,
     ])
-}
-
-fn hue_to_rgb(p: f64, q: f64, mut t: f64) -> f64 {
-    if t < 0.0 {
-        t += 1.0;
-    }
-    if t > 1.0 {
-        t -= 1.0;
-    }
-    if t < 1.0 / 6.0 {
-        return p + (q - p) * 6.0 * t;
-    }
-    if t < 1.0 / 2.0 {
-        return q;
-    }
-    if t < 2.0 / 3.0 {
-        return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
-    }
-    p
 }
 
 /// JavaScript's `Math.round` rounds half toward positive infinity; Rust's
@@ -396,11 +398,23 @@ mod tests {
     #[test]
     fn hsl_resolves_the_way_the_extensions_converter_does() {
         for (hsl, hex) in [
-            ("hsl(210, 50%, 50%)", "#407fbf"),
+            ("hsl(210, 50%, 50%)", "#4080bf"),
             ("hsl(0, 0%, 100%)", "#ffffff"),
             ("hsl(210, 50%, 40%)", "#336699"),
         ] {
             assert!(palette(hex).contains(hsl), "{hsl} should resolve to {hex}");
+        }
+    }
+
+    #[test]
+    fn a_legacy_hsl_outside_its_range_reads_as_css_reads_it() {
+        for (hsl, same) in [
+            ("hsl(760, 100%, 50%)", "hsl(40, 100%, 50%)"),
+            ("hsl(-320, 100%, 50%)", "hsl(40, 100%, 50%)"),
+            ("hsl(0, 150%, 50%)", "hsl(0, 100%, 50%)"),
+            ("hsl(0, 100%, 150%)", "hsl(0, 100%, 100%)"),
+        ] {
+            assert!(palette(same).contains(hsl), "{hsl} should read as {same}");
         }
     }
 }
