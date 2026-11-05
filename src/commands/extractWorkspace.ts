@@ -137,8 +137,10 @@ async function extractWorkspace(
 				},
 			);
 			// A cancelled scan read part of the tree. Reporting that as the
-			// project's palette would understate it without saying so.
-			if (scanned.cancelled) return;
+			// project's palette would understate it without saying so. The
+			// token is read again because the scan checks it only before each
+			// file, and a click during the last read lands after that.
+			if (scanned.cancelled || token.isCancellationRequested) return;
 			const summary: ScanSummary = { ...scanned, fileLimitReached, ignored };
 
 			const colors = distinct(found);
@@ -146,7 +148,7 @@ async function extractWorkspace(
 				root === undefined
 					? undefined
 					: vscode.workspace.asRelativePath(root, false);
-			await deliver(
+			const delivered = await deliver(
 				(positions) =>
 					formatExtractWorkspaceReport({
 						where,
@@ -157,7 +159,9 @@ async function extractWorkspace(
 					}),
 				config,
 				deps,
+				token,
 			);
+			if (!delivered) return;
 
 			deps.telemetry.event('extract-workspace-completed', {
 				files: summary.read,

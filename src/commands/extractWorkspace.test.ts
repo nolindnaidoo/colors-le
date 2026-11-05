@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	_cancelAfterProgress,
 	_clipboardText,
 	_openedDocuments,
 	_registeredCommands,
@@ -10,6 +11,7 @@ import {
 	_setConfig,
 	_setWorkspaceFiles,
 	_shownMessages,
+	env,
 	Uri,
 	workspace,
 } from '../__mocks__/vscode';
@@ -213,5 +215,44 @@ describe('colors-le.extractWorkspace and colors-le.extractFolder', () => {
 		expect(readme).toContain(
 			'3 file(s) read · 3 distinct color(s), 7 occurrence(s) in 3 file(s)',
 		);
+	});
+});
+
+describe('a workspace scan cancelled after its last check', () => {
+	// The scan reads the token before each file, and the report is delivered
+	// inside the progress callback, where Cancel is still on screen.
+	it('delivers nothing when Cancel is clicked while the last file is read', async () => {
+		open({ '/w/a.css': 'a { color: #123456; }\n' });
+		const original = workspace.fs.readFile;
+		// The .gitignore reads come first and must not cancel.
+		workspace.fs.readFile = async (uri: Uri) => {
+			if (uri.path === '/w/a.css') _cancelAfterProgress(0);
+			return original(uri);
+		};
+		try {
+			await runCommand('colors-le.extractWorkspace');
+		} finally {
+			workspace.fs.readFile = original;
+		}
+		expect(_openedDocuments()).toHaveLength(0);
+		expect(_shownMessages().filter((m) => m.kind === 'info')).toEqual([]);
+		expect(successes.count).toBe(0);
+	});
+
+	it('opens nothing when Cancel is clicked while the report is copied', async () => {
+		open({ '/w/a.css': 'a { color: #123456; }\n' });
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		const original = env.clipboard.writeText;
+		env.clipboard.writeText = async (text: string) => {
+			_cancelAfterProgress(0);
+			return original(text);
+		};
+		try {
+			await runCommand('colors-le.extractWorkspace');
+		} finally {
+			env.clipboard.writeText = original;
+		}
+		expect(_openedDocuments()).toHaveLength(0);
+		expect(_shownMessages().filter((m) => m.kind === 'info')).toEqual([]);
 	});
 });
