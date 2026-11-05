@@ -1,11 +1,11 @@
 {
 	"manifest.command.category": "Colors-LE",
-	"manifest.command.extract.title": "Ekstraksi Warna",
+	"manifest.command.extract.title": "Ekstrak Warna",
 	"manifest.command.extract-workspace.title": "Ekstrak Warna dari Ruang Kerja",
 	"manifest.command.extract-folder.title": "Ekstrak Warna dari Folder",
 	"manifest.command.analyze.title": "Menganalisis Warna",
 	"manifest.command.convert.title": "Konversi Warna",
-	"manifest.command.filter.title": "Warna Filter",
+	"manifest.command.filter.title": "Filter Warna",
 	"manifest.command.validate.title": "Memverifikasi Warna",
 	"manifest.command.dedupe.title": "Hapus Duplikat Warna",
 	"manifest.command.sort.title": "Urutkan Warna",

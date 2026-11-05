@@ -5,7 +5,7 @@
 	"manifest.command.extract-folder.title": "Extraire les couleurs du dossier",
 	"manifest.command.analyze.title": "Analyser les couleurs",
 	"manifest.command.convert.title": "Convertir les couleurs",
-	"manifest.command.filter.title": "Filtrer par couleur",
+	"manifest.command.filter.title": "Filtrer les couleurs",
 	"manifest.command.validate.title": "Valider les couleurs",
 	"manifest.command.dedupe.title": "Dédupliquer les couleurs",
 	"manifest.command.sort.title": "Trier les couleurs",
