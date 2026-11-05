@@ -195,6 +195,20 @@ describe('colors-le.extractColors', () => {
 		expect(_shownMessages()[0]?.kind).toBe('error');
 	});
 
+	it('reads the document by its language id, never by its file name', async () => {
+		registerExtractCommand(makeContext(), makeDeps());
+		_setActiveEditor(
+			_createDocument({
+				content: 'a { color: #250; }',
+				languageId: 'css',
+				fileName: '/x/notes.md',
+			}),
+		);
+		await runCommand('colors-le.extractColors');
+		// Read as Markdown, a short all-digit hex is an issue reference.
+		expect(_openedDocuments().at(-1)?.getText()).toBe('#250');
+	});
+
 	it('asks before opening or copying more result lines than the safety setting allows', async () => {
 		_setConfig('colors-le.safety.largeOutputLinesThreshold', 100);
 		_setConfig('colors-le.copyToClipboardEnabled', true);
