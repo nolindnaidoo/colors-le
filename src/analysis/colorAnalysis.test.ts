@@ -73,6 +73,21 @@ describe('clusterColors', () => {
 		]);
 		expect(clusters.length).toBeGreaterThanOrEqual(1);
 	});
+
+	it('keeps every hue range that holds a colour', () => {
+		const wheel = [0, 45, 90, 150, 210, 270, 330].map((h) =>
+			color(`hsl(${h}, 100%, 50%)`, 'hsl'),
+		);
+		expect(clusterColors(wheel).map((c) => c.label)).toEqual([
+			'Red',
+			'Orange',
+			'Yellow',
+			'Green',
+			'Cyan',
+			'Blue',
+			'Magenta',
+		]);
+	});
 });
 
 describe('detectColorGaps', () => {

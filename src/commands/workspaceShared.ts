@@ -59,12 +59,18 @@ export async function askForFolder(): Promise<vscode.Uri | undefined> {
 	return chosen?.[0];
 }
 
-/** Copy first, then open, as the single-file commands do, and for their reason. */
+/**
+ * Copy first, then open, as the single-file commands do, and for their reason.
+ *
+ * The Cancel button is still on screen while the report is copied, so a
+ * click there stops the report from opening.
+ */
 export async function deliver(
 	report: (positions: boolean) => string,
 	config: Configuration,
 	deps: WorkspaceDeps,
-): Promise<void> {
+	token: vscode.CancellationToken,
+): Promise<boolean> {
 	if (config.copyToClipboardEnabled) {
 		try {
 			await vscode.env.clipboard.writeText(
@@ -79,6 +85,7 @@ export async function deliver(
 			);
 		}
 	}
+	if (token.isCancellationRequested) return false;
 	const document = await vscode.workspace.openTextDocument({
 		content: report(config.showPositions),
 		language: 'markdown',
@@ -92,6 +99,7 @@ export async function deliver(
 	// Not awaited: it resolves when the toast is answered, and a command that
 	// waited on that would stay pending for as long as the toast is ignored.
 	void deps.ratingPrompt.recordSuccess();
+	return true;
 }
 
 /** Text as a code span. A code span cannot escape a backtick, so one becomes a quote. */

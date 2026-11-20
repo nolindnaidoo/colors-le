@@ -63,16 +63,56 @@ export function registerExtractWorkspaceCommands(
 			'colors-le.extractWorkspace',
 			guarded(deps.notifier, async () => extractWorkspace(deps)),
 		),
-		// The Explorer hands over the folder that was clicked. From the
-		// palette there is none, and the command asks.
+		// The Explorer hands over the folder that was clicked and, on a
+		// multi-selection, every entry selected; reading only the first
+		// scanned one folder of several without a word. From the palette
+		// there is neither, and the command asks.
 		vscode.commands.registerCommand(
 			'colors-le.extractFolder',
-			guarded(deps.notifier, async (picked?: vscode.Uri) => {
-				const folder = picked ?? (await askForFolder());
-				if (folder !== undefined) await extractWorkspace(deps, folder);
-			}),
+			guarded(
+				deps.notifier,
+				async (picked?: vscode.Uri, selected?: readonly vscode.Uri[]) => {
+					const handed =
+						selected !== undefined && selected.length > 0
+							? selected
+							: picked === undefined
+								? []
+								: [picked];
+					if (handed.length === 0) {
+						const folder = await askForFolder();
+						if (folder !== undefined) await extractWorkspace(deps, folder);
+						return;
+					}
+					for (const folder of await foldersOf(handed, deps))
+						await extractWorkspace(deps, folder);
+				},
+			),
 		),
 	);
+}
+
+/** The folders among what the Explorer handed over, saying what was left out. */
+async function foldersOf(
+	handed: readonly vscode.Uri[],
+	deps: WorkspaceDeps,
+): Promise<vscode.Uri[]> {
+	const folders: vscode.Uri[] = [];
+	for (const uri of handed) {
+		const kind = await vscode.workspace.fs.stat(uri).then(
+			(stat) => stat.type,
+			() => vscode.FileType.Unknown,
+		);
+		if ((kind & vscode.FileType.Directory) !== 0) folders.push(uri);
+	}
+	const left = handed.length - folders.length;
+	if (left > 0)
+		deps.notifier.showWarning(
+			vscode.l10n.t(
+				'Extract Colors from Folder reads folders. {0} selected item(s) that are not folders were left out.',
+				left,
+			),
+		);
+	return folders;
 }
 
 /**
@@ -106,7 +146,11 @@ async function extractWorkspace(
 				limits,
 			);
 			const found = new Map<string, Occurrence[]>();
+			const failed: string[] = [];
 			let total = 0;
+			// A color past the limit is dropped, and the scan reports an early
+			// stop only when files remained: inside the last file it said nothing.
+			let dropped = false;
 			const scanned = await scanFiles(
 				root,
 				files,
@@ -117,11 +161,21 @@ async function extractWorkspace(
 						message: vscode.l10n.t('{0} of {1} files', done, all),
 					}),
 				({ file, text }) => {
-					for (const color of extractColorsFromText(
-						text,
-						resolveFormat(undefined, file),
-					)) {
-						if (total >= config.workspaceScanMaxResults) return false;
+					let colors: ReturnType<typeof extractColorsFromText>;
+					try {
+						colors = extractColorsFromText(
+							text,
+							resolveFormat(undefined, file),
+						);
+					} catch {
+						failed.push(file);
+						return true;
+					}
+					for (const color of colors) {
+						if (total >= config.workspaceScanMaxResults) {
+							dropped = true;
+							return false;
+						}
 						const occurrence = {
 							file,
 							written: color.value,
@@ -137,8 +191,10 @@ async function extractWorkspace(
 				},
 			);
 			// A cancelled scan read part of the tree. Reporting that as the
-			// project's palette would understate it without saying so.
-			if (scanned.cancelled) return;
+			// project's palette would understate it without saying so. The
+			// token is read again because the scan checks it only before each
+			// file, and a click during the last read lands after that.
+			if (scanned.cancelled || token.isCancellationRequested) return;
 			const summary: ScanSummary = { ...scanned, fileLimitReached, ignored };
 
 			const colors = distinct(found);
@@ -146,7 +202,7 @@ async function extractWorkspace(
 				root === undefined
 					? undefined
 					: vscode.workspace.asRelativePath(root, false);
-			await deliver(
+			const delivered = await deliver(
 				(positions) =>
 					formatExtractWorkspaceReport({
 						where,
@@ -154,10 +210,14 @@ async function extractWorkspace(
 						summary,
 						limits,
 						positions,
+						failed,
+						resultsCap: dropped ? config.workspaceScanMaxResults : undefined,
 					}),
 				config,
 				deps,
+				token,
 			);
+			if (!delivered) return;
 
 			deps.telemetry.event('extract-workspace-completed', {
 				files: summary.read,
@@ -216,6 +276,9 @@ export interface ExtractWorkspaceReportInput {
 	readonly summary: ScanSummary;
 	readonly limits: ScanLimits;
 	readonly positions?: boolean;
+	/** Files the reader threw on, which were read and yielded nothing. */
+	readonly failed?: readonly string[] /** The results limit, when a color was dropped for it inside a file. */;
+	readonly resultsCap?: number | undefined;
 }
 
 /**
@@ -229,6 +292,8 @@ export function formatExtractWorkspaceReport({
 	summary,
 	limits,
 	positions = true,
+	failed = [],
+	resultsCap,
 }: ExtractWorkspaceReportInput): string {
 	const lines: string[] = [
 		`# ${vscode.l10n.t('{0} workspace report', 'Colors-LE')}`,
@@ -276,6 +341,23 @@ export function formatExtractWorkspaceReport({
 	}
 
 	const notes = unreadNotes(summary, limits, code('colors-le.workspace.*'));
+	if (failed.length > 0)
+		notes.push(
+			vscode.l10n.t(
+				'Colors could not be read from {0} file(s), so they are not in this report: {1}',
+				failed.length,
+				failed.map(code).join(', '),
+			),
+		);
+	// The scan's own note covers the files it never opened; this one covers
+	// the rest of the file the limit was reached in.
+	if (resultsCap !== undefined)
+		notes.push(
+			vscode.l10n.t(
+				'The results limit of {0} was reached. The colors after it in that file were not counted.',
+				resultsCap,
+			),
+		);
 	if (notes.length > 0) lines.push(...notes.map((note) => `> ${note}`), '');
 	return lines.join('\n');
 }

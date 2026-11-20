@@ -15,7 +15,7 @@ use crate::scan::{self, FileReport, ScanOptions};
 use crate::walk::{self, WalkOptions};
 
 const USAGE: &str = "usage: colors-le [options] <file|dir>...
-       colors-le [options] --stdin [--format <format>]
+       colors-le [options] --stdin --format <format>
        colors-le mcp
        colors-le --version | --help
 
@@ -36,6 +36,9 @@ over silently and counted in the summary. It was never a text candidate,
 so it is not a file that failed to be read.
 
 Options:
+  --palette <file>     a list of approved colours; anything else is a
+                       finding. One per line, a JSON array, or a flat
+                       JSON object's values
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
                        file name; a name this does not know is refused
@@ -107,8 +110,8 @@ pub(crate) fn run() -> ExitCode {
 
 fn execute(args: &[String]) -> Result<u8, String> {
     let options = parse(args)?;
-    let (reports, binary) = if options.stdin {
-        (vec![scan_stdin(&options)?], 0)
+    let (reports, binary, symlinks) = if options.stdin {
+        (vec![scan_stdin(&options)?], 0, 0)
     } else {
         read_tree(&options)?
     };
@@ -128,6 +131,7 @@ fn execute(args: &[String]) -> Result<u8, String> {
         &mut std::io::stderr().lock(),
         &reports,
         binary,
+        symlinks,
         options.values_only,
     );
     Ok(scan::exit_code(&reports, options.strict))
@@ -138,16 +142,17 @@ fn execute(args: &[String]) -> Result<u8, String> {
 /// candidate — but the count is not thrown away, because silence about
 /// files that were never looked at is the thing this tool exists to
 /// avoid.
-fn read_tree(options: &Cli) -> Result<(Vec<FileReport>, usize), String> {
+fn read_tree(options: &Cli) -> Result<(Vec<FileReport>, usize, usize), String> {
     let mut reports = Vec::new();
     let mut binary = 0;
-    for target in walk::collect(&options.inputs, &options.walk)? {
-        match scan::scan_file(&target, &options.scan) {
+    let walked = walk::collect(&options.inputs, &options.walk)?;
+    for target in &walked.files {
+        match scan::scan_file(target, &options.scan) {
             scan::Examined::Text(report) => reports.push(report),
             scan::Examined::Binary => binary += 1,
         }
     }
-    Ok((reports, binary))
+    Ok((reports, binary, walked.symlinks))
 }
 
 /// A terminal gets nothing here. The stderr summary already lists every
@@ -251,6 +256,14 @@ fn parse(args: &[String]) -> Result<Cli, String> {
                 let value = rest
                     .next()
                     .ok_or_else(|| "--palette needs a file".to_string())?;
+                // A FIFO is refused rather than read: a read on a pipe with
+                // no writer never returns, and the run waited on it forever.
+                if std::fs::metadata(value).is_ok_and(|metadata| !metadata.is_file()) {
+                    return Err(format!(
+                        "could not read the palette {value}: {}",
+                        scan::NOT_A_REGULAR_FILE
+                    ));
+                }
                 let text = std::fs::read_to_string(value)
                     .map_err(|error| format!("could not read the palette {value}: {error}"))?;
                 let (palette, rejected) = crate::extract::Palette::parse(&text);
@@ -287,6 +300,7 @@ fn summarise(
     stderr: &mut impl Write,
     reports: &[FileReport],
     binary: usize,
+    symlinks: usize,
     values_on_stdout: bool,
 ) {
     let mut colors = 0;
@@ -324,6 +338,15 @@ fn summarise(
         plural(colors, "color", "colors"),
         plural(reports.len(), "file", "files")
     );
+    if symlinks > 0 {
+        // Never followed, by design, and still not a silence: a link has
+        // no report line, so this is where a reader learns of it.
+        let _ = writeln!(
+            stderr,
+            "{} not followed",
+            plural(symlinks, "symbolic link", "symbolic links")
+        );
+    }
     if outside > 0 {
         // Said plainly: the count is the reason the run failed, and a
         // reader scrolling past a thousand colours needs it at the end.
@@ -387,24 +410,30 @@ mod tests {
         let tree = TempTree::new("cli-stderr");
         let reports = sample_reports(&tree);
         let mut listed = Vec::new();
-        summarise(&mut listed, &reports, 0, false);
+        summarise(&mut listed, &reports, 0, 0, false);
         let text = String::from_utf8(listed).expect("utf-8");
         assert!(text.contains("a.css:1:12  #2563eb\n"), "{text}");
         assert!(text.ends_with("1 color in 1 file\n"), "{text}");
 
         let mut quiet = Vec::new();
-        summarise(&mut quiet, &reports, 0, true);
+        summarise(&mut quiet, &reports, 0, 0, true);
         let text = String::from_utf8(quiet).expect("utf-8");
         assert_eq!(text, "1 color in 1 file\n");
     }
 
     #[test]
     fn every_documented_flag_is_parsed_and_the_reverse() {
-        let mut documented: Vec<&str> = USAGE
-            .split_whitespace()
+        // The Options block, not the whole text: a flag named only in prose
+        // passed this while the list a reader scans left it out.
+        let options = USAGE
+            .split_once("Options:")
+            .and_then(|(_, rest)| rest.split_once("\n\n"))
+            .map(|(block, _)| block)
+            .expect("an Options block");
+        let mut documented: Vec<&str> = options
+            .lines()
+            .filter_map(|line| line.split_whitespace().next())
             .filter(|word| word.starts_with("--"))
-            .map(|word| word.trim_end_matches([',', '.', ':', ';']))
-            .filter(|word| !matches!(*word, "--version" | "--help"))
             .collect();
         documented.sort_unstable();
         documented.dedup();

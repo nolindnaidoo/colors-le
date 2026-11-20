@@ -14,7 +14,7 @@ export interface ExtractionResult {
 }
 
 export interface ParseError {
-	readonly type: 'parse-error' | 'validation-error';
+	readonly type: 'parse-error';
 	readonly message: string;
 	readonly filepath?: string | undefined;
 	readonly line?: number | undefined;

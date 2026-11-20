@@ -7,6 +7,7 @@ import {
 import { CONFIG_DEFAULTS } from '../config/config';
 import type { Configuration } from '../types';
 import {
+	confirmLargeOutput,
 	handleSafetyChecks,
 	handleSafetyChecksWithUserConfirmation,
 } from './safety';
@@ -41,11 +42,19 @@ describe('handleSafetyChecks', () => {
 		expect(result.message).toContain('exceeds the safety threshold');
 	});
 
-	it('warns on many lines without blocking', () => {
+	it('counts bytes, not UTF-16 units, as a folder scan does', () => {
+		const config = { ...baseConfig, safetyFileSizeWarnBytes: 1000 };
+		// 600 characters, 1,200 bytes.
+		const result = handleSafetyChecks(doc('é'.repeat(600)), config);
+		expect(result.proceed).toBe(false);
+		expect(result.message).toContain('(1200 bytes)');
+	});
+
+	it("leaves the document's line count alone: the setting counts result lines", () => {
 		const config = { ...baseConfig, safetyLargeOutputLinesThreshold: 10 };
 		const result = handleSafetyChecks(doc('a\n'.repeat(50)), config);
 		expect(result.proceed).toBe(true);
-		expect(result.warnings.some((w) => w.includes('Large file'))).toBe(true);
+		expect(result.warnings).toEqual([]);
 	});
 
 	it('warns on very color-dense content', () => {
@@ -92,5 +101,32 @@ describe('handleSafetyChecksWithUserConfirmation', () => {
 			{ allowOverride: true },
 		);
 		expect(result.proceed).toBe(false);
+	});
+});
+
+describe('confirmLargeOutput', () => {
+	beforeEach(() => _resetMockState());
+	const config = { ...baseConfig, safetyLargeOutputLinesThreshold: 100 };
+
+	it('asks nothing at or under the threshold, or with safety off', async () => {
+		let asked = 0;
+		_respondToWarning(() => {
+			asked += 1;
+			return undefined;
+		});
+		expect(await confirmLargeOutput(100, config)).toBe(true);
+		expect(
+			await confirmLargeOutput(500, { ...config, safetyEnabled: false }),
+		).toBe(true);
+		expect(asked).toBe(0);
+	});
+
+	it('asks above it, and goes on only when told to', async () => {
+		_respondToWarning((items) =>
+			items.find((item) => item === 'Continue Anyway'),
+		);
+		expect(await confirmLargeOutput(101, config)).toBe(true);
+		_respondToWarning(() => undefined);
+		expect(await confirmLargeOutput(101, config)).toBe(false);
 	});
 });

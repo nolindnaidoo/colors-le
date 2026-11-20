@@ -14,7 +14,6 @@ import {
 	type PaletteAnalysis,
 } from '../analysis/colorAnalysis';
 import { extractColors } from '../extraction/extract';
-import type { Color } from '../types';
 import { createNotifier } from '../ui/notifier';
 import { describeError } from '../utils/errors';
 import { formatDuration } from '../utils/format';
@@ -62,7 +61,6 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
 
 				// Generate analysis report
 				const report = generateAnalysisReport(
-					result.colors,
 					statistics,
 					anomalies,
 					patterns,
@@ -105,7 +103,6 @@ export function registerAnalyzeCommand(context: vscode.ExtensionContext): void {
  * Generate comprehensive analysis report
  */
 function generateAnalysisReport(
-	_colors: readonly Color[],
 	statistics: ColorStatistics,
 	anomalies: readonly ColorAnomaly[],
 	patterns: readonly ColorPattern[],
@@ -171,6 +168,11 @@ function generateAnalysisReport(
 				`| \`${color.color}\` | ${color.count} | ${color.percentage.toFixed(1)}% |`,
 			);
 		}
+		if (statistics.unique > statistics.mostCommon.length)
+			report.push(
+				'',
+				`*The ${statistics.mostCommon.length} most common of ${statistics.unique} distinct colors.*`,
+			);
 		report.push('');
 	}
 
@@ -187,13 +189,7 @@ function generateAnalysisReport(
 	// Contrast is measured against a background, and a palette has none; the
 	// report used to print a pass nothing had measured.
 	report.push(
-		`- **WCAG contrast**: ${
-			palette.accessibility.wcagAA === undefined
-				? 'not assessed (Validate Colors checks contrast against a background you name)'
-				: palette.accessibility.wcagAA
-					? '✅ AA'
-					: '❌ fails AA'
-		}`,
+		'- **WCAG contrast**: not assessed (Validate Colors checks contrast against a background you name)',
 	);
 	report.push('');
 	report.push(`**Harmony Description**: ${palette.harmony.description}`);
@@ -314,6 +310,8 @@ function generateAnalysisReport(
 				`| \`${usage.color}\` | ${usage.frequency} | ${contexts}${moreContexts} |`,
 			);
 		}
+		if (palette.usage.length > 20)
+			report.push('', `*${palette.usage.length - 20} more colors not shown.*`);
 		report.push('');
 	}
 
@@ -330,12 +328,6 @@ function generateAnalysisReport(
 	if (palette.harmony.confidence < 0.5) {
 		report.push(
 			'- **Improve Harmony**: Consider using a color harmony tool to create more cohesive palettes',
-		);
-	}
-
-	if (palette.accessibility.wcagAA === false) {
-		report.push(
-			'- **Accessibility**: Ensure color combinations meet WCAG contrast requirements',
 		);
 	}
 

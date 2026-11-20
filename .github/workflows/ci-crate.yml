@@ -200,7 +200,8 @@ jobs:
       - name: Forbid inline lint suppressions
         working-directory: .
         run: |
-          if grep -rn '#\[allow(' crate/src --include='*.rs'; then
+          # Outer, inner (#![allow]) and cfg_attr(..., allow(...)) alike.
+          if grep -rnE '#!?\[(cfg_attr\(.*)?allow\(' crate/src --include='*.rs'; then
             echo 'Inline #[allow] found — fix the lint or relax it in [lints.clippy] in crate/Cargo.toml.'
             exit 1
           fi

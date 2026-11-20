@@ -127,8 +127,9 @@ async function promptForConversionOptions(
 		targetFormat,
 	};
 
-	// Ask about alpha preservation
-	if (['hex', 'rgb', 'hsl'].includes(targetFormat)) {
+	// Asked only where the answer changes the output: rgb() and hsl() never
+	// carry alpha, rgba() and hsla() always do, and hex and oklch() may.
+	if (targetFormat === 'hex' || targetFormat === 'oklch') {
 		const preserveAlpha = await vscode.window.showQuickPick(
 			[
 				{
@@ -151,27 +152,32 @@ async function promptForConversionOptions(
 		options.preserveAlpha = preserveAlpha.value;
 	}
 
-	// Ask about value rounding
-	const roundValues = await vscode.window.showQuickPick(
-		[
+	// Only oklch() has decimals to round: every other notation is written in
+	// whole channels and percentages whatever the answer.
+	if (targetFormat === 'oklch') {
+		const roundValues = await vscode.window.showQuickPick(
+			[
+				{
+					label: vscode.l10n.t('Yes'),
+					description: vscode.l10n.t(
+						'Round lightness and chroma to three decimals, hue to two',
+					),
+					value: true,
+				},
+				{
+					label: vscode.l10n.t('No'),
+					description: vscode.l10n.t('Keep decimal precision'),
+					value: false,
+				},
+			],
 			{
-				label: vscode.l10n.t('Yes'),
-				description: vscode.l10n.t('Round values to integers'),
-				value: true,
+				placeHolder: vscode.l10n.t('Round values?'),
 			},
-			{
-				label: vscode.l10n.t('No'),
-				description: vscode.l10n.t('Keep decimal precision'),
-				value: false,
-			},
-		],
-		{
-			placeHolder: vscode.l10n.t('Round values?'),
-		},
-	);
+		);
 
-	if (roundValues === undefined) return undefined;
-	options.roundValues = roundValues.value;
+		if (roundValues === undefined) return undefined;
+		options.roundValues = roundValues.value;
+	}
 
 	// Format-specific options
 	if (targetFormat === 'hex') {

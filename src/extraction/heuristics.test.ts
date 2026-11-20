@@ -177,3 +177,13 @@ describe('classifyColorFormat', () => {
 		expect(classifyColorFormat('bogus')).toBe('unknown');
 	});
 });
+
+describe('findColorLiterals on a call that never closes', () => {
+	it('stays fast on 200,000 spaces after rgb(', () => {
+		// Took about half a second at 40,000 spaces; the bound is far above
+		// the milliseconds it takes now.
+		const start = performance.now();
+		findColorLiterals(`a { color: rgb(${' '.repeat(200_000)}`);
+		expect(performance.now() - start).toBeLessThan(1500);
+	});
+});

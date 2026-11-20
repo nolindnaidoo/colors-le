@@ -1,7 +1,11 @@
 import * as vscode from 'vscode';
 import { extractColors } from '../extraction/extract';
 import type { Color } from '../types';
-import { isValidColorFormat, parseColorToHSL } from '../utils/colorConversion';
+import {
+	isValidColorFormat,
+	parseColor,
+	parseColorToHSL,
+} from '../utils/colorConversion';
 import { promptForFilterOptions } from './filterPrompts';
 import type { ColorFilterOptions, ColorFilterResult } from './filterTypes';
 
@@ -354,20 +358,5 @@ function generateFilterReport(
 // Helper functions
 
 function isTransparentColor(color: string): boolean {
-	if (color.toLowerCase() === 'transparent') return true;
-
-	const rgba = color.match(
-		/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/,
-	);
-	if (rgba?.[1] && Number.parseFloat(rgba[1]) === 0) return true;
-
-	const hsla = color.match(
-		/hsla\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*([\d.]+)\s*\)/,
-	);
-	if (hsla?.[1] && Number.parseFloat(hsla[1]) === 0) return true;
-
-	const hex8 = color.match(/^#[0-9a-f]{6}([0-9a-f]{2})$/i);
-	if (hex8?.[1] && Number.parseInt(hex8[1], 16) === 0) return true;
-
-	return false;
+	return parseColor(color)?.a === 0;
 }

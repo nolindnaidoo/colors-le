@@ -101,14 +101,7 @@ export function readOptionalBoolean(
 	return value;
 }
 
-/**
- * `ok` is not `success`.
- *
- * `extractColors` returns `success: false` for empty content — a true result,
- * not a failure. Reporting that as an error would have a model announce a
- * problem that did not happen, so `ok` is driven by whether any diagnostic is
- * actually an error.
- */
+/** `ok` is false when any diagnostic is an error, and only then. */
 export function isOk(diagnostics: readonly Diagnostic[]): boolean {
 	return !diagnostics.some((d) => d.severity === 'error');
 }

@@ -50,33 +50,48 @@ impl Default for WalkOptions {
     }
 }
 
+/// What a walk reached, and the links it passed over.
+#[derive(Debug, Default)]
+pub(crate) struct Walked {
+    /// Every file to read, and every FIFO, socket or device met, which
+    /// `scan_file` names by its kind rather than opening.
+    pub(crate) files: Vec<PathBuf>,
+    /// Links met inside a directory. Never followed, by design; counted,
+    /// because a reader has to know the tree holds more than the scan read.
+    pub(crate) symlinks: usize,
+}
+
 /// Collect every file to read, in a stable order.
 ///
 /// The sort is not cosmetic: `ignore` makes no ordering guarantee, and a
 /// report whose lines move between two runs over an unchanged tree
 /// cannot be diffed — which is most of what a report in CI is for, and
 /// all of what "what changed since last release" is for.
-pub(crate) fn collect(inputs: &[PathBuf], options: &WalkOptions) -> Result<Vec<PathBuf>, String> {
-    let mut files = Vec::new();
+pub(crate) fn collect(inputs: &[PathBuf], options: &WalkOptions) -> Result<Walked, String> {
+    let mut walked = Walked::default();
 
     for input in inputs {
         let metadata =
             std::fs::metadata(input).map_err(|error| format!("{}: {error}", input.display()))?;
 
-        if metadata.is_file() {
-            files.push(input.clone());
+        // Only a directory is walked. A FIFO named outright was walked as
+        // one and answered for as an empty tree.
+        if !metadata.is_dir() {
+            walked.files.push(input.clone());
             continue;
         }
 
-        files.extend(walk_directory(input, options)?);
+        let found = walk_directory(input, options)?;
+        walked.files.extend(found.files);
+        walked.symlinks += found.symlinks;
     }
 
-    files.sort();
-    files.dedup();
-    Ok(files)
+    walked.files.sort();
+    walked.files.dedup();
+    Ok(walked)
 }
 
-fn walk_directory(root: &StdPath, options: &WalkOptions) -> Result<Vec<PathBuf>, String> {
+fn walk_directory(root: &StdPath, options: &WalkOptions) -> Result<Walked, String> {
     let mut builder = ignore::WalkBuilder::new(root);
     builder
         .hidden(!options.hidden)
@@ -90,15 +105,22 @@ fn walk_directory(root: &StdPath, options: &WalkOptions) -> Result<Vec<PathBuf>,
         // paths as though they were part of the audit.
         .follow_links(false);
 
-    let mut files = Vec::new();
+    let mut walked = Walked::default();
     for entry in builder.build() {
         let entry = entry.map_err(|error| format!("{}: {error}", root.display()))?;
-        if !entry.file_type().is_some_and(|kind| kind.is_file()) {
-            continue;
+        match entry.file_type() {
+            Some(kind) if kind.is_dir() => {}
+            // The root is the exception: a link named outright is walked.
+            Some(kind) if kind.is_symlink() => {
+                if entry.depth() > 0 {
+                    walked.symlinks += 1;
+                }
+            }
+            Some(_) => walked.files.push(entry.into_path()),
+            None => {}
         }
-        files.push(entry.into_path());
     }
-    Ok(files)
+    Ok(walked)
 }
 
 #[cfg(test)]
@@ -123,7 +145,11 @@ mod tests {
         let tree = TempTree::new("walk-one");
         let file = tree.write("a.css", ".a{}");
         assert_eq!(
-            names(&collect(&[file], &WalkOptions::default()).expect("walks")),
+            names(
+                &collect(&[file], &WalkOptions::default())
+                    .expect("walks")
+                    .files
+            ),
             ["a.css"]
         );
     }
@@ -134,8 +160,12 @@ mod tests {
         for name in ["z.css", "a.css", "m.css"] {
             tree.write(name, "{}");
         }
-        let first = collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
-        let again = collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
+        let first = collect(&[tree.path().to_path_buf()], &WalkOptions::default())
+            .expect("walks")
+            .files;
+        let again = collect(&[tree.path().to_path_buf()], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert_eq!(names(&first), ["a.css", "m.css", "z.css"]);
         assert_eq!(first, again);
     }
@@ -151,7 +181,9 @@ mod tests {
         for name in names {
             tree.write(name, "x");
         }
-        let walked = collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
+        let walked = collect(&[tree.path().to_path_buf()], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert_eq!(walked.len(), names.len(), "{walked:?}");
     }
 
@@ -163,7 +195,9 @@ mod tests {
         tree.write("ignored.css", ".a{color:#fff}");
         tree.write("kept.css", ".b{color:#000}");
 
-        let walked = collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
+        let walked = collect(&[tree.path().to_path_buf()], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert!(names(&walked).contains(&"kept.css".to_string()));
         assert!(!names(&walked).contains(&"ignored.css".to_string()));
     }
@@ -182,7 +216,8 @@ mod tests {
                 ..WalkOptions::default()
             },
         )
-        .expect("walks");
+        .expect("walks")
+        .files;
         assert!(names(&walked).contains(&"ignored.css".to_string()));
     }
 
@@ -190,8 +225,9 @@ mod tests {
     fn hidden_files_are_read_on_request() {
         let tree = TempTree::new("walk-hidden");
         tree.write(".hidden.css", ".a{}");
-        let default =
-            collect(&[tree.path().to_path_buf()], &WalkOptions::default()).expect("walks");
+        let default = collect(&[tree.path().to_path_buf()], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert!(default.is_empty());
 
         let all = collect(
@@ -201,7 +237,8 @@ mod tests {
                 ..WalkOptions::default()
             },
         )
-        .expect("walks");
+        .expect("walks")
+        .files;
         assert_eq!(names(&all), [".hidden.css"]);
     }
 
@@ -212,7 +249,9 @@ mod tests {
         tree.mkdir(".git");
         tree.write(".gitignore", ".hidden.css\n");
         let file = tree.write(".hidden.css", ".a{}");
-        let walked = collect(&[file], &WalkOptions::default()).expect("walks");
+        let walked = collect(&[file], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert_eq!(names(&walked), [".hidden.css"]);
     }
 
@@ -228,7 +267,9 @@ mod tests {
     fn the_same_file_named_twice_is_read_once() {
         let tree = TempTree::new("walk-dedupe");
         let file = tree.write("a.css", ".a{}");
-        let walked = collect(&[file.clone(), file], &WalkOptions::default()).expect("walks");
+        let walked = collect(&[file.clone(), file], &WalkOptions::default())
+            .expect("walks")
+            .files;
         assert_eq!(walked.len(), 1);
     }
 }

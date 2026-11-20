@@ -396,13 +396,14 @@ fn attribute_spans(blanked: &str, attributes: &[&str]) -> Vec<(usize, usize)> {
 /// Deduplicate by start offset and sort, which is how two matchers
 /// finding the same run at the same place become one colour.
 pub(crate) fn settle(matches: Vec<ColorMatch>) -> Vec<ColorMatch> {
-    let mut seen: Vec<usize> = Vec::new();
+    // A set, not a list: looking each start up in a list of the ones
+    // before it was the square of the colours in the document.
+    let mut seen: std::collections::HashSet<usize> = std::collections::HashSet::new();
     let mut settled: Vec<ColorMatch> = Vec::new();
     for found in matches {
-        if seen.contains(&found.start) {
+        if !seen.insert(found.start) {
             continue;
         }
-        seen.push(found.start);
         settled.push(found);
     }
     settled.sort_by_key(|found| found.start);

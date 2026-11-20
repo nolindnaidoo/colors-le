@@ -16,7 +16,7 @@
  * Run: bun run build:cli && cargo build --locked --manifest-path crate/Cargo.toml
  *      bun scripts/check-cli-parity.ts
  */
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
 	chmodSync,
 	existsSync,
@@ -143,6 +143,12 @@ function build(): void {
 		file('closed/shut/inside.css', '.s{color:#888888}\n');
 		chmodSync(join(tree, 'closed', 'shut'), 0o000);
 	}
+	// A FIFO in the walk, named outright and named as the palette: a read
+	// on one with no writer never returns, so either binary opening it hangs.
+	if (process.platform !== 'win32') {
+		execFileSync('mkfifo', [join(tree, 'repo', 'pipe.css')]);
+		created.push(join(tree, 'repo', 'pipe.css'));
+	}
 }
 
 function cases(): readonly Case[] {
@@ -187,6 +193,8 @@ function cases(): readonly Case[] {
 		{ args: [join(repo, 'nested')] },
 		{ args: [join(tree, 'loose')] },
 		{ args: [join(tree, 'closed')] },
+		{ args: [join(repo, 'pipe.css')] },
+		{ args: ['--palette', join(repo, 'pipe.css'), join(repo, 'a.css')] },
 		{ args: [join(tree, 'missing')] },
 		{ args: [join(tree, 'no', 'such', 'place')] },
 		{ args: [repo, '--dedup'] },
@@ -214,7 +222,10 @@ function runOne(command: readonly string[], testCase: Case): Outcome {
 	const result = spawnSync(program, [...rest, ...testCase.args], {
 		input: testCase.stdin ?? '',
 		cwd: tree,
+		// A binary waiting on a FIFO is a failure, not a hang of this check.
+		timeout: 20_000,
 	});
+	if (result.error) throw new Error(`${program} ${testCase.args.join(' ')}: ${result.error.message}`);
 	return {
 		status: result.status,
 		stdout: result.stdout.toString('utf8'),

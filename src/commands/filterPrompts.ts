@@ -115,12 +115,14 @@ export async function promptForFilterOptions(
 	if (lightnessFilter === undefined) return undefined;
 
 	switch (lightnessFilter.value) {
+		// The bounds are inclusive and lightness is a whole percentage, so
+		// "< 30%" is at most 29 and "> 70%" at least 71.
 		case 'dark': {
-			options.maxLightness = 30;
+			options.maxLightness = 29;
 			break;
 		}
 		case 'light': {
-			options.minLightness = 70;
+			options.minLightness = 71;
 			break;
 		}
 		case 'medium': {
@@ -191,12 +193,13 @@ export async function promptForFilterOptions(
 	if (saturationFilter === undefined) return undefined;
 
 	switch (saturationFilter.value) {
+		// As for lightness: "> 70%" is at least 71 and "< 30%" at most 29.
 		case 'vibrant': {
-			options.minSaturation = 70;
+			options.minSaturation = 71;
 			break;
 		}
 		case 'muted': {
-			options.maxSaturation = 30;
+			options.maxSaturation = 29;
 			break;
 		}
 		case 'custom': {

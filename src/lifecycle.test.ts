@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	_codeActionProviders,
 	_configListenerCount,
 	_createDocument,
 	_createExtensionContext,
@@ -34,6 +35,7 @@ function live() {
 		listeners: _configListenerCount(),
 		statusBars: _statusBarItems().filter((item) => !item.disposed).length,
 		channels: _outputChannels().filter((channel) => !channel.disposed).length,
+		codeActions: _codeActionProviders().filter((p) => !p.disposed).length,
 		timers: vi.getTimerCount(),
 	};
 }
@@ -64,8 +66,8 @@ async function runEveryCommand(): Promise<void> {
 }
 
 // The telemetry, the status bar item, its listener, its wrapper, eleven
-// commands and the eleven code action registrations.
-const SUBSCRIPTIONS = 26;
+// commands and the ten code action registrations.
+const SUBSCRIPTIONS = 25;
 
 describe('lifecycle', () => {
 	beforeEach(() => {
@@ -90,6 +92,7 @@ describe('lifecycle', () => {
 			listeners: 1,
 			statusBars: 1,
 			channels: 1,
+			codeActions: 10,
 			timers: 0,
 		});
 
@@ -99,11 +102,14 @@ describe('lifecycle', () => {
 			listeners: 0,
 			statusBars: 0,
 			channels: 0,
+			codeActions: 0,
 			timers: 0,
 		});
 
 		// Safe to repeat.
-		for (const subscription of context.subscriptions) subscription.dispose();
+		expect(() => {
+			for (const subscription of context.subscriptions) subscription.dispose();
+		}).not.toThrow();
 		expect(live().timers).toBe(0);
 	});
 

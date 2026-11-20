@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Color } from '../types';
+import { parseColor, rgbToHex } from '../utils/colorConversion';
 import {
 	convertColor,
 	convertColors,
 	getAvailableFormats,
 	getContrastRatio,
-	validateColorFormat,
 } from './colorConverter';
 
 function color(value: string, format: Color['format'] = 'hex'): Color {
@@ -111,17 +111,6 @@ describe('getAvailableFormats', () => {
 		expect(formats).toContain('hex');
 		expect(formats).toContain('rgb');
 		expect(formats).toContain('hsl');
-	});
-});
-
-describe('validateColorFormat', () => {
-	it('accepts values matching the format', () => {
-		expect(validateColorFormat('#ff0000', 'hex')).toBe(true);
-		expect(validateColorFormat('rgb(1, 2, 3)', 'rgb')).toBe(true);
-	});
-
-	it('rejects mismatches', () => {
-		expect(validateColorFormat('#ff0000', 'rgb')).toBe(false);
 	});
 });
 
@@ -237,20 +226,6 @@ describe('convertColor: option handling', () => {
 	});
 });
 
-describe('validateColorFormat: each format', () => {
-	it('recognises every supported format', () => {
-		expect(validateColorFormat('#ff0000', 'hex')).toBe(true);
-		expect(validateColorFormat('rgb(1, 2, 3)', 'rgb')).toBe(true);
-		expect(validateColorFormat('rgba(1, 2, 3, 1)', 'rgba')).toBe(true);
-		expect(validateColorFormat('hsl(0, 1%, 2%)', 'hsl')).toBe(true);
-		expect(validateColorFormat('hsla(0, 1%, 2%, 1)', 'hsla')).toBe(true);
-	});
-
-	it('rejects an unknown format name', () => {
-		expect(validateColorFormat('#ff0000', 'nonsense')).toBe(false);
-	});
-});
-
 describe('getContrastRatio: edge inputs', () => {
 	it('returns a ratio for two mid greys', () => {
 		expect(getContrastRatio('#777777', '#888888')).toBeGreaterThan(1);
@@ -279,5 +254,32 @@ describe('convertColors: batch behaviour', () => {
 
 	it('returns an empty array for no input', () => {
 		expect(convertColors([], { targetFormat: 'rgb' })).toHaveLength(0);
+	});
+});
+
+describe('Convert reads a colour as every other command does', () => {
+	// Convert and Validate's contrast had a reader of their own, which
+	// rounded a channel that lands on .5 down where CSS rounds it up.
+	it.each([
+		'hsl(210, 50%, 50%)',
+		'hsla(60, 100%, 25%, 0.3)',
+		'hsl(400, 50%, 50%)',
+		'rgb(300, 0, 0)',
+		'#f008',
+		'rebeccapurple',
+		'oklch(0.6 0.2 30)',
+	])('%s', (value) => {
+		const rgb = parseColor(value);
+		const converted = convertColor(color(value), {
+			targetFormat: 'hex',
+			preserveAlpha: true,
+		}).converted;
+		expect(rgb && rgbToHex(rgb)).toBe(converted);
+	});
+
+	it('measures contrast on the same reading', () => {
+		expect(getContrastRatio('hsl(400, 100%, 50%)', 'hsl(40, 100%, 50%)')).toBe(
+			1,
+		);
 	});
 });

@@ -8,7 +8,7 @@
  */
 
 export const USAGE = `usage: colors-le [options] <file|dir>...
-       colors-le [options] --stdin [--format <format>]
+       colors-le [options] --stdin --format <format>
        colors-le mcp
        colors-le --version | --help
 
@@ -29,6 +29,9 @@ over silently and counted in the summary. It was never a text candidate,
 so it is not a file that failed to be read.
 
 Options:
+  --palette <file>     a list of approved colours; anything else is a
+                       finding. One per line, a JSON array, or a flat
+                       JSON object's values
   --dedupe             collapse repeated values to their first occurrence
   --format <format>    force a format instead of inferring it from the
                        file name; a name this does not know is refused

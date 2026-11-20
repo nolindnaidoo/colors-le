@@ -76,7 +76,13 @@ fn restore_permissions(root: &Path) {
         return;
     };
     for entry in entries.flatten() {
-        let _ = std::fs::set_permissions(entry.path(), std::fs::Permissions::from_mode(0o644));
+        // A directory needs its search bit back, or the removal cannot
+        // descend into it and the tree is left in the temporary directory.
+        let mode = match entry.file_type() {
+            Ok(kind) if kind.is_dir() => 0o755,
+            _ => 0o644,
+        };
+        let _ = std::fs::set_permissions(entry.path(), std::fs::Permissions::from_mode(mode));
     }
 }
 
@@ -407,8 +413,15 @@ fn a_broken_symlink_and_a_loop_are_answered_rather_than_followed() {
 
     let run = scan(tree.path());
     run.survived("a tree holding a broken symlink and a loop");
-    // The walk never follows links, so the tree still reads as one file.
+    // The walk never follows links, so the tree still reads as one file,
+    // and says it passed three over rather than going quiet about them.
     assert_eq!(run.code, Some(0), "{}", run.stderr);
+    assert!(
+        run.stderr
+            .ends_with("1 color in 1 file\n3 symbolic links not followed\n"),
+        "{}",
+        run.stderr
+    );
 }
 
 /// A FIFO blocks forever on open. The walk must not be the thing that
@@ -428,10 +441,63 @@ fn a_fifo_does_not_hang_the_walk() {
         return;
     }
 
-    // `ignore` reports a FIFO as a non-file entry, so the walk passes
-    // over it — asserted by the run finishing at all.
+    // Named by its kind and never opened, in a walk and named outright.
     let run = scan(tree.path());
     run.survived("a tree holding a FIFO");
+    assert!(
+        run.stderr.contains("pipe.css: not a regular file"),
+        "{}",
+        run.stderr
+    );
+    let named = scan(&fifo);
+    assert_eq!(named.code, Some(1), "{}", named.stderr);
+    assert!(
+        named.stderr.contains("pipe.css: not a regular file"),
+        "{}",
+        named.stderr
+    );
+}
+
+/// A palette is read whole before the walk starts, so a FIFO there was
+/// waited on forever. Run with a deadline, so a regression fails here
+/// rather than hanging the suite.
+#[cfg(unix)]
+#[test]
+fn a_fifo_palette_is_refused_rather_than_waited_on() {
+    let tree = Tree::new("fifopalette");
+    let css = tree.text("theme.css", &format!(".a{{color:{VALUE}}}"));
+    let fifo = tree.path().join("palette.txt");
+    let made = Command::new("mkfifo")
+        .arg(&fifo)
+        .status()
+        .is_ok_and(|status| status.success());
+    if !made {
+        skipped("a FIFO palette", "mkfifo is not available here");
+        return;
+    }
+
+    let mut child = Command::new(BINARY)
+        .args(["--palette", &fifo.to_string_lossy(), &css.to_string_lossy()])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .expect("the binary runs");
+    let started = std::time::Instant::now();
+    while child.try_wait().expect("a wait").is_none() {
+        if started.elapsed() > std::time::Duration::from_secs(10) {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("still waiting on the FIFO after 10 s");
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    let output = child.wait_with_output().expect("the output");
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("not a regular file"),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[cfg(not(unix))]
@@ -577,4 +643,14 @@ fn symlink(target: &Path, link: &Path) -> bool {
         }
         std::os::windows::fs::symlink_file(target, link).is_ok()
     }
+}
+
+#[test]
+fn a_tree_holding_a_directory_is_removed_when_dropped() {
+    let tree = Tree::new("dropped");
+    std::fs::create_dir(tree.path().join("sub")).expect("a directory");
+    std::fs::write(tree.path().join("sub").join("a.css"), ".a{}").expect("a file");
+    let root = tree.path().to_path_buf();
+    drop(tree);
+    assert!(!root.exists(), "{} was left behind", root.display());
 }

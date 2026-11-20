@@ -14,7 +14,6 @@ export const SUPPORTED_LANGUAGES: readonly string[] = Object.freeze([
 	'typescript',
 	'json',
 	'yaml',
-	'yml',
 	'html',
 ]);
 

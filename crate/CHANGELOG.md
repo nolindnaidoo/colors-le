@@ -12,6 +12,36 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`--help` lists `--palette` among its options**, and shows `--format`
+  as required with `--stdin`, as it is.
+- **`colors_le_scan` names a skipped file at the top of its answer**, as a
+  warning, as it was written to. It matched on an error severity, and a
+  skip is a warning, so it never did.
+- **A document with many colours is scanned in linear time.** Settling the
+  matches looked each one up in a list of those before it: 200,000
+  colours in one file took 1.5 s and 400,000 nearly 6 s. The budget suite
+  holds four times the colours to under six times the time.
+- **A FIFO is named, and the links a walk passes over are counted.** A
+  FIFO, a socket or a device in a walk was dropped without a word, and
+  one named outright was walked as an empty directory, exit 1 with
+  "0 colors in 0 files". Each is a `skipped` report now, "not a regular
+  file", and never opened. `--palette` naming a FIFO waited forever and
+  exits 2 now. A symbolic link in a walk is still not followed; stderr
+  ends with how many, and `colors_le_scan` carries `symbolicLinks`.
+- **The shared corpus holds a filename that is a format name**, `css` and
+  `JSON`, which this server read as that format and the two JavaScript
+  servers as raw text.
+- **The shared corpus holds an empty and a whitespace-only document** for
+  `extract_colors`, which this server already answered `ok` with no
+  diagnostics and the two JavaScript servers answered as a failure.
+- **A palette's `hsl()` resolves to the colour CSS gives.** A channel that
+  lands on .5 was computed a hair under it and rounded down, so
+  `hsl(210, 50%, 50%)` matched `#407fbf` and not `#4080bf`, and so on for
+  hundreds of hsl values. The npm command line's `--palette` reads them
+  the same way.
+- **A palette's legacy `hsl()` reads a hue round the wheel and clamps its
+  percentages.** A hue past 720 or below 0, or a saturation past 100%,
+  resolved to another colour.
 - **The MCP server refuses an argument that does not fit the tool's schema
   as a protocol error, `-32602`, in the npm servers' words.** A `format: 7`
   was read as absent, a `hidden: "yes"` as false, an argument the schema

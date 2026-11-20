@@ -6,6 +6,7 @@ import {
 	_openedDocuments,
 	_registeredCommands,
 	_resetMockState,
+	_respondToWarning,
 	_setActiveEditor,
 	_setApplyEditResult,
 	_setClipboardError,
@@ -194,12 +195,50 @@ describe('colors-le.extractColors', () => {
 		expect(_shownMessages()[0]?.kind).toBe('error');
 	});
 
-	it('reports empty documents as info, not error', async () => {
-		_setConfig('colors-le.notificationsLevel', 'all');
+	it('reads the document by its language id, never by its file name', async () => {
 		registerExtractCommand(makeContext(), makeDeps());
 		_setActiveEditor(
-			_createDocument({ content: 'p { margin: 0; }', languageId: 'css' }),
+			_createDocument({
+				content: 'a { color: #250; }',
+				languageId: 'css',
+				fileName: '/x/notes.md',
+			}),
 		);
+		await runCommand('colors-le.extractColors');
+		// Read as Markdown, a short all-digit hex is an issue reference.
+		expect(_openedDocuments().at(-1)?.getText()).toBe('#250');
+	});
+
+	it('asks before opening or copying more result lines than the safety setting allows', async () => {
+		_setConfig('colors-le.safety.largeOutputLinesThreshold', 100);
+		_setConfig('colors-le.copyToClipboardEnabled', true);
+		registerExtractCommand(makeContext(), makeDeps());
+		// One line holding 150 colours: the document's line count is 1.
+		_setActiveEditor(
+			_createDocument({
+				content: Array.from({ length: 150 }, () => 'color: #123456;').join(' '),
+				languageId: 'css',
+			}),
+		);
+		const asked: string[] = [];
+		_respondToWarning((items) => {
+			asked.push(String(items.length));
+			return undefined;
+		});
+		await runCommand('colors-le.extractColors');
+		expect(asked).toHaveLength(1);
+		expect(_openedDocuments()).toHaveLength(0);
+		expect(_clipboardText()).toBe('');
+	});
+
+	it.each([
+		['a document with no colors', 'p { margin: 0; }'],
+		['an empty document', ''],
+		['a document of whitespace', ' \n\t\n'],
+	])('reports %s as no colors found, not an error', async (_name, content) => {
+		_setConfig('colors-le.notificationsLevel', 'all');
+		registerExtractCommand(makeContext(), makeDeps());
+		_setActiveEditor(_createDocument({ content, languageId: 'css' }));
 		await runCommand('colors-le.extractColors');
 		expect(
 			_shownMessages().some((m) => m.message.includes('No colors found')),

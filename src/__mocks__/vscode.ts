@@ -659,13 +659,27 @@ export class CodeAction {
 
 export const CodeActionKind = { QuickFix: { value: 'quickfix' } };
 
+const codeActionProviders: Array<{ disposed: boolean }> = [];
+
 export const languages = {
 	registerCodeActionsProvider: (
 		_selector: unknown,
 		_provider: unknown,
 		_metadata?: unknown,
-	) => ({ dispose: () => {} }),
+	) => {
+		const registration = { disposed: false };
+		codeActionProviders.push(registration);
+		return {
+			dispose: () => {
+				registration.disposed = true;
+			},
+		};
+	},
 };
+
+export function _codeActionProviders(): ReadonlyArray<{ disposed: boolean }> {
+	return codeActionProviders;
+}
 
 export const FileType = {
 	Unknown: 0,
@@ -689,6 +703,7 @@ export function _resetMockState(): void {
 	shownMessages.length = 0;
 	statusBarItems.length = 0;
 	outputChannels.length = 0;
+	codeActionProviders.length = 0;
 	appliedEdits.length = 0;
 	executedBuiltins.length = 0;
 	registeredCommands.clear();

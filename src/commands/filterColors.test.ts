@@ -159,3 +159,21 @@ describe('filterColors: combined', () => {
 		);
 	});
 });
+
+describe('filterColors: Exclude transparent', () => {
+	it('drops every notation whose alpha is zero', () => {
+		const zeroAlpha = [
+			'transparent',
+			'#f000',
+			'#ff000000',
+			'rgba(0, 0, 0, 0.0)',
+			'rgb(0 0 0 / 0)',
+			'hsl(0 0% 0% / 0%)',
+		];
+		const result = filterColors(
+			[...zeroAlpha.map((value) => color(value)), color('#f008')],
+			{ excludeTransparent: true },
+		);
+		expect(result.filtered.map((c) => c.value)).toEqual(['#f008']);
+	});
+});

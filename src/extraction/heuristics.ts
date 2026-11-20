@@ -196,8 +196,11 @@ const HEX_RE = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi;
 
 // Loose shape first; validated component-wise below. Letters, `/`, `+`
 // and `-` are for the modern syntax: units, `none`, colour spaces, alpha.
+// No `\s*` after the parenthesis: the class holds whitespace already, and the
+// two together split a run of spaces every way there is, the square of its
+// length on a call that never closes.
 const FUNCTIONAL_RE =
-	/\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(\s*[\d.\s,%a-z/+-]*?\)/gi;
+	/\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([\d.\s,%a-z/+-]*?\)/gi;
 
 const RGB_VALID = /^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/;
 const RGBA_VALID =

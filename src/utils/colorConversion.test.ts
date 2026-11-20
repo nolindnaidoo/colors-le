@@ -1,14 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import {
-	detectColorFormat,
 	isValidColorFormat,
 	parseColor,
 	parseColorToHSL,
 	type RgbColor,
 	rgbToHex,
 	rgbToHsl,
-	rgbToHslString,
-	rgbToRgbString,
 } from './colorConversion';
 
 describe('parseColor', () => {
@@ -142,85 +139,6 @@ describe('rgbToHsl', () => {
 	});
 });
 
-describe('rgbToRgbString', () => {
-	test('should convert RGB to string', () => {
-		const rgb: RgbColor = { r: 255, g: 128, b: 64 };
-		expect(rgbToRgbString(rgb)).toBe('rgb(255, 128, 64)');
-	});
-
-	test('should convert RGBA to string', () => {
-		const rgb: RgbColor = { r: 255, g: 128, b: 64, a: 0.5 };
-		expect(rgbToRgbString(rgb)).toBe('rgba(255, 128, 64, 0.5)');
-	});
-
-	test('should handle black', () => {
-		const rgb: RgbColor = { r: 0, g: 0, b: 0 };
-		expect(rgbToRgbString(rgb)).toBe('rgb(0, 0, 0)');
-	});
-
-	test('should handle white', () => {
-		const rgb: RgbColor = { r: 255, g: 255, b: 255 };
-		expect(rgbToRgbString(rgb)).toBe('rgb(255, 255, 255)');
-	});
-});
-
-describe('rgbToHslString', () => {
-	test('should convert RGB to HSL string', () => {
-		const rgb: RgbColor = { r: 255, g: 0, b: 0 };
-		expect(rgbToHslString(rgb)).toBe('hsl(0, 100%, 50%)');
-	});
-
-	test('should convert RGBA to HSLA string', () => {
-		const rgb: RgbColor = { r: 255, g: 0, b: 0, a: 0.5 };
-		expect(rgbToHslString(rgb)).toBe('hsla(0, 100%, 50%, 0.5)');
-	});
-
-	test('should handle black', () => {
-		const rgb: RgbColor = { r: 0, g: 0, b: 0 };
-		expect(rgbToHslString(rgb)).toBe('hsl(0, 0%, 0%)');
-	});
-
-	test('should handle white', () => {
-		const rgb: RgbColor = { r: 255, g: 255, b: 255 };
-		expect(rgbToHslString(rgb)).toBe('hsl(0, 0%, 100%)');
-	});
-});
-
-describe('detectColorFormat', () => {
-	test('should detect hex format', () => {
-		expect(detectColorFormat('#abc')).toBe('hex');
-		expect(detectColorFormat('#aabbcc')).toBe('hex');
-		expect(detectColorFormat('#aabbccdd')).toBe('hex');
-	});
-
-	test('should detect rgb format', () => {
-		expect(detectColorFormat('rgb(255, 128, 64)')).toBe('rgb');
-	});
-
-	test('should detect rgba format', () => {
-		expect(detectColorFormat('rgba(255, 128, 64, 0.5)')).toBe('rgba');
-	});
-
-	test('should detect hsl format', () => {
-		expect(detectColorFormat('hsl(0, 100%, 50%)')).toBe('hsl');
-	});
-
-	test('should detect hsla format', () => {
-		expect(detectColorFormat('hsla(0, 100%, 50%, 0.5)')).toBe('hsla');
-	});
-
-	test('should return unknown for invalid formats', () => {
-		expect(detectColorFormat('invalid')).toBe('unknown');
-		expect(detectColorFormat('notacolor')).toBe('unknown');
-		expect(detectColorFormat('')).toBe('unknown');
-	});
-
-	test('should handle colors with extra whitespace', () => {
-		expect(detectColorFormat('  #abc  ')).toBe('hex');
-		expect(detectColorFormat('  rgb(255, 128, 64)  ')).toBe('rgb');
-	});
-});
-
 describe('HSL to RGB conversion edge cases', () => {
 	test('should convert HSL with hue in different ranges', () => {
 		// Test all 6 ranges of the hue spectrum
@@ -321,5 +239,24 @@ describe('what Extract reports, the readers read', () => {
 		const { h } = rgbToHsl({ r: 255, g: 0, b: 1 });
 		expect(h).toBeGreaterThanOrEqual(0);
 		expect(h).toBeLessThan(360);
+	});
+});
+
+describe('a legacy component outside its range', () => {
+	test('reads a hue past 360 round the wheel', () => {
+		expect(parseColor('hsl(400, 50%, 50%)')).toEqual(
+			parseColor('hsl(40, 50%, 50%)'),
+		);
+		expect(parseColor('hsl(720, 100%, 50%)')).toEqual(
+			parseColor('hsl(0, 100%, 50%)'),
+		);
+	});
+
+	test('clamps a channel past 255, a percentage past 100 and an alpha past 1', () => {
+		expect(parseColor('rgb(300, 0, 0)')).toEqual({ r: 255, g: 0, b: 0 });
+		expect(parseColor('rgba(0, 0, 0, 5)')).toEqual({ r: 0, g: 0, b: 0, a: 1 });
+		expect(parseColor('hsl(0, 150%, 50%)')).toEqual(
+			parseColor('hsl(0, 100%, 50%)'),
+		);
 	});
 });

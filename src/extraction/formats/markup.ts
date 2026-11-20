@@ -71,14 +71,24 @@ export function extractFromMarkup(
 		m = styleAttrRe.exec(blanked);
 	}
 
-	// <style> ... </style> blocks
-	const styleBlockRe = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-	m = styleBlockRe.exec(blanked);
-	while (m !== null) {
-		const inner = m[1] ?? '';
-		const innerStart = m.index + m[0].indexOf(inner);
-		matches.push(...scanCssSegment(blanked, innerStart, inner.length));
-		m = styleBlockRe.exec(blanked);
+	// <style> ... </style> blocks, found by hand rather than by one pattern:
+	// a pattern retries from every `<style` to the end of the document, the
+	// square of its length when none is closed. A tag with no `>` after it, or
+	// a block with no `</style>`, means no later one has either.
+	const styleOpenRe = /<style/gi;
+	const styleCloseRe = /<\/style>/gi;
+	let open = styleOpenRe.exec(blanked);
+	while (open !== null) {
+		const tagEnd = blanked.indexOf('>', open.index + open[0].length);
+		if (tagEnd < 0) break;
+		styleCloseRe.lastIndex = tagEnd + 1;
+		const close = styleCloseRe.exec(blanked);
+		if (close === null) break;
+		matches.push(
+			...scanCssSegment(blanked, tagEnd + 1, close.index - tagEnd - 1),
+		);
+		styleOpenRe.lastIndex = close.index + close[0].length;
+		open = styleOpenRe.exec(blanked);
 	}
 
 	// presentational color attributes: whole value must be one color
@@ -107,17 +117,24 @@ export function extractFromMarkup(
 	// document whose entire purpose is colors reported none. The guard is
 	// `attributeColor`'s, unchanged: the trimmed text must be the color
 	// entirely, so prose that merely mentions one is not a finding.
-	const textRe = />([^<]+)</g;
-	m = textRe.exec(blanked);
-	while (m !== null) {
-		const raw = m[1] ?? '';
+	// By hand, as the style blocks are and for their reason: a `>` with no `<`
+	// after it means no later `>` has one either.
+	let gt = blanked.indexOf('>');
+	while (gt >= 0) {
+		const lt = blanked.indexOf('<', gt + 1);
+		if (lt < 0) break;
+		if (lt === gt + 1) {
+			gt = blanked.indexOf('>', gt + 1);
+			continue;
+		}
+		const raw = blanked.slice(gt + 1, lt);
 		const trimmed = raw.trim();
 		if (trimmed.length > 0) {
-			const start = m.index + 1 + raw.indexOf(trimmed);
+			const start = gt + 1 + raw.indexOf(trimmed);
 			const found = attributeColor(trimmed, start);
 			if (found) matches.push(found);
 		}
-		m = textRe.exec(blanked);
+		gt = blanked.indexOf('>', lt + 1);
 	}
 
 	matches.sort((a, b) => a.start - b.start);

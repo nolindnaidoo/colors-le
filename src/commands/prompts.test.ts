@@ -6,6 +6,7 @@ import {
 	_respondToQuickPick,
 } from '../__mocks__/vscode';
 import type { Color } from '../types';
+import { filterColors } from './filter';
 import { promptForFilterOptions } from './filterPrompts';
 import { promptForValidationOptions } from './validatePrompts';
 
@@ -331,5 +332,50 @@ describe('prompt input validation', () => {
 		answerPicks((items) => items, byValue('custom'), firstOf(1));
 		answerInputs('#ffffff', '3.0', undefined);
 		expect(await promptForValidationOptions()).toBeUndefined();
+	});
+});
+
+describe('the filter presets keep what their labels say', () => {
+	// Lightness and saturation are whole percentages, so a strict bound in a
+	// label is the next whole number in the options.
+	const AT_30_AND_70 = [
+		color('#4d4d4d'),
+		color('#b3b3b3'),
+		color('hsl(0, 30%, 50%)', 'hsl'),
+		color('hsl(0, 70%, 50%)', 'hsl'),
+	];
+
+	async function kept(lightness: string, saturation: string) {
+		answerPicks(
+			byValue('none'),
+			byValue(lightness),
+			byValue(saturation),
+			firstOf(0),
+		);
+		const options = await promptForFilterOptions(AT_30_AND_70);
+		if (options === undefined) throw new Error('the prompts were dismissed');
+		return filterColors(AT_30_AND_70, options).filtered.map((c) => c.value);
+	}
+
+	it('"Lightness < 30%" drops a colour at 30%', async () => {
+		expect(await kept('dark', 'none')).toEqual([]);
+	});
+
+	it('"Lightness > 70%" drops a colour at 70%', async () => {
+		expect(await kept('light', 'none')).toEqual([]);
+	});
+
+	it('"30% ≤ Lightness ≤ 70%" keeps both ends', async () => {
+		expect(await kept('medium', 'none')).toEqual([
+			'#4d4d4d',
+			'#b3b3b3',
+			'hsl(0, 30%, 50%)',
+			'hsl(0, 70%, 50%)',
+		]);
+	});
+
+	it('"Saturation > 70%" and "Saturation < 30%" drop a colour at the bound', async () => {
+		expect(await kept('none', 'vibrant')).toEqual([]);
+		expect(await kept('none', 'muted')).toEqual(['#4d4d4d', '#b3b3b3']);
 	});
 });

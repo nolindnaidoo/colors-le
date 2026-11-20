@@ -199,3 +199,26 @@ describe('extractFromHtml', () => {
 		expect(result[2]?.value).toBe('rgba(0, 0, 255, 0.5)');
 	});
 });
+
+describe('extractFromHtml on input that never closes', () => {
+	// A pattern that retries from every start to the end of the document took
+	// about three seconds on 40,000 unclosed tags; these take milliseconds.
+	// The bound is far above either so a slow machine does not fail it.
+	const within = (ms: number, run: () => unknown) => {
+		const start = performance.now();
+		run();
+		expect(performance.now() - start).toBeLessThan(ms);
+	};
+
+	test('200,000 unclosed style tags', () => {
+		within(1500, () => extractFromHtml('<style>'.repeat(200_000)));
+	});
+
+	test('a style tag with no > after it, repeated', () => {
+		within(1500, () => extractFromHtml('<style'.repeat(200_000)));
+	});
+
+	test('200,000 > with no < after them', () => {
+		within(1500, () => extractFromHtml(`<p>${'>'.repeat(200_000)}`));
+	});
+});
